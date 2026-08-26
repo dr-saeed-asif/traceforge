@@ -1,0 +1,11 @@
+{
+  "name": "@traceforge/adapter-ollama",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": { ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" } },
+  "dependencies": {
+    "@traceforge/adapter-contracts": "0.1.0",
+    "@traceforge/application": "0.1.0"
+  }
+}
