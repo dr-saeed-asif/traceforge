@@ -18,6 +18,7 @@ export default defineConfig({
       "@traceforge/git": fileURLToPath(new URL("./packages/git/src/index.ts", import.meta.url)),
       "@traceforge/provenance": fileURLToPath(new URL("./packages/provenance/src/index.ts", import.meta.url)),
       "@traceforge/sdk": fileURLToPath(new URL("./packages/sdk/src/index.ts", import.meta.url))
+      ,"@traceforge/server": fileURLToPath(new URL("./packages/server/src/index.ts", import.meta.url))
     }
   },
   test: {

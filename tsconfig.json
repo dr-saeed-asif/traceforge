@@ -15,6 +15,7 @@
     { "path": "./packages/adapter-ollama" },
     { "path": "./packages/adapter-model-gateways" },
     { "path": "./packages/api" },
+    { "path": "./packages/server" },
     { "path": "./packages/evaluation" }
   ]
 }

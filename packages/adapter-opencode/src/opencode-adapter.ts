@@ -241,6 +241,21 @@ export class OpenCodeAdapter implements AgentAdapter<OpenCodeAdapterConfig> {
         actor: { type: "tool", id: input.tool, name: input.tool },
         payload: { relativePath: pathFrom(args), operation: input.tool === "edit" ? "MODIFIED" : "CREATE_OR_OVERWRITE" }
       });
+    } else if (input.tool === "apply_patch") {
+      const metadata = jsonObject(output.metadata);
+      const files = Array.isArray(metadata.files) ? metadata.files.map(jsonObject) : [];
+      for (const file of files) {
+        const relativePath = typeof file.filePath === "string"
+          ? file.filePath
+          : typeof file.relativePath === "string" ? file.relativePath : "not_available";
+        const operation = file.type === "add" ? "CREATED" : file.type === "delete" ? "DELETED" : "MODIFIED";
+        await this.publish(context, {
+          eventType: operation === "CREATED" ? "FILE_CREATED" : operation === "DELETED" ? "FILE_DELETED" : "FILE_MODIFIED",
+          providerEventId: `${input.callID}:apply-patch:${relativePath}`, evidence: "OBSERVED",
+          actor: { type: "tool", id: "apply_patch", name: "apply_patch" },
+          payload: { relativePath, operation, additions: file.additions ?? 0, deletions: file.deletions ?? 0 }
+        });
+      }
     } else if (input.tool === "webfetch" && typeof args.url === "string") {
       await this.publish(context, {
         eventType: "RESOURCE_ACCESSED", providerEventId: `${input.callID}:resource`, evidence: "OBSERVED",

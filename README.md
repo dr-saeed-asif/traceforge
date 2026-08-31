@@ -111,6 +111,15 @@ Validate the complete pipeline without a paid model request:
 node scripts/smoke-opencode-capture.mjs
 ```
 
+Start the central PostgreSQL-backed ingestion API after configuring `.traceforge/operational/runtime.env`:
+
+```powershell
+docker compose -f infrastructure/docker/compose.yml up -d
+npm run api:start
+```
+
+The server applies pending migrations, starts the redacting and hash-chaining collector, and listens on `TRACEFORGE_HOST:TRACEFORGE_PORT` (defaults `127.0.0.1:8080`). `GET /healthz` is unauthenticated; all `/api/v1/*` routes require the configured bearer token. Independent projects load `packages/adapter-opencode/dist/operational-plugin.js` from their project-local `opencode.json` and send events to this API.
+
 The hosted dashboard continues to show its clearly labeled demo data when no live run/API binding is supplied. With the private API binding configured, open it using `?runId=<captured-run-id>` to render that run from PostgreSQL.
 
 ### PostgreSQL development
