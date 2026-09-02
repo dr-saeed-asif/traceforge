@@ -16,7 +16,7 @@ export const DEFAULT_REDACTION_RULES: readonly RedactionRule[] = [
   { name: "credential-field", pattern: /((?:password|passwd|pwd|api[_-]?key|access[_-]?token|refresh[_-]?token|token|secret)\s*[:=]\s*)["']?[^\s,"';]+["']?/giu, replacement: "$1[REDACTED]" },
   { name: "openai-key", pattern: /\bsk-[A-Za-z0-9_-]{16,}\b/gu },
   { name: "github-token", pattern: /\bgh[opsu]_[A-Za-z0-9]{20,}\b/gu },
-  { name: "database-url", pattern: /\b(?:postgres(?:ql)?|mysql|mongodb(?:\+srv)?):\/\/[^\s]+/giu }
+  { name: "database-url", pattern: /\b(?:mysql|mongodb(?:\+srv)?):\/\/[^\s]+/giu }
 ];
 
 export class RedactionPolicy {

@@ -15,7 +15,7 @@ describe("domain dependency boundary", () => {
     const source = join(dirname(fileURLToPath(import.meta.url)), "../src");
     const forbidden = [
       "openai", "anthropic", "ollama", "deepseek", "opencode",
-      "postgres", "fastify", "express", "react", "node:"
+      "mysql", "fastify", "express", "react", "node:"
     ];
     const imports = sourceFiles(source)
       .flatMap((file) => readFileSync(file, "utf8").match(/from\s+["'][^"']+["']/gu) ?? [])

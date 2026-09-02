@@ -53,6 +53,9 @@
       outline: none;
       border-color: #007bff;
     }
+    input.invalid {
+      border-color: #dc3545;
+    }
     button {
       width: 100%;
       padding: 12px;
@@ -81,16 +84,16 @@
 <body>
   <div class="login-container">
     <h2>Login</h2>
-    <form id="loginForm">
+    <form id="loginForm" novalidate>
       <div class="form-group">
         <label for="email">Email</label>
-        <input type="email" id="email" name="email" required autocomplete="email">
-        <div class="error" id="emailError">Please enter a valid email</div>
+        <input type="email" id="email" name="email" required autocomplete="email" aria-describedby="emailError" aria-invalid="false">
+        <div class="error" id="emailError" role="alert"></div>
       </div>
       <div class="form-group">
         <label for="password">Password</label>
-        <input type="password" id="password" name="password" required autocomplete="current-password">
-        <div class="error" id="passwordError">Password is required</div>
+        <input type="password" id="password" name="password" required autocomplete="current-password" aria-describedby="passwordError" aria-invalid="false">
+        <div class="error" id="passwordError" role="alert"></div>
       </div>
       <button type="submit">Login</button>
     </form>
@@ -103,45 +106,68 @@
     const emailError = document.getElementById('emailError');
     const passwordError = document.getElementById('passwordError');
 
-    function validateEmail(email) {
-      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    function validateEmail(value) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
     }
 
-    function showError(input, errorEl) {
-      input.style.borderColor = '#dc3545';
-      errorEl.classList.add('show');
+    function setError(input, errorEl, message) {
+      const hasError = Boolean(message);
+      input.classList.toggle('invalid', hasError);
+      input.setAttribute('aria-invalid', String(hasError));
+      errorEl.textContent = message;
+      errorEl.classList.toggle('show', hasError);
     }
 
-    function hideError(input, errorEl) {
-      input.style.borderColor = '#ddd';
-      errorEl.classList.remove('show');
+    function validateEmailField() {
+      const value = emailInput.value.trim();
+
+      if (!value) {
+        setError(emailInput, emailError, 'Email is required');
+        return false;
+      }
+
+      if (!validateEmail(value)) {
+        setError(emailInput, emailError, 'Please enter a valid email');
+        return false;
+      }
+
+      setError(emailInput, emailError, '');
+      return true;
+    }
+
+    function validatePasswordField() {
+      const value = passwordInput.value;
+
+      if (!value) {
+        setError(passwordInput, passwordError, 'Password is required');
+        return false;
+      }
+
+      setError(passwordInput, passwordError, '');
+      return true;
     }
 
     emailInput.addEventListener('input', () => {
-      if (validateEmail(emailInput.value)) {
-        hideError(emailInput, emailError);
+      if (emailInput.classList.contains('invalid')) {
+        validateEmailField();
       }
     });
 
     passwordInput.addEventListener('input', () => {
-      if (passwordInput.value.length > 0) {
-        hideError(passwordInput, passwordError);
+      if (passwordInput.classList.contains('invalid')) {
+        validatePasswordField();
       }
     });
 
+    emailInput.addEventListener('blur', validateEmailField);
+    passwordInput.addEventListener('blur', validatePasswordField);
+
     form.addEventListener('submit', (e) => {
       e.preventDefault();
-      let valid = true;
-
-      if (!validateEmail(emailInput.value)) {
-        showError(emailInput, emailError);
-        valid = false;
-      }
-
-      if (passwordInput.value.length === 0) {
-        showError(passwordInput, passwordError);
-        valid = false;
-      }
+      emailInput.value = emailInput.value.trim();
+      const emailValid = validateEmailField();
+      const passwordValid = validatePasswordField();
+      const valid = emailValid && passwordValid;
 
       if (valid) {
         alert('Login successful!');

@@ -8,7 +8,7 @@ const migrationDirectory=resolve(repositoryRoot,"infrastructure/migrations");
 const migration=readdirSync(migrationDirectory).filter(name=>name.endsWith(".sql")).sort().map(name=>readFileSync(resolve(migrationDirectory,name),"utf8")).join("\n");
 const permissions = readFileSync(resolve(repositoryRoot, "infrastructure/database/runtime-permissions.sql"), "utf8");
 
-describe("PostgreSQL migration contract", () => {
+describe("MySQL migration contract", () => {
   it("defines the normalized MVP tables", () => {
     const expected = [
       "projects", "tasks", "sessions", "agents", "agent_runs", "model_invocations", "prompts",
@@ -22,7 +22,7 @@ describe("PostgreSQL migration contract", () => {
 
   it("enforces run sequence and idempotency uniqueness", () => {
     expect(migration).toContain("UNIQUE (run_id, sequence)");
-    expect(migration).toMatch(/idempotency_key text PRIMARY KEY/u);
+    expect(migration).toMatch(/idempotency_key VARCHAR\(255\) PRIMARY KEY/u);
     expect(migration).toContain("CHECK ((sequence = 1 AND previous_event_hash IS NULL)");
   });
 
@@ -32,12 +32,12 @@ describe("PostgreSQL migration contract", () => {
   });
 
   it("forbids plaintext data keys in encrypted blob metadata", () => {
-    expect(migration).toContain("NOT (encryption_metadata ? 'plaintextKey')");
-    expect(migration).toContain("encryption_metadata ? 'encryptedDataKey'");
+    expect(migration).toContain("NOT JSON_CONTAINS_PATH(encryption_metadata, 'one', '$.plaintextKey')");
+    expect(migration).toContain("JSON_CONTAINS_PATH(encryption_metadata, 'one', '$.encryptedDataKey')");
   });
 
   it("does not grant event mutation to the runtime role", () => {
-    expect(permissions).toContain("REVOKE UPDATE, DELETE, TRUNCATE ON provenance_events");
+    expect(permissions).toContain("GRANT SELECT, INSERT ON traceforge.* TO 'traceforge_runtime'@'%';");
     expect(permissions).not.toMatch(/GRANT\s+UPDATE[^;]+provenance_events/iu);
   });
 });

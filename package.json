@@ -9,7 +9,7 @@
     "typecheck": "tsc -b --pretty false",
     "test": "vitest run",
     "test:watch": "vitest",
-    "db:migrate": "npm run build && node packages/database/dist/migrate-cli.js",
+    "db:migrate": "npm run build && node --env-file=.env packages/database/dist/migrate-cli.js",
     "api:start": "npm run build && node packages/server/dist/main.js",
     "clean": "node scripts/clean-generated.mjs"
   },

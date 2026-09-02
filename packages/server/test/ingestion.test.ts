@@ -16,7 +16,7 @@ function event(eventType = "PROMPT_SUBMITTED") {
 }
 
 describe("central ingestion", () => {
-  it("creates contexts through the PostgreSQL registry boundary", async () => {
+  it("creates contexts through the MySQL registry boundary", async () => {
     const ensure = vi.fn(async () => context);
     const ingestion = new CentralTraceForgeIngestion({ ensure }, { collect: vi.fn() } as never, { markCompleted: vi.fn(), markFailed: vi.fn() });
     await expect(ingestion.ensureContext({ adapter: "opencode", externalSessionId: "external", repository: "repo", workspace: "workspace", developer: "developer" })).resolves.toEqual(context);

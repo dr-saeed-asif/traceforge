@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { readFile, readdir } from "node:fs/promises";
 import { join } from "node:path";
-import type { Pool } from "pg";
+import type { Pool, PoolConnection, RowDataPacket } from "mysql2/promise";
 
 export interface MigrationResult {
   readonly applied: readonly string[];
@@ -9,47 +9,46 @@ export interface MigrationResult {
 }
 
 export async function runMigrations(pool: Pool, directory: string): Promise<MigrationResult> {
-  const client = await pool.connect();
+  const connection = await pool.getConnection();
   const applied: string[] = [];
   const alreadyApplied: string[] = [];
   try {
-    await client.query("SELECT pg_advisory_lock(hashtext('traceforge_schema_migrations'))");
-    await client.query(`CREATE TABLE IF NOT EXISTS schema_migrations (
-      migration_name text PRIMARY KEY,
-      checksum char(64) NOT NULL,
-      applied_at timestamptz NOT NULL DEFAULT now()
-    )`);
+    await acquireLock(connection);
+    await connection.query(`CREATE TABLE IF NOT EXISTS schema_migrations (
+      migration_name VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci PRIMARY KEY,
+      checksum CHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+      applied_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6)
+    ) ENGINE=InnoDB`);
     const names = (await readdir(directory)).filter((name) => /^\d+_[a-z0-9_]+\.sql$/u.test(name)).sort();
     for (const name of names) {
       const sql = await readFile(join(directory, name), "utf8");
       const checksum = createHash("sha256").update(sql).digest("hex");
-      const existing = await client.query<{ checksum: string }>(
-        "SELECT checksum FROM schema_migrations WHERE migration_name = $1",
+      const [existing] = await connection.query<(RowDataPacket & { checksum: string })[]>(
+        "SELECT checksum FROM schema_migrations WHERE migration_name = ?",
         [name]
       );
-      const row = existing.rows[0];
+      const row = existing[0];
       if (row !== undefined) {
         if (row.checksum !== checksum) throw new Error(`Applied migration ${name} has been modified`);
         alreadyApplied.push(name);
         continue;
       }
-      await client.query("BEGIN");
-      try {
-        await client.query(sql);
-        await client.query(
-          "INSERT INTO schema_migrations (migration_name, checksum) VALUES ($1, $2)",
-          [name, checksum]
-        );
-        await client.query("COMMIT");
-        applied.push(name);
-      } catch (error) {
-        await client.query("ROLLBACK");
-        throw error;
-      }
+      // MySQL DDL implicitly commits, so the migration and its ledger row are separate operations.
+      await connection.query(sql);
+      await connection.query(
+        "INSERT INTO schema_migrations (migration_name, checksum) VALUES (?, ?)",
+        [name, checksum]
+      );
+      applied.push(name);
     }
     return { applied, alreadyApplied };
   } finally {
-    try { await client.query("SELECT pg_advisory_unlock(hashtext('traceforge_schema_migrations'))"); }
-    finally { client.release(); }
+    try { await connection.query("SELECT RELEASE_LOCK(?)", ["traceforge_schema_migrations"]); }
+    finally { connection.release(); }
   }
+}
+
+async function acquireLock(connection: PoolConnection): Promise<void> {
+  const [rows] = await connection.query<RowDataPacket[]>("SELECT GET_LOCK(?, 30) AS acquired", ["traceforge_schema_migrations"]);
+  if (Number(rows[0]?.acquired) !== 1) throw new Error("Could not acquire the schema migration lock");
 }

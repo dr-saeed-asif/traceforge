@@ -3,7 +3,7 @@ import { loadCentralServerConfig } from "../src/config.js";
 
 function environment(): NodeJS.ProcessEnv {
   return {
-    DATABASE_URL: "postgresql://example.test/traceforge",
+    DATABASE_URL: "mysql://example.test/traceforge",
     TRACEFORGE_API_TOKEN: "0123456789abcdef",
     TRACEFORGE_ARTIFACT_DIR: ".traceforge/artifacts",
     TRACEFORGE_LOCAL_KEY_ID: "local-test-key",

@@ -7,7 +7,7 @@ describe("RedactionPolicy", () => {
       "Authorization: Bearer top-secret-token",
       "password=hunter2",
       "OPENAI_API_KEY=sk-abcdefghijklmnopqrstuv",
-      "postgres://admin:secret@localhost/prod"
+      "mysql://admin:secret@localhost/prod"
     ].join("\n");
 
     const result = new RedactionPolicy().redact(input);
