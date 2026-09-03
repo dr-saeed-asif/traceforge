@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "workspaces": ["packages/adapter-opencode"],
+  "workspaces": [
+    "packages/adapter-opencode"
+  ],
   "scripts": {
     "build": "tsc -p tsconfig.json && tsc -p packages/adapter-opencode/tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p packages/adapter-opencode/tsconfig.json --noEmit",
@@ -12,7 +14,9 @@
     "api:start": "npm run build && node --env-file-if-exists=.env dist/server.js",
     "api:up": "npm run db:migrate && npm run api:start"
   },
-  "engines": { "node": ">=22" },
+  "engines": {
+    "node": ">=22"
+  },
   "dependencies": {
     "mysql2": "^3.14.4"
   },
