@@ -1,22 +1,23 @@
 {
-  "name": "traceforge",
-  "version": "0.1.0",
+  "name": "traceforge-prompt-capture",
+  "version": "1.0.0",
   "private": true,
   "type": "module",
-  "workspaces": ["packages/*"],
+  "workspaces": ["packages/adapter-opencode"],
   "scripts": {
-    "build": "tsc -b",
-    "typecheck": "tsc -b --pretty false",
+    "build": "tsc -p tsconfig.json && tsc -p packages/adapter-opencode/tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p packages/adapter-opencode/tsconfig.json --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest",
-    "db:migrate": "npm run build && node packages/database/dist/migrate-cli.js",
-    "api:start": "npm run build && node packages/server/dist/main.js",
-    "clean": "node scripts/clean-generated.mjs"
+    "db:migrate": "npm run build && node --env-file-if-exists=.env dist/migrate.js",
+    "api:start": "npm run build && node --env-file-if-exists=.env dist/server.js",
+    "api:up": "npm run db:migrate && npm run api:start"
   },
-  "engines": {
-    "node": ">=22"
+  "engines": { "node": ">=22" },
+  "dependencies": {
+    "mysql2": "^3.14.4"
   },
   "devDependencies": {
+    "@opencode-ai/plugin": "1.18.21",
     "@types/node": "^24.0.0",
     "typescript": "^5.9.2",
     "vitest": "^3.2.4"

@@ -1,21 +1,17 @@
 {
-  "files": [],
-  "references": [
-    { "path": "./packages/domain" },
-    { "path": "./packages/crypto" },
-    { "path": "./packages/provenance" },
-    { "path": "./packages/application" },
-    { "path": "./packages/collector" },
-    { "path": "./packages/database" },
-    { "path": "./packages/sdk" },
-    { "path": "./packages/git" },
-    { "path": "./packages/anchor" },
-    { "path": "./packages/adapter-contracts" },
-    { "path": "./packages/adapter-opencode" },
-    { "path": "./packages/adapter-ollama" },
-    { "path": "./packages/adapter-model-gateways" },
-    { "path": "./packages/api" },
-    { "path": "./packages/server" },
-    { "path": "./packages/evaluation" }
-  ]
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "lib": ["ES2022"],
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "noEmitOnError": true,
+    "rootDir": "src",
+    "outDir": "dist",
+    "sourceMap": true,
+    "skipLibCheck": true
+  },
+  "include": ["src/**/*.ts"]
 }

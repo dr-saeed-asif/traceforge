@@ -1,18 +1,13 @@
 # OpenCode Activity Captures
 
-This root-level folder is maintained by the active TraceForge integration in `opencode-works`.
+Completed prompts are written here.
 
-Every captured OpenCode prompt receives its own subfolder:
+Each prompt gets its own folder with:
 
-```text
-<run-id>--<prompt-sequence>--<prompt-slug>/
-├── README.md
-├── prompt.json
-├── summary.json
-├── events/
-│   └── <sequence>--<event-type>--<event-id>.json
-└── worked-files/
-    └── <sequence>--<filename>.json
-```
+- `README.md`
+- `summary.json`
+- `prompt.json`
+- `resources.json`
+- `events/*.json`
 
-The root `index.json` lists all captured prompt folders. Runtime evidence is excluded from Git because it may contain sensitive engineering activity.
+The root `index.json` lists the latest captured prompt folders.

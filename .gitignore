@@ -1,12 +1,7 @@
 node_modules/
 dist/
-.vinext/
-.next/
-.wrangler/
-coverage/
-*.tsbuildinfo
 .env
 .traceforge/
-*.log
 opencode-activity-captures/*
 !opencode-activity-captures/README.md
+package-lock.json
