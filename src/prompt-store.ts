@@ -84,8 +84,11 @@ export class PromptStore {
     prompt.events.push({ sequence: nextSequence, eventType: event.eventType, payload });
     if (event.eventType === "AGENT_STARTED") prompt.agentName = text(payload.agentName ?? payload.agent ?? event.actor?.name);
     if (event.eventType === "MODEL_REQUEST") prompt.modelName = text(payload.model ?? event.actor?.name);
-    if (event.eventType === "MODEL_RESPONSE" && typeof payload.responseText === "string") prompt.resultParts.push(payload.responseText);
-    if (event.eventType === "RESOURCE_ACCESSED") prompt.resources.push(payload);
+    if (event.eventType === "MODEL_RESPONSE" && typeof payload.responseText === "string") {
+      prompt.resultParts.push(payload.responseText);
+      for (const resource of referencedWebpages(payload.responseText)) addResource(prompt, resource);
+    }
+    if (event.eventType === "RESOURCE_ACCESSED") addResource(prompt, payload);
     if (terminalEvents.has(event.eventType)) await this.finalize(event.runId);
   }
 
@@ -206,4 +209,53 @@ function sha256(input: string): string {
 function slug(value: string): string {
   const normalized = value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
   return normalized.slice(0, 80) || "prompt";
+}
+
+function addResource(prompt: ActivePrompt, resource: Readonly<Record<string, unknown>>): void {
+  const url = normalizedWebUrl(resource.url);
+  if (url !== undefined) {
+    const existingIndex = prompt.resources.findIndex((value) => isSameWebResource(value, url));
+    if (existingIndex !== -1) {
+      const existing = prompt.resources[existingIndex];
+      if (isRecord(existing) && existing.accessType === "referenced" && resource.accessType !== "referenced") {
+        prompt.resources[existingIndex] = resource;
+      }
+      return;
+    }
+  }
+  if (!prompt.resources.some((value) => JSON.stringify(value) === JSON.stringify(resource))) prompt.resources.push(resource);
+}
+
+function referencedWebpages(text: string): Readonly<Record<string, unknown>>[] {
+  const matches = text.match(/(?:https?:\/\/|www\.)[^\s<>()]+|\b(?:[a-z0-9-]+\.)+(?:com|org|net|dev|edu|gov|info|tech|app|xyz|ai|io|me|pk|tv|co|uk)(?=\/|\b)(?:\/[^\s<>()]*)?/giu) ?? [];
+  const resources: Readonly<Record<string, unknown>>[] = [];
+  const seen = new Set<string>();
+  for (const match of matches) {
+    const url = normalizedWebUrl(match.replace(/[\]}`'".,;:!?]+$/gu, ""));
+    if (url === undefined || seen.has(url)) continue;
+    seen.add(url);
+    resources.push({ resourceType: "webpage", accessType: "referenced", source: "model-response", url });
+  }
+  return resources;
+}
+
+function normalizedWebUrl(value: unknown): string | undefined {
+  if (typeof value !== "string" || value.trim() === "") return undefined;
+  const candidate = /^https?:\/\//iu.test(value) ? value : `https://${value}`;
+  try {
+    const url = new URL(candidate);
+    if (url.protocol !== "http:" && url.protocol !== "https:") return undefined;
+    url.hostname = url.hostname.toLowerCase();
+    return url.href;
+  } catch {
+    return undefined;
+  }
+}
+
+function isSameWebResource(value: unknown, url: string): boolean {
+  return isRecord(value) && normalizedWebUrl(value.url) === url;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
 }

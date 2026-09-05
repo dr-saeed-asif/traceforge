@@ -1,5 +1,5 @@
 import { existsSync, readFileSync } from "node:fs";
-import { dirname, resolve } from "node:path";
+import { dirname, isAbsolute, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { Plugin } from "@opencode-ai/plugin";
 
@@ -12,6 +12,7 @@ export const TraceForgePlugin:Plugin=async(input)=>{
   const settings=loadSettings();
   const apiUrl=settings.TRACEFORGE_API_URL??"http://127.0.0.1:8080";
   const token=settings.TRACEFORGE_API_TOKEN;
+  const workspace=input.worktree||input.directory;
   if(!token){console.warn("[TraceForge] TRACEFORGE_API_TOKEN is unavailable; capture disabled");return{};}
   const contexts=new Map<string,Promise<Context>>();
   const contextFor=(sessionId:string)=>{
@@ -45,11 +46,83 @@ export const TraceForgePlugin:Plugin=async(input)=>{
       }
     },
     "tool.execute.after":async(inputValue)=>{
-      const value=inputValue as unknown as {tool:string;sessionID:string;args?:Record<string,unknown>};
-      if(value.tool==="webfetch"&&typeof value.args?.url==="string")await capture(value.sessionID,"RESOURCE_ACCESSED",{resourceType:"webpage",url:value.args.url});
+      const value=inputValue as unknown as {tool:string;sessionID:string;args?:unknown};
+      for(const resource of resourcesForTool(value.tool,value.args,workspace))await capture(value.sessionID,"RESOURCE_ACCESSED",resource);
     }
   };
 };
+
+function resourcesForTool(tool:string,args:unknown,workspace:string):Record<string,unknown>[] {
+  if(!isRecord(args))return[];
+  const normalizedTool=tool.toLowerCase().replace(/[^a-z0-9]/gu,"");
+
+  if(normalizedTool==="webfetch"){
+    const url=firstString(args,["url"]);
+    return url?[{resourceType:"webpage",accessType:"read",tool,url}]:[];
+  }
+  if(normalizedTool==="websearch"){
+    const query=firstString(args,["query"]);
+    return query?[{resourceType:"web-search",accessType:"search",tool,query}]:[];
+  }
+  if(normalizedTool==="skill"){
+    const name=firstString(args,["name","skill"]);
+    return name?[{resourceType:"skill",accessType:"read",tool,name}]:[];
+  }
+
+  const directFileAccess:Record<string,"read"|"write">={
+    read:"read",readfile:"read",view:"read",viewfile:"read",viewimage:"read",
+    write:"write",writefile:"write",edit:"write",editfile:"write",multiedit:"write"
+  };
+  const accessType=directFileAccess[normalizedTool];
+  if(accessType){
+    const path=firstString(args,["filePath","filepath","path"]);
+    return path?[{resourceType:"file",accessType,tool,path:workspacePath(path,workspace)}]:[];
+  }
+
+  if(normalizedTool==="applypatch"||normalizedTool==="patch"){
+    const patch=firstString(args,["patchText","patch","input"]);
+    return patchPaths(patch).map(path=>({resourceType:"file",accessType:"write",tool,path:workspacePath(path,workspace)}));
+  }
+
+  if(normalizedTool==="grep"||normalizedTool==="glob"||normalizedTool==="list"||normalizedTool==="listfiles"){
+    const path=firstString(args,["path","directory"])??".";
+    const pattern=firstString(args,["pattern","query","include"]);
+    return [{resourceType:"directory",accessType:"search",tool,path:workspacePath(path,workspace),...(pattern?{pattern}:{})}];
+  }
+
+  return[];
+}
+
+function isRecord(value:unknown):value is Record<string,unknown>{
+  return value!==null&&typeof value==="object"&&!Array.isArray(value);
+}
+
+function firstString(value:Record<string,unknown>,keys:readonly string[]):string|undefined{
+  for(const key of keys){
+    const candidate=value[key];
+    if(typeof candidate==="string"&&candidate.trim()!=="")return candidate.trim();
+  }
+  return undefined;
+}
+
+function workspacePath(path:string,workspace:string):string{
+  const absolute=resolve(workspace,path);
+  const local=relative(workspace,absolute);
+  const selected=local!==""&&!local.startsWith("..")&&!isAbsolute(local)?local:absolute;
+  return selected.replace(/\\/gu,"/")||".";
+}
+
+function patchPaths(patch:string|undefined):string[]{
+  if(!patch)return[];
+  const paths=new Set<string>();
+  for(const line of patch.split(/\r?\n/gu)){
+    const marker=/^\*\*\* (?:Add|Update|Delete) File: (.+)$/u.exec(line);
+    const unified=/^(?:\+\+\+|---) (?:a\/|b\/)?(.+)$/u.exec(line);
+    const path=(marker?.[1]??unified?.[1])?.trim();
+    if(path&&path!=="/dev/null")paths.add(path);
+  }
+  return[...paths];
+}
 
 function sessionIdOf(properties:Record<string,unknown>):string|null{
   if(typeof properties.sessionID==="string")return properties.sessionID;

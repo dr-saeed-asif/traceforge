@@ -42,4 +42,45 @@ describe("PromptStore", () => {
     expect(index[0]?.folder).toBe(captureFolder);
     expect(eventFiles).toHaveLength(4);
   });
+
+  it("projects response links as referenced resources without claiming they were fetched", async () => {
+    const execute = vi.fn(async () => [[], []] as const);
+    const dir = await mkdtemp(join(tmpdir(), "traceforge-captures-"));
+    cleanup.push(dir);
+    const store = new PromptStore({ execute } as never, dir);
+
+    await store.ingest({ runId: "run-links", eventType: "PROMPT_SUBMITTED", payload: { content: "Recommend tutorials", agent: "OpenCode", model: "gpt-4" } });
+    await store.ingest({ runId: "run-links", eventType: "MODEL_RESPONSE", payload: { responseText: "Use https://docs.python.org/3/tutorial/, realpython.com, and react.dev." } });
+    await store.ingest({ runId: "run-links", eventType: "AGENT_COMPLETED", payload: { status: "COMPLETED" } });
+
+    const resources = [
+      { resourceType: "webpage", accessType: "referenced", source: "model-response", url: "https://docs.python.org/3/tutorial/" },
+      { resourceType: "webpage", accessType: "referenced", source: "model-response", url: "https://realpython.com/" },
+      { resourceType: "webpage", accessType: "referenced", source: "model-response", url: "https://react.dev/" }
+    ];
+    expect(execute).toHaveBeenCalledWith(expect.stringContaining("INSERT INTO prompt_results"), [
+      "Recommend tutorials", "OpenCode", "gpt-4", "Use https://docs.python.org/3/tutorial/, realpython.com, and react.dev.", JSON.stringify(resources)
+    ]);
+
+    const captureFolder = (await readdir(dir)).find((value) => value !== "index.json");
+    const stored = JSON.parse(await readFile(join(dir, captureFolder!, "resources.json"), "utf8") as string) as { resources: unknown[] };
+    expect(stored.resources).toEqual(resources);
+  });
+
+  it("prefers a fetched resource over the same URL referenced in the response", async () => {
+    const execute = vi.fn(async () => [[], []] as const);
+    const dir = await mkdtemp(join(tmpdir(), "traceforge-captures-"));
+    cleanup.push(dir);
+    const store = new PromptStore({ execute } as never, dir);
+
+    const fetched = { resourceType: "webpage", accessType: "read", tool: "webfetch", url: "https://example.test/docs" };
+    await store.ingest({ runId: "run-fetched", eventType: "PROMPT_SUBMITTED", payload: { content: "Read docs", agent: "OpenCode", model: "gpt-4" } });
+    await store.ingest({ runId: "run-fetched", eventType: "RESOURCE_ACCESSED", payload: fetched });
+    await store.ingest({ runId: "run-fetched", eventType: "MODEL_RESPONSE", payload: { responseText: "See https://example.test/docs" } });
+    await store.ingest({ runId: "run-fetched", eventType: "AGENT_COMPLETED", payload: { status: "COMPLETED" } });
+
+    expect(execute).toHaveBeenCalledWith(expect.stringContaining("INSERT INTO prompt_results"), [
+      "Read docs", "OpenCode", "gpt-4", "See https://example.test/docs", JSON.stringify([fetched])
+    ]);
+  });
 });
