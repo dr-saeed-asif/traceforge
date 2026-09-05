@@ -16,6 +16,7 @@ export interface PromptResult {
   readonly modelName: string;
   readonly result: string;
   readonly resources: readonly unknown[];
+  readonly filePaths: readonly string[];
 }
 
 interface StoredEvent {
@@ -100,11 +101,12 @@ export class PromptStore {
       agentName: prompt.agentName,
       modelName: prompt.modelName,
       result: prompt.resultParts.join("\n") || "NOT_AVAILABLE",
-      resources: prompt.resources
+      resources: prompt.resources,
+      filePaths: filePaths(prompt.resources)
     };
     await this.pool.execute(
-      "INSERT INTO prompt_results (`PromptQuery`,`AgentName`,`ModelName`,`Result`,`Resources`) VALUES (?,?,?,?,?)",
-      [result.promptQuery, result.agentName, result.modelName, result.result, JSON.stringify(result.resources)]
+      "INSERT INTO prompt_results (`PromptQuery`,`AgentName`,`ModelName`,`Result`,`Resources`,`FilePaths`) VALUES (?,?,?,?,?,?)",
+      [result.promptQuery, result.agentName, result.modelName, result.result, JSON.stringify(result.resources), JSON.stringify(result.filePaths)]
     );
     await this.writeCaptureFiles(runId, result, prompt.events);
     this.active.delete(runId);
@@ -133,7 +135,8 @@ export class PromptStore {
       prompt: result.promptQuery,
       agentName: result.agentName,
       modelName: result.modelName,
-      result: result.result
+      result: result.result,
+      filePaths: result.filePaths
     };
     const readme = [
       "# Prompt activity",
@@ -258,4 +261,14 @@ function isSameWebResource(value: unknown, url: string): boolean {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+function filePaths(resources: readonly unknown[]): string[] {
+  const paths = new Set<string>();
+  for (const resource of resources) {
+    if (!isRecord(resource) || (resource.resourceType !== "file" && resource.resourceType !== "directory")) continue;
+    if (typeof resource.path !== "string" || resource.path.trim() === "") continue;
+    paths.add(resource.path.trim().replace(/\\/gu, "/"));
+  }
+  return [...paths];
 }

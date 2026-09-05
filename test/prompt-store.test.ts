@@ -20,11 +20,26 @@ describe("PromptStore", () => {
     await store.ingest({ runId: "run-1", eventType: "PROMPT_SUBMITTED", payload: { content: "Create form", agent: "OpenCode", model: "gpt-4" } });
     await store.ingest({ runId: "run-1", eventType: "MODEL_RESPONSE", payload: { responseText: "Done" } });
     await store.ingest({ runId: "run-1", eventType: "RESOURCE_ACCESSED", payload: { resourceType: "webpage", url: "https://example.test" } });
+    await store.ingest({ runId: "run-1", eventType: "RESOURCE_ACCESSED", payload: { resourceType: "file", path: "src\\index.ts" } });
+    await store.ingest({ runId: "run-1", eventType: "RESOURCE_ACCESSED", payload: { resourceType: "directory", path: "src/components" } });
+    await store.ingest({ runId: "run-1", eventType: "RESOURCE_ACCESSED", payload: { resourceType: "file", path: "src/index.ts" } });
     await store.ingest({ runId: "run-1", eventType: "AGENT_COMPLETED", payload: { status: "COMPLETED" } });
 
     expect(execute).toHaveBeenCalledWith(
       expect.stringContaining("INSERT INTO prompt_results"),
-      ["Create form", "OpenCode", "gpt-4", "Done", JSON.stringify([{ resourceType: "webpage", url: "https://example.test" }])]
+      [
+        "Create form",
+        "OpenCode",
+        "gpt-4",
+        "Done",
+        JSON.stringify([
+          { resourceType: "webpage", url: "https://example.test" },
+          { resourceType: "file", path: "src\\index.ts" },
+          { resourceType: "directory", path: "src/components" },
+          { resourceType: "file", path: "src/index.ts" }
+        ]),
+        JSON.stringify(["src/index.ts", "src/components"])
+      ]
     );
 
     const entries = await readdir(dir);
@@ -33,14 +48,16 @@ describe("PromptStore", () => {
     expect(captureFolder).toBeDefined();
 
     const summary = JSON.parse(await readFile(join(dir, captureFolder!, "summary.json"), "utf8")) as { eventCount: number };
+    const prompt = JSON.parse(await readFile(join(dir, captureFolder!, "prompt.json"), "utf8")) as { filePaths: string[] };
     const resources = JSON.parse(await readFile(join(dir, captureFolder!, "resources.json"), "utf8")) as { resources: unknown[] };
     const index = JSON.parse(await readFile(join(dir, "index.json"), "utf8")) as Array<{ folder: string }>;
     const eventFiles = await readdir(join(dir, captureFolder!, "events"));
 
-    expect(summary.eventCount).toBe(4);
-    expect(resources.resources).toEqual([{ resourceType: "webpage", url: "https://example.test" }]);
+    expect(summary.eventCount).toBe(7);
+    expect(resources.resources).toHaveLength(4);
+    expect(prompt.filePaths).toEqual(["src/index.ts", "src/components"]);
     expect(index[0]?.folder).toBe(captureFolder);
-    expect(eventFiles).toHaveLength(4);
+    expect(eventFiles).toHaveLength(7);
   });
 
   it("projects response links as referenced resources without claiming they were fetched", async () => {
@@ -59,7 +76,7 @@ describe("PromptStore", () => {
       { resourceType: "webpage", accessType: "referenced", source: "model-response", url: "https://react.dev/" }
     ];
     expect(execute).toHaveBeenCalledWith(expect.stringContaining("INSERT INTO prompt_results"), [
-      "Recommend tutorials", "OpenCode", "gpt-4", "Use https://docs.python.org/3/tutorial/, realpython.com, and react.dev.", JSON.stringify(resources)
+      "Recommend tutorials", "OpenCode", "gpt-4", "Use https://docs.python.org/3/tutorial/, realpython.com, and react.dev.", JSON.stringify(resources), "[]"
     ]);
 
     const captureFolder = (await readdir(dir)).find((value) => value !== "index.json");
@@ -80,7 +97,7 @@ describe("PromptStore", () => {
     await store.ingest({ runId: "run-fetched", eventType: "AGENT_COMPLETED", payload: { status: "COMPLETED" } });
 
     expect(execute).toHaveBeenCalledWith(expect.stringContaining("INSERT INTO prompt_results"), [
-      "Read docs", "OpenCode", "gpt-4", "See https://example.test/docs", JSON.stringify([fetched])
+      "Read docs", "OpenCode", "gpt-4", "See https://example.test/docs", JSON.stringify([fetched]), "[]"
     ]);
   });
 });

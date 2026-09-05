@@ -10,7 +10,7 @@ Ye do jagah output save karta hai:
 <<<<<<< HEAD
 ## Stored Fields
 
-Har completed prompt ke liye ye 5 fields save hoti hain:
+Har completed prompt ke liye ye 6 fields save hoti hain:
 =======
 - provider-independent domain entities and normalized event envelope;
 - deterministic canonical JSON and SHA-256 event chaining;
@@ -70,6 +70,7 @@ OpenCode, Ollama, OpenAI, Anthropic, and DeepSeek adapters, the REST API boundar
 - `ModelName`
 - `Result`
 - `Resources`
+- `FilePaths`
 
 ## Project Structure
 
@@ -157,7 +158,8 @@ prompt_results(
   AgentName,
   ModelName,
   Result,
-  Resources
+  Resources,
+  FilePaths
 )
 ```
 
@@ -229,7 +231,7 @@ When a prompt is sent:
 ## MySQL Query
 
 ```sql
-SELECT PromptQuery, AgentName, ModelName, Result, Resources
+SELECT PromptQuery, AgentName, ModelName, Result, Resources, FilePaths
 FROM traceforge.prompt_results;
 ```
 
