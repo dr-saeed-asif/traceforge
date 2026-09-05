@@ -31,7 +31,8 @@ export const TraceForgePlugin:Plugin=async(input)=>{
       const output=outputValue as unknown as {message:{id:string;agent?:string;model:Model};parts:readonly TextPart[]};
       const model=input.model??output.message.model,agent=input.agent??output.message.agent??"OpenCode";
       const content=output.parts.filter(part=>part.type==="text").map(part=>part.text??"").join("\n");
-      await capture(input.sessionID,"PROMPT_SUBMITTED",{content,agent,model:model.modelID});
+      const gitUser=await getGitIdentity((inputValue as any).directory||(inputValue as any).worktree);
+      await capture(input.sessionID,"PROMPT_SUBMITTED",{content,agent,model:model.modelID,gitUser});
       await capture(input.sessionID,"AGENT_STARTED",{agentName:agent},{name:agent});
       await capture(input.sessionID,"MODEL_REQUEST",{model:model.modelID,provider:model.providerID},{name:model.modelID});
     },
@@ -118,6 +119,31 @@ async function generatedCodeFor(resources:readonly Record<string,unknown>[],tool
 function isSensitivePath(path:string):boolean{
   const segments=path.replace(/\\/gu,"/").split("/");
   return segments.some(segment=>segment===".git"||segment==="node_modules"||segment===".env"||segment.startsWith(".env."));
+}
+
+async function getGitIdentity(workspace:string):Promise<string>{
+  const execSync=require("child_process").execSync;
+  let name="NOT_AVAILABLE", email="NOT_AVAILABLE";
+  try{
+    const projectNameRaw=execSync("git config user.name",{cwd:workspace});
+    const projectName=projectNameRaw.toString().trim();
+    const projectEmailRaw=execSync("git config user.email",{cwd:workspace});
+    const projectEmail=projectEmailRaw.toString().trim();
+    if(projectName&&projectName!==""&&projectEmail&&projectEmail!==""){
+      name=projectName; email=projectEmail;
+    }
+  }catch{}
+  if(name==="NOT_AVAILABLE"||email==="NOT_AVAILABLE"){
+    try{
+      const globalNameRaw=execSync("git config --global user.name",{});
+      const globalName=globalNameRaw.toString().trim();
+      const globalEmailRaw=execSync("git config --global user.email",{});
+      const globalEmail=globalEmailRaw.toString().trim();
+      if(globalName&&globalName!=="")name=globalName;
+      if(globalEmail&&globalEmail!=="")email=globalEmail;
+    }catch{}
+  }
+  return name==="NOT_AVAILABLE"||email==="NOT_AVAILABLE"?"NOT_AVAILABLE":`${name} <${email}>`;
 }
 
 function isRecord(value:unknown):value is Record<string,unknown>{

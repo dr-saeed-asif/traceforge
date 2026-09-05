@@ -20,6 +20,7 @@ export interface PromptResult {
   readonly filePaths: readonly string[];
   readonly generatedCode: readonly GeneratedCode[];
   readonly encryptedGeneratedCode: EncryptedGeneratedCode;
+  readonly gitUser: string;
 }
 
 interface GeneratedCode {
@@ -77,6 +78,7 @@ export class PromptStore {
   private async process(event: CaptureEvent): Promise<void> {
     const payload = event.payload ?? {};
     if (event.eventType === "PROMPT_SUBMITTED") {
+      const gitUser = typeof payload.gitUser === "string" && payload.gitUser.trim() !== "" ? payload.gitUser.trim() : "NOT_AVAILABLE";
       await this.finalize(event.runId);
       this.active.set(event.runId, {
         promptQuery: text(payload.content),
@@ -109,6 +111,7 @@ export class PromptStore {
     const prompt = this.active.get(runId);
     if (!prompt) return;
     const generatedCode = [...prompt.generatedCode.values()];
+    const gitUser = prompt.events.length > 0 && prompt.events[0] && typeof prompt.events[0].payload?.gitUser === "string" && prompt.events[0].payload.gitUser.trim() !== "" ? prompt.events[0].payload.gitUser.trim() : "NOT_AVAILABLE";
     const result: PromptResult = {
       promptQuery: prompt.promptQuery,
       agentName: prompt.agentName,
@@ -117,11 +120,12 @@ export class PromptStore {
       resources: prompt.resources,
       filePaths: filePaths(prompt.resources),
       generatedCode,
-      encryptedGeneratedCode: encryptGeneratedCode(generatedCode, this.generatedCodeKey)
+      encryptedGeneratedCode: encryptGeneratedCode(generatedCode, this.generatedCodeKey),
+      gitUser
     };
     await this.pool.execute(
-      "INSERT INTO prompt_results (`PromptQuery`,`AgentName`,`ModelName`,`Result`,`Resources`,`FilePaths`,`GeneratedCode`,`EncryptedGeneratedCode`) VALUES (?,?,?,?,?,?,?,?)",
-      [result.promptQuery, result.agentName, result.modelName, result.result, JSON.stringify(result.resources), JSON.stringify(result.filePaths), JSON.stringify(result.generatedCode), JSON.stringify(result.encryptedGeneratedCode)]
+      "INSERT INTO prompt_results (`PromptQuery`,`AgentName`,`ModelName`,`Result`,`Resources`,`FilePaths`,`GeneratedCode`,`EncryptedGeneratedCode`,`GitUser`) VALUES (?,?,?,?,?,?,?,?,?)",
+      [result.promptQuery, result.agentName, result.modelName, result.result, JSON.stringify(result.resources), JSON.stringify(result.filePaths), JSON.stringify(result.generatedCode), JSON.stringify(result.encryptedGeneratedCode), result.gitUser]
     );
     await this.writeCaptureFiles(runId, result, prompt.events);
     this.active.delete(runId);
@@ -152,7 +156,8 @@ export class PromptStore {
       modelName: result.modelName,
       result: result.result,
       filePaths: result.filePaths,
-      generatedFiles: result.generatedCode.map((entry) => entry.path)
+      generatedFiles: result.generatedCode.map((entry) => entry.path),
+      gitUser: result.gitUser
     };
     const readme = [
       "# Prompt activity",

@@ -27,7 +27,7 @@ describe("PromptStore", () => {
     await store.ingest({ runId: "run-1", eventType: "RESOURCE_ACCESSED", payload: { resourceType: "file", path: "src/index.ts" } });
     await store.ingest({ runId: "run-1", eventType: "AGENT_COMPLETED", payload: { status: "COMPLETED" } });
 
-    expect(execute).toHaveBeenCalledWith(
+expect(execute).toHaveBeenCalledWith(
       expect.stringContaining("INSERT INTO prompt_results"),
       [
         "Create form",
@@ -41,8 +41,9 @@ describe("PromptStore", () => {
           { resourceType: "file", path: "src/index.ts" }
         ]),
         JSON.stringify(["src/index.ts", "src/components"]),
-        "[]",
-        expect.any(String)
+"[]",
+        expect.any(String),
+        "NOT_AVAILABLE"
       ]
     );
 
@@ -80,8 +81,8 @@ describe("PromptStore", () => {
       { path: "src/app.ts", code: "const version = 2;" },
       { path: "src/view.ts", code: "export const view = true;" }
     ];
-    expect(execute).toHaveBeenCalledWith(expect.stringContaining("`GeneratedCode`"), [
-      "Create app", "OpenCode", "gpt-4", "NOT_AVAILABLE", "[]", "[]", JSON.stringify(generatedCode), expect.any(String)
+expect(execute).toHaveBeenCalledWith(expect.stringContaining("`GeneratedCode`"), [
+      "Create app", "OpenCode", "gpt-4", "NOT_AVAILABLE", "[]", "[]", JSON.stringify(generatedCode), expect.any(String), "NOT_AVAILABLE"
     ]);
     const parameters = execute.mock.calls[0]?.[1] as unknown[];
     const encrypted = JSON.parse(String(parameters[7])) as EncryptedGeneratedCode;
@@ -110,8 +111,8 @@ describe("PromptStore", () => {
       { resourceType: "webpage", accessType: "referenced", source: "model-response", url: "https://realpython.com/" },
       { resourceType: "webpage", accessType: "referenced", source: "model-response", url: "https://react.dev/" }
     ];
-    expect(execute).toHaveBeenCalledWith(expect.stringContaining("INSERT INTO prompt_results"), [
-      "Recommend tutorials", "OpenCode", "gpt-4", "Use https://docs.python.org/3/tutorial/, realpython.com, and react.dev.", JSON.stringify(resources), "[]", "[]", expect.any(String)
+expect(execute).toHaveBeenCalledWith(expect.stringContaining("INSERT INTO prompt_results"), [
+      "Recommend tutorials", "OpenCode", "gpt-4", "Use https://docs.python.org/3/tutorial/, realpython.com, and react.dev.", JSON.stringify(resources), "[]", "[]", expect.any(String), "NOT_AVAILABLE"
     ]);
 
     const captureFolder = (await readdir(dir)).find((value) => value !== "index.json");
@@ -131,8 +132,9 @@ describe("PromptStore", () => {
     await store.ingest({ runId: "run-fetched", eventType: "MODEL_RESPONSE", payload: { responseText: "See https://example.test/docs" } });
     await store.ingest({ runId: "run-fetched", eventType: "AGENT_COMPLETED", payload: { status: "COMPLETED" } });
 
-    expect(execute).toHaveBeenCalledWith(expect.stringContaining("INSERT INTO prompt_results"), [
-      "Read docs", "OpenCode", "gpt-4", "See https://example.test/docs", JSON.stringify([fetched]), "[]", "[]", expect.any(String)
-    ]);
+expect(execute).toHaveBeenCalledWith(
+      expect.stringContaining("INSERT INTO prompt_results"),
+      ["Read docs", "OpenCode", "gpt-4", "See https://example.test/docs", JSON.stringify([fetched]), "[]", "[]", expect.any(String), "NOT_AVAILABLE"]
+    );
   });
 });
