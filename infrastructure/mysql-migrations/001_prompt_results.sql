@@ -5,5 +5,6 @@ CREATE TABLE IF NOT EXISTS prompt_results (
   `Result` LONGTEXT NOT NULL,
   `Resources` JSON NOT NULL,
   `FilePaths` JSON NOT NULL,
-  `GeneratedCode` JSON NOT NULL
+  `GeneratedCode` JSON NOT NULL,
+  `EncryptedGeneratedCode` JSON NOT NULL
 ) ENGINE=InnoDB;

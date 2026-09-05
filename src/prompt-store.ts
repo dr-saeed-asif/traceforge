@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import type { Pool } from "mysql2/promise";
+import { encryptGeneratedCode, type EncryptedGeneratedCode } from "./generated-code-crypto.js";
 
 export interface CaptureEvent {
   readonly runId: string;
@@ -18,6 +19,7 @@ export interface PromptResult {
   readonly resources: readonly unknown[];
   readonly filePaths: readonly string[];
   readonly generatedCode: readonly GeneratedCode[];
+  readonly encryptedGeneratedCode: EncryptedGeneratedCode;
 }
 
 interface GeneratedCode {
@@ -57,7 +59,8 @@ export class PromptStore {
 
   public constructor(
     private readonly pool: Pick<Pool, "execute">,
-    captureDir?: string
+    captureDir: string | undefined,
+    private readonly generatedCodeKey: Buffer
   ) {
     this.captureDir = captureDir ?? resolve(".", "opencode-activity-captures");
   }
@@ -105,6 +108,7 @@ export class PromptStore {
   private async finalize(runId: string): Promise<void> {
     const prompt = this.active.get(runId);
     if (!prompt) return;
+    const generatedCode = [...prompt.generatedCode.values()];
     const result: PromptResult = {
       promptQuery: prompt.promptQuery,
       agentName: prompt.agentName,
@@ -112,11 +116,12 @@ export class PromptStore {
       result: prompt.resultParts.join("\n") || "NOT_AVAILABLE",
       resources: prompt.resources,
       filePaths: filePaths(prompt.resources),
-      generatedCode: [...prompt.generatedCode.values()]
+      generatedCode,
+      encryptedGeneratedCode: encryptGeneratedCode(generatedCode, this.generatedCodeKey)
     };
     await this.pool.execute(
-      "INSERT INTO prompt_results (`PromptQuery`,`AgentName`,`ModelName`,`Result`,`Resources`,`FilePaths`,`GeneratedCode`) VALUES (?,?,?,?,?,?,?)",
-      [result.promptQuery, result.agentName, result.modelName, result.result, JSON.stringify(result.resources), JSON.stringify(result.filePaths), JSON.stringify(result.generatedCode)]
+      "INSERT INTO prompt_results (`PromptQuery`,`AgentName`,`ModelName`,`Result`,`Resources`,`FilePaths`,`GeneratedCode`,`EncryptedGeneratedCode`) VALUES (?,?,?,?,?,?,?,?)",
+      [result.promptQuery, result.agentName, result.modelName, result.result, JSON.stringify(result.resources), JSON.stringify(result.filePaths), JSON.stringify(result.generatedCode), JSON.stringify(result.encryptedGeneratedCode)]
     );
     await this.writeCaptureFiles(runId, result, prompt.events);
     this.active.delete(runId);

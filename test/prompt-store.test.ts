@@ -3,8 +3,10 @@ import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { PromptStore } from "../src/prompt-store.js";
+import { decryptGeneratedCode, type EncryptedGeneratedCode } from "../src/generated-code-crypto.js";
 
 const cleanup: string[] = [];
+const generatedCodeKey = Buffer.alloc(32, 7);
 
 afterEach(async () => {
   await Promise.all(cleanup.splice(0).map((path) => rm(path, { recursive: true, force: true })));
@@ -15,7 +17,7 @@ describe("PromptStore", () => {
     const execute = vi.fn(async () => [[], []] as const);
     const dir = await mkdtemp(join(tmpdir(), "traceforge-captures-"));
     cleanup.push(dir);
-    const store = new PromptStore({ execute } as never, dir);
+    const store = new PromptStore({ execute } as never, dir, generatedCodeKey);
 
     await store.ingest({ runId: "run-1", eventType: "PROMPT_SUBMITTED", payload: { content: "Create form", agent: "OpenCode", model: "gpt-4" } });
     await store.ingest({ runId: "run-1", eventType: "MODEL_RESPONSE", payload: { responseText: "Done" } });
@@ -39,7 +41,8 @@ describe("PromptStore", () => {
           { resourceType: "file", path: "src/index.ts" }
         ]),
         JSON.stringify(["src/index.ts", "src/components"]),
-        "[]"
+        "[]",
+        expect.any(String)
       ]
     );
 
@@ -65,7 +68,7 @@ describe("PromptStore", () => {
     const execute = vi.fn(async () => [[], []] as const);
     const dir = await mkdtemp(join(tmpdir(), "traceforge-captures-"));
     cleanup.push(dir);
-    const store = new PromptStore({ execute } as never, dir);
+    const store = new PromptStore({ execute } as never, dir, generatedCodeKey);
 
     await store.ingest({ runId: "run-code", eventType: "PROMPT_SUBMITTED", payload: { content: "Create app", agent: "OpenCode", model: "gpt-4" } });
     await store.ingest({ runId: "run-code", eventType: "GENERATED_CODE_CAPTURED", payload: { path: "src\\app.ts", code: "const version = 1;" } });
@@ -78,8 +81,12 @@ describe("PromptStore", () => {
       { path: "src/view.ts", code: "export const view = true;" }
     ];
     expect(execute).toHaveBeenCalledWith(expect.stringContaining("`GeneratedCode`"), [
-      "Create app", "OpenCode", "gpt-4", "NOT_AVAILABLE", "[]", "[]", JSON.stringify(generatedCode)
+      "Create app", "OpenCode", "gpt-4", "NOT_AVAILABLE", "[]", "[]", JSON.stringify(generatedCode), expect.any(String)
     ]);
+    const parameters = execute.mock.calls[0]?.[1] as unknown[];
+    const encrypted = JSON.parse(String(parameters[7])) as EncryptedGeneratedCode;
+    expect(decryptGeneratedCode(encrypted, generatedCodeKey)).toEqual(generatedCode);
+    expect(encrypted.ciphertext).not.toContain("const version");
 
     const captureFolder = (await readdir(dir)).find((value) => value !== "index.json");
     const stored = JSON.parse(await readFile(join(dir, captureFolder!, "generated-code.json"), "utf8")) as { generatedCode: unknown[] };
@@ -92,7 +99,7 @@ describe("PromptStore", () => {
     const execute = vi.fn(async () => [[], []] as const);
     const dir = await mkdtemp(join(tmpdir(), "traceforge-captures-"));
     cleanup.push(dir);
-    const store = new PromptStore({ execute } as never, dir);
+    const store = new PromptStore({ execute } as never, dir, generatedCodeKey);
 
     await store.ingest({ runId: "run-links", eventType: "PROMPT_SUBMITTED", payload: { content: "Recommend tutorials", agent: "OpenCode", model: "gpt-4" } });
     await store.ingest({ runId: "run-links", eventType: "MODEL_RESPONSE", payload: { responseText: "Use https://docs.python.org/3/tutorial/, realpython.com, and react.dev." } });
@@ -104,7 +111,7 @@ describe("PromptStore", () => {
       { resourceType: "webpage", accessType: "referenced", source: "model-response", url: "https://react.dev/" }
     ];
     expect(execute).toHaveBeenCalledWith(expect.stringContaining("INSERT INTO prompt_results"), [
-      "Recommend tutorials", "OpenCode", "gpt-4", "Use https://docs.python.org/3/tutorial/, realpython.com, and react.dev.", JSON.stringify(resources), "[]", "[]"
+      "Recommend tutorials", "OpenCode", "gpt-4", "Use https://docs.python.org/3/tutorial/, realpython.com, and react.dev.", JSON.stringify(resources), "[]", "[]", expect.any(String)
     ]);
 
     const captureFolder = (await readdir(dir)).find((value) => value !== "index.json");
@@ -116,7 +123,7 @@ describe("PromptStore", () => {
     const execute = vi.fn(async () => [[], []] as const);
     const dir = await mkdtemp(join(tmpdir(), "traceforge-captures-"));
     cleanup.push(dir);
-    const store = new PromptStore({ execute } as never, dir);
+    const store = new PromptStore({ execute } as never, dir, generatedCodeKey);
 
     const fetched = { resourceType: "webpage", accessType: "read", tool: "webfetch", url: "https://example.test/docs" };
     await store.ingest({ runId: "run-fetched", eventType: "PROMPT_SUBMITTED", payload: { content: "Read docs", agent: "OpenCode", model: "gpt-4" } });
@@ -125,7 +132,7 @@ describe("PromptStore", () => {
     await store.ingest({ runId: "run-fetched", eventType: "AGENT_COMPLETED", payload: { status: "COMPLETED" } });
 
     expect(execute).toHaveBeenCalledWith(expect.stringContaining("INSERT INTO prompt_results"), [
-      "Read docs", "OpenCode", "gpt-4", "See https://example.test/docs", JSON.stringify([fetched]), "[]", "[]"
+      "Read docs", "OpenCode", "gpt-4", "See https://example.test/docs", JSON.stringify([fetched]), "[]", "[]", expect.any(String)
     ]);
   });
 });

@@ -12,7 +12,9 @@
     "test": "vitest run",
     "db:migrate": "npm run build && node --env-file-if-exists=.env dist/migrate.js",
     "api:start": "npm run build && node --env-file-if-exists=.env dist/server.js",
-    "api:up": "npm run db:migrate && npm run api:start"
+    "api:up": "npm run db:migrate && npm run api:start",
+    "key:generate": "npm run build && node dist/generate-encryption-key.js",
+    "code:decrypt": "node --env-file-if-exists=.env dist/decrypt-generated-code.js"
   },
   "engines": {
     "node": ">=22"

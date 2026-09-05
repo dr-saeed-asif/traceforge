@@ -10,7 +10,7 @@ Ye do jagah output save karta hai:
 <<<<<<< HEAD
 ## Stored Fields
 
-Har completed prompt ke liye ye 7 fields save hoti hain:
+Har completed prompt ke liye ye 8 fields save hoti hain:
 =======
 - provider-independent domain entities and normalized event envelope;
 - deterministic canonical JSON and SHA-256 event chaining;
@@ -72,6 +72,7 @@ OpenCode, Ollama, OpenAI, Anthropic, and DeepSeek adapters, the REST API boundar
 - `Resources`
 - `FilePaths`
 - `GeneratedCode`
+- `EncryptedGeneratedCode`
 
 ## Project Structure
 
@@ -113,6 +114,7 @@ TRACEFORGE_API_URL=http://127.0.0.1:8080
 TRACEFORGE_HOST=127.0.0.1
 TRACEFORGE_PORT=8080
 TRACEFORGE_API_TOKEN=traceforge-local-dev-token-change-me
+TRACEFORGE_GENERATED_CODE_PRIVATE_KEY=<base64-encoded-32-byte-key>
 ```
 
 ## Install
@@ -161,7 +163,8 @@ prompt_results(
   Result,
   Resources,
   FilePaths,
-  GeneratedCode
+  GeneratedCode,
+  EncryptedGeneratedCode
 )
 ```
 
@@ -233,8 +236,20 @@ When a prompt is sent:
 ## MySQL Query
 
 ```sql
-SELECT PromptQuery, AgentName, ModelName, Result, Resources, FilePaths, GeneratedCode
+SELECT PromptQuery, AgentName, ModelName, Result, Resources, FilePaths, GeneratedCode, EncryptedGeneratedCode
 FROM traceforge.prompt_results;
+```
+
+Decrypt generated code for an exact prompt query:
+
+```powershell
+npm run code:decrypt -- "Create app"
+```
+
+Generate the private encryption key once if `.env` does not already contain it:
+
+```powershell
+npm run key:generate
 ```
 
 ## Capture Folder Output

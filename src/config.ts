@@ -1,8 +1,11 @@
+import { parseGeneratedCodeKey } from "./generated-code-crypto.js";
+
 export interface Config {
   readonly host: string;
   readonly port: number;
   readonly databaseUrl: string;
   readonly apiToken: string;
+  readonly generatedCodeKey: Buffer;
 }
 
 export function loadConfig(environment: NodeJS.ProcessEnv = process.env): Config {
@@ -12,7 +15,8 @@ export function loadConfig(environment: NodeJS.ProcessEnv = process.env): Config
   if (apiToken.length < 16) throw new Error("TRACEFORGE_API_TOKEN must contain at least 16 characters");
   const port = Number(environment.TRACEFORGE_PORT ?? "8080");
   if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error("TRACEFORGE_PORT is invalid");
-  return { host: environment.TRACEFORGE_HOST ?? "127.0.0.1", port, databaseUrl, apiToken };
+  const generatedCodeKey = parseGeneratedCodeKey(environment.TRACEFORGE_GENERATED_CODE_PRIVATE_KEY);
+  return { host: environment.TRACEFORGE_HOST ?? "127.0.0.1", port, databaseUrl, apiToken, generatedCodeKey };
 }
 
 function required(value: string | undefined, name: string): string {

@@ -7,7 +7,7 @@ import { PromptStore, type CaptureEvent } from "./prompt-store.js";
 const config = loadConfig();
 const pool = createPool({ uri: config.databaseUrl, connectionLimit: 10, timezone: "Z" });
 const captureDir = resolve(".", "opencode-activity-captures");
-const prompts = new PromptStore(pool, captureDir);
+const prompts = new PromptStore(pool, captureDir, config.generatedCodeKey);
 
 const server = createServer(async (request, response) => {
   try {
