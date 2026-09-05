@@ -1,3 +1,5 @@
+import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { TraceForgePlugin } from "../src/operational-plugin.js";
@@ -7,6 +9,7 @@ const originalEnvironment={
   TRACEFORGE_API_URL:process.env.TRACEFORGE_API_URL,
   TRACEFORGE_RUNTIME_ENV:process.env.TRACEFORGE_RUNTIME_ENV
 };
+const cleanup:string[]=[];
 
 beforeEach(()=>{
   process.env.TRACEFORGE_API_TOKEN="test-token-with-enough-characters";
@@ -14,11 +17,12 @@ beforeEach(()=>{
   process.env.TRACEFORGE_RUNTIME_ENV=resolve("missing-test-runtime.env");
 });
 
-afterEach(()=>{
+afterEach(async()=>{
   restoreEnvironment("TRACEFORGE_API_TOKEN",originalEnvironment.TRACEFORGE_API_TOKEN);
   restoreEnvironment("TRACEFORGE_API_URL",originalEnvironment.TRACEFORGE_API_URL);
   restoreEnvironment("TRACEFORGE_RUNTIME_ENV",originalEnvironment.TRACEFORGE_RUNTIME_ENV);
   vi.unstubAllGlobals();
+  await Promise.all(cleanup.splice(0).map(path=>rm(path,{recursive:true,force:true})));
 });
 
 describe("TraceForgePlugin resource capture",()=>{
@@ -61,6 +65,30 @@ describe("TraceForgePlugin resource capture",()=>{
     await hooks["tool.execute.after"]!({tool:"bash",sessionID:"session-1",callID:"call-1",args:{command:"npm test"}},{title:"done",output:"",metadata:{}});
 
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("captures final generated code and excludes sensitive files",async()=>{
+    const requests:Record<string,unknown>[]=[];
+    vi.stubGlobal("fetch",vi.fn(async(_url:string|URL|Request,init?:RequestInit)=>{
+      const body=JSON.parse(String(init?.body)) as Record<string,unknown>;
+      requests.push(body);
+      if("externalSessionId" in body)return new Response(JSON.stringify({context:{taskId:"task-1",sessionId:"session-1",runId:"run-1"}}),{status:200});
+      return new Response(JSON.stringify({status:"accepted"}),{status:202});
+    }));
+
+    const workspace=await mkdtemp(join(tmpdir(),"traceforge-plugin-"));
+    cleanup.push(workspace);
+    await mkdir(join(workspace,"src"));
+    await writeFile(join(workspace,"src","app.ts"),"export const app = true;\n","utf8");
+    await writeFile(join(workspace,".env"),"SECRET=value\n","utf8");
+    const hooks=await TraceForgePlugin({directory:workspace,worktree:resolve(workspace,"..")} as never);
+    const output={title:"done",output:"",metadata:{}};
+
+    await hooks["tool.execute.after"]!({tool:"write",sessionID:"session-1",callID:"call-1",args:{filePath:join(workspace,"src","app.ts")}},output);
+    await hooks["tool.execute.after"]!({tool:"write",sessionID:"session-1",callID:"call-2",args:{filePath:join(workspace,".env")}},output);
+
+    const generated=requests.filter(request=>request.eventType==="GENERATED_CODE_CAPTURED").map(request=>request.payload);
+    expect(generated).toEqual([{path:"src/app.ts",code:"export const app = true;\n",operation:"write"}]);
   });
 });
 

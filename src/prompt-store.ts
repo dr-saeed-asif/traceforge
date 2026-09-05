@@ -17,6 +17,12 @@ export interface PromptResult {
   readonly result: string;
   readonly resources: readonly unknown[];
   readonly filePaths: readonly string[];
+  readonly generatedCode: readonly GeneratedCode[];
+}
+
+interface GeneratedCode {
+  readonly path: string;
+  readonly code: string;
 }
 
 interface StoredEvent {
@@ -31,6 +37,7 @@ interface ActivePrompt {
   modelName: string;
   readonly resultParts: string[];
   readonly resources: unknown[];
+  readonly generatedCode: Map<string, GeneratedCode>;
   readonly events: StoredEvent[];
 }
 
@@ -74,6 +81,7 @@ export class PromptStore {
         modelName: text(payload.model),
         resultParts: [],
         resources: [],
+        generatedCode: new Map(),
         events: [{ sequence: 1, eventType: event.eventType, payload }]
       });
       return;
@@ -90,6 +98,7 @@ export class PromptStore {
       for (const resource of referencedWebpages(payload.responseText)) addResource(prompt, resource);
     }
     if (event.eventType === "RESOURCE_ACCESSED") addResource(prompt, payload);
+    if (event.eventType === "GENERATED_CODE_CAPTURED") addGeneratedCode(prompt, payload);
     if (terminalEvents.has(event.eventType)) await this.finalize(event.runId);
   }
 
@@ -102,11 +111,12 @@ export class PromptStore {
       modelName: prompt.modelName,
       result: prompt.resultParts.join("\n") || "NOT_AVAILABLE",
       resources: prompt.resources,
-      filePaths: filePaths(prompt.resources)
+      filePaths: filePaths(prompt.resources),
+      generatedCode: [...prompt.generatedCode.values()]
     };
     await this.pool.execute(
-      "INSERT INTO prompt_results (`PromptQuery`,`AgentName`,`ModelName`,`Result`,`Resources`,`FilePaths`) VALUES (?,?,?,?,?,?)",
-      [result.promptQuery, result.agentName, result.modelName, result.result, JSON.stringify(result.resources), JSON.stringify(result.filePaths)]
+      "INSERT INTO prompt_results (`PromptQuery`,`AgentName`,`ModelName`,`Result`,`Resources`,`FilePaths`,`GeneratedCode`) VALUES (?,?,?,?,?,?,?)",
+      [result.promptQuery, result.agentName, result.modelName, result.result, JSON.stringify(result.resources), JSON.stringify(result.filePaths), JSON.stringify(result.generatedCode)]
     );
     await this.writeCaptureFiles(runId, result, prompt.events);
     this.active.delete(runId);
@@ -127,7 +137,7 @@ export class PromptStore {
       promptEventId,
       status: "COMPLETED",
       eventCount: events.length,
-      artifactCount: 0,
+      artifactCount: result.generatedCode.length,
       updatedAt
     };
     const promptJson = {
@@ -136,7 +146,8 @@ export class PromptStore {
       agentName: result.agentName,
       modelName: result.modelName,
       result: result.result,
-      filePaths: result.filePaths
+      filePaths: result.filePaths,
+      generatedFiles: result.generatedCode.map((entry) => entry.path)
     };
     const readme = [
       "# Prompt activity",
@@ -153,7 +164,8 @@ export class PromptStore {
       writeFile(resolve(capturePath, "README.md"), `${readme}\n`, "utf8"),
       writeFile(resolve(capturePath, "summary.json"), `${JSON.stringify(summary, null, 2)}\n`, "utf8"),
       writeFile(resolve(capturePath, "prompt.json"), `${JSON.stringify(promptJson, null, 2)}\n`, "utf8"),
-      writeFile(resolve(capturePath, "resources.json"), `${JSON.stringify({ resources: result.resources }, null, 2)}\n`, "utf8")
+      writeFile(resolve(capturePath, "resources.json"), `${JSON.stringify({ resources: result.resources }, null, 2)}\n`, "utf8"),
+      writeFile(resolve(capturePath, "generated-code.json"), `${JSON.stringify({ generatedCode: result.generatedCode }, null, 2)}\n`, "utf8")
     ];
 
     for (const event of events) {
@@ -271,4 +283,10 @@ function filePaths(resources: readonly unknown[]): string[] {
     paths.add(resource.path.trim().replace(/\\/gu, "/"));
   }
   return [...paths];
+}
+
+function addGeneratedCode(prompt: ActivePrompt, payload: Readonly<Record<string, unknown>>): void {
+  if (typeof payload.path !== "string" || payload.path.trim() === "" || typeof payload.code !== "string") return;
+  const path = payload.path.trim().replace(/\\/gu, "/");
+  prompt.generatedCode.set(path, { path, code: payload.code });
 }

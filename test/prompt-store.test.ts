@@ -38,7 +38,8 @@ describe("PromptStore", () => {
           { resourceType: "directory", path: "src/components" },
           { resourceType: "file", path: "src/index.ts" }
         ]),
-        JSON.stringify(["src/index.ts", "src/components"])
+        JSON.stringify(["src/index.ts", "src/components"]),
+        "[]"
       ]
     );
 
@@ -60,6 +61,33 @@ describe("PromptStore", () => {
     expect(eventFiles).toHaveLength(7);
   });
 
+  it("stores the latest complete code for every generated file", async () => {
+    const execute = vi.fn(async () => [[], []] as const);
+    const dir = await mkdtemp(join(tmpdir(), "traceforge-captures-"));
+    cleanup.push(dir);
+    const store = new PromptStore({ execute } as never, dir);
+
+    await store.ingest({ runId: "run-code", eventType: "PROMPT_SUBMITTED", payload: { content: "Create app", agent: "OpenCode", model: "gpt-4" } });
+    await store.ingest({ runId: "run-code", eventType: "GENERATED_CODE_CAPTURED", payload: { path: "src\\app.ts", code: "const version = 1;" } });
+    await store.ingest({ runId: "run-code", eventType: "GENERATED_CODE_CAPTURED", payload: { path: "src/app.ts", code: "const version = 2;" } });
+    await store.ingest({ runId: "run-code", eventType: "GENERATED_CODE_CAPTURED", payload: { path: "src/view.ts", code: "export const view = true;" } });
+    await store.ingest({ runId: "run-code", eventType: "AGENT_COMPLETED", payload: { status: "COMPLETED" } });
+
+    const generatedCode = [
+      { path: "src/app.ts", code: "const version = 2;" },
+      { path: "src/view.ts", code: "export const view = true;" }
+    ];
+    expect(execute).toHaveBeenCalledWith(expect.stringContaining("`GeneratedCode`"), [
+      "Create app", "OpenCode", "gpt-4", "NOT_AVAILABLE", "[]", "[]", JSON.stringify(generatedCode)
+    ]);
+
+    const captureFolder = (await readdir(dir)).find((value) => value !== "index.json");
+    const stored = JSON.parse(await readFile(join(dir, captureFolder!, "generated-code.json"), "utf8")) as { generatedCode: unknown[] };
+    const summary = JSON.parse(await readFile(join(dir, captureFolder!, "summary.json"), "utf8")) as { artifactCount: number };
+    expect(stored.generatedCode).toEqual(generatedCode);
+    expect(summary.artifactCount).toBe(2);
+  });
+
   it("projects response links as referenced resources without claiming they were fetched", async () => {
     const execute = vi.fn(async () => [[], []] as const);
     const dir = await mkdtemp(join(tmpdir(), "traceforge-captures-"));
@@ -76,7 +104,7 @@ describe("PromptStore", () => {
       { resourceType: "webpage", accessType: "referenced", source: "model-response", url: "https://react.dev/" }
     ];
     expect(execute).toHaveBeenCalledWith(expect.stringContaining("INSERT INTO prompt_results"), [
-      "Recommend tutorials", "OpenCode", "gpt-4", "Use https://docs.python.org/3/tutorial/, realpython.com, and react.dev.", JSON.stringify(resources), "[]"
+      "Recommend tutorials", "OpenCode", "gpt-4", "Use https://docs.python.org/3/tutorial/, realpython.com, and react.dev.", JSON.stringify(resources), "[]", "[]"
     ]);
 
     const captureFolder = (await readdir(dir)).find((value) => value !== "index.json");
@@ -97,7 +125,7 @@ describe("PromptStore", () => {
     await store.ingest({ runId: "run-fetched", eventType: "AGENT_COMPLETED", payload: { status: "COMPLETED" } });
 
     expect(execute).toHaveBeenCalledWith(expect.stringContaining("INSERT INTO prompt_results"), [
-      "Read docs", "OpenCode", "gpt-4", "See https://example.test/docs", JSON.stringify([fetched]), "[]"
+      "Read docs", "OpenCode", "gpt-4", "See https://example.test/docs", JSON.stringify([fetched]), "[]", "[]"
     ]);
   });
 });

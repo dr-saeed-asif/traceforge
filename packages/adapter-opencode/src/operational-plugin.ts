@@ -1,4 +1,5 @@
 import { existsSync, readFileSync } from "node:fs";
+import { readFile } from "node:fs/promises";
 import { dirname, isAbsolute, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { Plugin } from "@opencode-ai/plugin";
@@ -12,7 +13,7 @@ export const TraceForgePlugin:Plugin=async(input)=>{
   const settings=loadSettings();
   const apiUrl=settings.TRACEFORGE_API_URL??"http://127.0.0.1:8080";
   const token=settings.TRACEFORGE_API_TOKEN;
-  const workspace=input.worktree||input.directory;
+  const workspace=input.directory||input.worktree;
   if(!token){console.warn("[TraceForge] TRACEFORGE_API_TOKEN is unavailable; capture disabled");return{};}
   const contexts=new Map<string,Promise<Context>>();
   const contextFor=(sessionId:string)=>{
@@ -47,7 +48,9 @@ export const TraceForgePlugin:Plugin=async(input)=>{
     },
     "tool.execute.after":async(inputValue)=>{
       const value=inputValue as unknown as {tool:string;sessionID:string;args?:unknown};
-      for(const resource of resourcesForTool(value.tool,value.args,workspace))await capture(value.sessionID,"RESOURCE_ACCESSED",resource);
+      const resources=resourcesForTool(value.tool,value.args,workspace);
+      for(const resource of resources)await capture(value.sessionID,"RESOURCE_ACCESSED",resource);
+      for(const generated of await generatedCodeFor(resources,value.tool,workspace))await capture(value.sessionID,"GENERATED_CODE_CAPTURED",generated);
     }
   };
 };
@@ -91,6 +94,30 @@ function resourcesForTool(tool:string,args:unknown,workspace:string):Record<stri
   }
 
   return[];
+}
+
+async function generatedCodeFor(resources:readonly Record<string,unknown>[],tool:string,workspace:string):Promise<Record<string,unknown>[]> {
+  const generated:Record<string,unknown>[]=[];
+  for(const resource of resources){
+    if(resource.resourceType!=="file"||resource.accessType!=="write"||typeof resource.path!=="string")continue;
+    const absolute=isAbsolute(resource.path)?resolve(resource.path):resolve(workspace,resource.path);
+    const local=relative(workspace,absolute);
+    if(local.startsWith("..")||isAbsolute(local)||isSensitivePath(local))continue;
+    try{
+      const content=await readFile(absolute);
+      if(content.byteLength>1024*1024||content.includes(0))continue;
+      const code=new TextDecoder("utf-8",{fatal:true}).decode(content);
+      generated.push({path:workspacePath(absolute,workspace),code,operation:tool});
+    }catch{
+      // Deleted, binary, oversized, and unreadable files are intentionally not captured.
+    }
+  }
+  return generated;
+}
+
+function isSensitivePath(path:string):boolean{
+  const segments=path.replace(/\\/gu,"/").split("/");
+  return segments.some(segment=>segment===".git"||segment==="node_modules"||segment===".env"||segment.startsWith(".env."));
 }
 
 function isRecord(value:unknown):value is Record<string,unknown>{

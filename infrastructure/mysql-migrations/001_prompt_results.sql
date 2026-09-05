@@ -4,5 +4,6 @@ CREATE TABLE IF NOT EXISTS prompt_results (
   `ModelName` VARCHAR(255) NOT NULL,
   `Result` LONGTEXT NOT NULL,
   `Resources` JSON NOT NULL,
-  `FilePaths` JSON NOT NULL
+  `FilePaths` JSON NOT NULL,
+  `GeneratedCode` JSON NOT NULL
 ) ENGINE=InnoDB;
