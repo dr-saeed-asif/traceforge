@@ -3,9 +3,6 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "workspaces": [
-    "packages/adapter-opencode"
-  ],
   "scripts": {
     "build": "tsc -p tsconfig.json && tsc -p packages/adapter-opencode/tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p packages/adapter-opencode/tsconfig.json --noEmit",
