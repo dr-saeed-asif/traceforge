@@ -1,9 +1,11 @@
 import { execSync } from "node:child_process";
+import { createHash, randomUUID } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import { readFile } from "node:fs/promises";
-import { dirname, isAbsolute, relative, resolve } from "node:path";
+import { basename, dirname, isAbsolute, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { Plugin } from "@opencode-ai/plugin";
+import { DurableOutbox } from "./durable-outbox.js";
 
 interface Context {
   readonly taskId: string;
@@ -12,9 +14,21 @@ interface Context {
 }
 
 interface TextPart {
+  readonly id?: string;
+  readonly messageID?: string;
   readonly type: string;
   readonly text?: string;
   readonly time?: { readonly end?: number };
+}
+
+interface PendingEvent {
+  sessionId: string;
+  eventId: string;
+  occurredAt: string;
+  eventType: string;
+  promptId?: string;
+  payload: Record<string, unknown>;
+  actor?: { name: string };
 }
 
 export const TraceForgePlugin: Plugin = async (input) => {
@@ -22,6 +36,8 @@ export const TraceForgePlugin: Plugin = async (input) => {
   const apiUrl = settings.TRACEFORGE_API_URL ?? "http://127.0.0.1:8080";
   const token = settings.TRACEFORGE_API_TOKEN;
   const workspace = input.directory || input.worktree;
+  const projectPath = resolve(workspace).replace(/\\/gu, "/");
+  const projectName = basename(workspace);
   if (!token) {
     console.warn("[TraceForge] TRACEFORGE_API_TOKEN is unavailable; capture disabled");
     return {};
@@ -32,57 +48,106 @@ export const TraceForgePlugin: Plugin = async (input) => {
     let context = contexts.get(sessionId);
     if (!context) {
       context = post<{ context: Context }>(apiUrl, token, "/api/v1/integrations/context", {
-        externalSessionId: sessionId
-      }).then(value => value.context);
+        externalSessionId: sessionId, projectPath, projectName
+      }).then(value => value.context).catch(error => { contexts.delete(sessionId); throw error; });
       contexts.set(sessionId, context);
     }
     return context;
   };
-  const capture = async (sessionId: string, eventType: string, payload: Record<string, unknown>, actor?: { name: string }) => {
-    try {
-      const context = await contextFor(sessionId);
-      await post(apiUrl, token, "/api/v1/integrations/events", {
-        ...context, eventType, payload, ...(actor ? { actor } : {})
-      });
-    } catch (error) {
-      console.warn(`[TraceForge] ${eventType} capture failed`, error);
+  const prompts = new Map<string, string>();
+  const messages = new Map<string, { role: string; parentID?: string }>();
+  const promptIdFor = (sessionId: string, messageId: string) => digest(`${projectPath}:${sessionId}:${messageId}`);
+  const outboxPath = settings.TRACEFORGE_OUTBOX_DIR ?? resolve(dirname(fileURLToPath(import.meta.url)), "../../../.traceforge/outbox", digest(`${apiUrl}:${projectPath}`));
+  const outbox = new DurableOutbox<PendingEvent>(outboxPath, async entry => {
+    let promptId = entry.promptId;
+    let payload = entry.payload;
+    if (entry.eventType === "MODEL_RESPONSE") {
+      const messageId = String(payload.messageId);
+      const key = `${entry.sessionId}:${messageId}`;
+      let info = messages.get(key);
+      if (!info) {
+        const response = await input.client.session.message({ path: { id: entry.sessionId, messageID: messageId }, query: { directory: workspace }, signal: AbortSignal.timeout(10_000) });
+        if (!response.data) throw new Error("Message role lookup failed; response remains queued");
+        info = response.data.info;
+        messages.set(key, info);
+      }
+      if (info.role !== "assistant") return;
+      if (info.parentID) promptId = promptIdFor(entry.sessionId, info.parentID);
+      payload = { ...payload, role: "assistant" };
     }
+    const context = await contextFor(entry.sessionId);
+    await post(apiUrl, token, "/api/v1/integrations/events", {
+      ...entry, ...context, projectName, projectPath, payload, ...(promptId ? { promptId } : {})
+    });
+  });
+  await outbox.start();
+  const capture = async (sessionId: string, eventType: string, payload: Record<string, unknown>, actor?: { name: string }, identity?: string) => {
+    const promptId = prompts.get(sessionId);
+    await outbox.enqueue({
+      sessionId, eventType, payload, eventId: identity ? digest(`${projectPath}:${sessionId}:${eventType}:${identity}`) : randomUUID(),
+      occurredAt: new Date().toISOString(), ...(promptId ? { promptId } : {}), ...(actor ? { actor } : {})
+    });
+  };
+
+  // Generic event callbacks are not awaited by OpenCode: serialize them with direct hooks.
+  const queues = new Map<string, Promise<void>>();
+  const serial = (sessionId: string, work: () => Promise<void>): Promise<void> => {
+    const pending = (queues.get(sessionId) ?? Promise.resolve()).catch(() => {}).then(work);
+    queues.set(sessionId, pending);
+    return pending.finally(() => { if (queues.get(sessionId) === pending) queues.delete(sessionId); });
   };
 
   return {
-    "chat.message": async (input, output) => {
-      const model = input.model ?? output.message.model;
-      const agent = input.agent ?? output.message.agent ?? "OpenCode";
+    dispose: async () => { await Promise.allSettled(queues.values()); await outbox.close(); },
+    "chat.message": async (chat, output) => serial(chat.sessionID, async () => {
+      const model = chat.model ?? output.message.model;
+      const agent = chat.agent ?? output.message.agent ?? "OpenCode";
       const content = output.parts.filter(part => part.type === "text").map(part => part.text ?? "").join("\n");
-      // Standard chat hooks omit these fields, preserving Git's process-cwd lookup.
-      const location = input as typeof input & { directory?: string; worktree?: string };
-      const gitUser = await getGitIdentity(location.directory || location.worktree);
-      await capture(input.sessionID, "PROMPT_SUBMITTED", { content, agent, model: model.modelID, gitUser });
-      await capture(input.sessionID, "AGENT_STARTED", { agentName: agent }, { name: agent });
-      await capture(input.sessionID, "MODEL_REQUEST", { model: model.modelID, provider: model.providerID }, { name: model.modelID });
-    },
+      const messageId = output.message.id ?? chat.messageID ?? randomUUID();
+      const promptId = promptIdFor(chat.sessionID, messageId);
+      prompts.set(chat.sessionID, promptId);
+      messages.set(`${chat.sessionID}:${messageId}`, { role: "user" });
+      const gitUser = await getGitIdentity(workspace);
+      await capture(chat.sessionID, "PROMPT_SUBMITTED", { content, agent, model: model.modelID, gitUser, messageId }, undefined, promptId);
+      await capture(chat.sessionID, "AGENT_STARTED", { agentName: agent }, { name: agent }, promptId);
+      await capture(chat.sessionID, "MODEL_REQUEST", { model: model.modelID, provider: model.providerID }, { name: model.modelID }, promptId);
+    }),
     event: async ({ event }) => {
       const properties = event.properties as Record<string, unknown>;
       const sessionId = sessionIdOf(properties);
       if (!sessionId) return;
-      if (event.type === "session.idle") await capture(sessionId, "AGENT_COMPLETED", { status: "COMPLETED" });
-      if (event.type === "session.deleted") await capture(sessionId, "SESSION_COMPLETED", { status: "COMPLETED" });
+      // Populate role metadata immediately, even while an earlier part awaits delivery.
+      if (event.type === "message.updated" && isRecord(properties.info)) {
+        const info = properties.info;
+        if (typeof info.id === "string" && typeof info.role === "string") messages.set(`${sessionId}:${info.id}`, { role: info.role, ...(typeof info.parentID === "string" ? { parentID: info.parentID } : {}) });
+      }
+      return serial(sessionId, async () => {
+      if (event.type === "session.idle") await capture(sessionId, "AGENT_COMPLETED", { status: "COMPLETED" }, undefined, prompts.get(sessionId));
+      if (event.type === "session.deleted") await capture(sessionId, "SESSION_COMPLETED", { status: "COMPLETED" }, undefined, prompts.get(sessionId));
+      if (event.type === "session.error") await capture(sessionId, "AGENT_FAILED", { status: "FAILED" }, undefined, prompts.get(sessionId));
       if (event.type === "message.part.updated") {
         const part = properties.part as TextPart | undefined;
-        if (part?.type === "text" && typeof part.text === "string" && part.time?.end !== undefined) {
-          await capture(sessionId, "MODEL_RESPONSE", { responseText: part.text });
+        if (part?.type === "text" && typeof part.text === "string" && part.time?.end !== undefined && part.id && part.messageID) {
+          const info = messages.get(`${sessionId}:${part.messageID}`);
+          if (info?.role === "user") return;
+          await capture(sessionId, "MODEL_RESPONSE", { responseText: part.text, messageId: part.messageID, partId: part.id }, undefined, `${part.messageID}:${part.id}`);
         }
       }
+      });
     },
-    "tool.execute.after": async (input) => {
+    "tool.execute.after": async (input) => serial(input.sessionID, async () => {
       const resources = resourcesForTool(input.tool, input.args, workspace);
-      for (const resource of resources) await capture(input.sessionID, "RESOURCE_ACCESSED", resource);
+      for (const resource of resources) await capture(input.sessionID, "RESOURCE_ACCESSED", resource, undefined, `${input.callID}:${JSON.stringify(resource)}`);
       for (const generated of await generatedCodeFor(resources, input.tool, workspace)) {
-        await capture(input.sessionID, "GENERATED_CODE_CAPTURED", generated);
+        await capture(input.sessionID, "GENERATED_CODE_CAPTURED", generated, undefined, `${input.callID}:${String(generated.path)}`);
       }
-    }
+    })
   };
 };
+
+function digest(value: string): string {
+  return createHash("sha256").update(value).digest("hex");
+}
 
 async function post<T = unknown>(base: string, token: string, path: string, body: unknown): Promise<T> {
   const response = await fetch(`${base.replace(/\/$/u, "")}${path}`, {

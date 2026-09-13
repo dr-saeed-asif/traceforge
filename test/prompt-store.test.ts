@@ -43,13 +43,13 @@ expect(execute).toHaveBeenCalledWith(
         JSON.stringify(["src/index.ts", "src/components"]),
 "[]",
         expect.any(String),
-        "NOT_AVAILABLE"
+        "NOT_AVAILABLE", expect.any(String), "run-1", "run-1", null, null, "COMPLETED"
       ]
     );
 
     const entries = await readdir(dir);
     expect(entries).toContain("index.json");
-    const captureFolder = entries.find((value) => value !== "index.json");
+    const captureFolder = entries.find((value) => value !== "index.json" && !value.startsWith("."));
     expect(captureFolder).toBeDefined();
 
     const summary = JSON.parse(await readFile(join(dir, captureFolder!, "summary.json"), "utf8")) as { eventCount: number };
@@ -82,14 +82,14 @@ expect(execute).toHaveBeenCalledWith(
       { path: "src/view.ts", code: "export const view = true;" }
     ];
 expect(execute).toHaveBeenCalledWith(expect.stringContaining("`GeneratedCode`"), [
-      "Create app", "OpenCode", "gpt-4", "NOT_AVAILABLE", "[]", "[]", JSON.stringify(generatedCode), expect.any(String), "NOT_AVAILABLE"
+      "Create app", "OpenCode", "gpt-4", "NOT_AVAILABLE", "[]", "[]", JSON.stringify(generatedCode), expect.any(String), "NOT_AVAILABLE", expect.any(String), "run-code", "run-code", null, null, "COMPLETED"
     ]);
     const parameters = execute.mock.calls[0]?.[1] as unknown[];
     const encrypted = JSON.parse(String(parameters[7])) as EncryptedGeneratedCode;
     expect(decryptGeneratedCode(encrypted, generatedCodeKey)).toEqual(generatedCode);
     expect(encrypted.ciphertext).not.toContain("const version");
 
-    const captureFolder = (await readdir(dir)).find((value) => value !== "index.json");
+    const captureFolder = (await readdir(dir)).find((value) => value !== "index.json" && !value.startsWith("."));
     const stored = JSON.parse(await readFile(join(dir, captureFolder!, "generated-code.json"), "utf8")) as { generatedCode: unknown[] };
     const summary = JSON.parse(await readFile(join(dir, captureFolder!, "summary.json"), "utf8")) as { artifactCount: number };
     expect(stored.generatedCode).toEqual(generatedCode);
@@ -112,10 +112,10 @@ expect(execute).toHaveBeenCalledWith(expect.stringContaining("`GeneratedCode`"),
       { resourceType: "webpage", accessType: "referenced", source: "model-response", url: "https://react.dev/" }
     ];
 expect(execute).toHaveBeenCalledWith(expect.stringContaining("INSERT INTO prompt_results"), [
-      "Recommend tutorials", "OpenCode", "gpt-4", "Use https://docs.python.org/3/tutorial/, realpython.com, and react.dev.", JSON.stringify(resources), "[]", "[]", expect.any(String), "NOT_AVAILABLE"
+      "Recommend tutorials", "OpenCode", "gpt-4", "Use https://docs.python.org/3/tutorial/, realpython.com, and react.dev.", JSON.stringify(resources), "[]", "[]", expect.any(String), "NOT_AVAILABLE", expect.any(String), "run-links", "run-links", null, null, "COMPLETED"
     ]);
 
-    const captureFolder = (await readdir(dir)).find((value) => value !== "index.json");
+    const captureFolder = (await readdir(dir)).find((value) => value !== "index.json" && !value.startsWith("."));
     const stored = JSON.parse(await readFile(join(dir, captureFolder!, "resources.json"), "utf8") as string) as { resources: unknown[] };
     expect(stored.resources).toEqual(resources);
   });
@@ -134,7 +134,7 @@ expect(execute).toHaveBeenCalledWith(expect.stringContaining("INSERT INTO prompt
 
 expect(execute).toHaveBeenCalledWith(
       expect.stringContaining("INSERT INTO prompt_results"),
-      ["Read docs", "OpenCode", "gpt-4", "See https://example.test/docs", JSON.stringify([fetched]), "[]", "[]", expect.any(String), "NOT_AVAILABLE"]
+      ["Read docs", "OpenCode", "gpt-4", "See https://example.test/docs", JSON.stringify([fetched]), "[]", "[]", expect.any(String), "NOT_AVAILABLE", expect.any(String), "run-fetched", "run-fetched", null, null, "COMPLETED"]
     );
   });
 });

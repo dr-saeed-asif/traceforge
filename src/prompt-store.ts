@@ -3,8 +3,15 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import type { Pool } from "mysql2/promise";
 import { encryptGeneratedCode, type EncryptedGeneratedCode } from "./generated-code-crypto.js";
+import { atomicWrite, EventJournal, type JournalEvent } from "./event-journal.js";
 
 export interface CaptureEvent {
+  readonly eventId?: string;
+  readonly occurredAt?: string;
+  readonly promptId?: string;
+  readonly sessionId?: string;
+  readonly projectName?: string;
+  readonly projectPath?: string;
   readonly runId: string;
   readonly eventType: string;
   readonly actor?: { readonly name?: string };
@@ -12,6 +19,11 @@ export interface CaptureEvent {
 }
 
 export interface PromptResult {
+  readonly promptId: string;
+  readonly sessionId: string;
+  readonly projectName: string | null;
+  readonly projectPath: string | null;
+  readonly status: string;
   readonly promptQuery: string;
   readonly agentName: string;
   readonly modelName: string;
@@ -35,6 +47,12 @@ interface StoredEvent {
 }
 
 interface ActivePrompt {
+  readonly promptId: string;
+  readonly sessionId: string;
+  readonly projectName: string | null;
+  readonly projectPath: string | null;
+  readonly responseParts: Set<string>;
+  status: string;
   promptQuery: string;
   agentName: string;
   modelName: string;
@@ -57,6 +75,10 @@ export class PromptStore {
   private readonly active = new Map<string, ActivePrompt>();
   private readonly queues = new Map<string, Promise<void>>();
   private readonly captureDir: string;
+  private readonly journal: EventJournal;
+  private readonly processed = new Map<string, number>();
+  private initialization: Promise<void> | undefined;
+  private indexQueue = Promise.resolve();
 
   public constructor(
     private readonly pool: Pick<Pool, "execute">,
@@ -64,23 +86,63 @@ export class PromptStore {
     private readonly generatedCodeKey: Buffer
   ) {
     this.captureDir = captureDir ?? resolve(".", "opencode-activity-captures");
+    this.journal = new EventJournal(resolve(this.captureDir, ".journal"));
   }
 
-  public ingest(event: CaptureEvent): Promise<void> {
+  public initialize(): Promise<void> {
+    return this.initialization ??= (async () => {
+      await this.journal.load();
+      for (const runId of this.journal.runs.keys()) await this.drainRun(runId);
+    })();
+  }
+
+  public async drain(): Promise<void> {
+    await Promise.allSettled(this.queues.values());
+  }
+
+  public async ingest(event: CaptureEvent): Promise<void> {
+    await this.initialize();
     const previous = this.queues.get(event.runId) ?? Promise.resolve();
-    const pending = previous.then(() => this.process(event));
+    const pending = previous.catch(() => {}).then(async () => {
+      await this.journal.append(event);
+      await this.drainRun(event.runId);
+    });
     this.queues.set(event.runId, pending);
     return pending.finally(() => {
       if (this.queues.get(event.runId) === pending) this.queues.delete(event.runId);
     });
   }
 
-  private async process(event: CaptureEvent): Promise<void> {
+  private async drainRun(runId: string): Promise<void> {
+    const events = this.journal.runs.get(runId) ?? [];
+    while ((this.processed.get(runId) ?? 0) < events.length) {
+      const index = this.processed.get(runId) ?? 0;
+      const previous = this.active.get(runId);
+      const snapshot = previous ? structuredClone(previous) : undefined;
+      try {
+        await this.process(events[index]!);
+        this.processed.set(runId, index + 1);
+      } catch (error) {
+        if (snapshot) this.active.set(runId, snapshot);
+        else this.active.delete(runId);
+        throw error;
+      }
+    }
+  }
+
+  private async process(event: JournalEvent): Promise<void> {
     const payload = event.payload ?? {};
     if (event.eventType === "PROMPT_SUBMITTED") {
-      const gitUser = typeof payload.gitUser === "string" && payload.gitUser.trim() !== "" ? payload.gitUser.trim() : "NOT_AVAILABLE";
+      const previous = this.active.get(event.runId);
+      if (previous) previous.status = "INTERRUPTED";
       await this.finalize(event.runId);
       this.active.set(event.runId, {
+        promptId: event.promptId ?? sha256(`${event.runId}:${event.eventId}`),
+        sessionId: event.sessionId ?? event.runId,
+        projectName: event.projectName ?? null,
+        projectPath: event.projectPath ?? null,
+        responseParts: new Set(),
+        status: "IN_PROGRESS",
         promptQuery: text(payload.content),
         agentName: text(payload.agent),
         modelName: text(payload.model),
@@ -94,6 +156,15 @@ export class PromptStore {
 
     const prompt = this.active.get(event.runId);
     if (!prompt) return;
+    if (event.promptId && event.promptId !== prompt.promptId) return;
+    if (event.eventType === "MODEL_RESPONSE") {
+      if (payload.role !== undefined && payload.role !== "assistant") return;
+      if (typeof payload.partId === "string") {
+        const key = `${String(payload.messageId)}:${payload.partId}`;
+        if (prompt.responseParts.has(key)) return;
+        prompt.responseParts.add(key);
+      }
+    }
     const nextSequence = prompt.events.length + 1;
     prompt.events.push({ sequence: nextSequence, eventType: event.eventType, payload });
     if (event.eventType === "AGENT_STARTED") prompt.agentName = text(payload.agentName ?? payload.agent ?? event.actor?.name);
@@ -104,7 +175,10 @@ export class PromptStore {
     }
     if (event.eventType === "RESOURCE_ACCESSED") addResource(prompt, payload);
     if (event.eventType === "GENERATED_CODE_CAPTURED") addGeneratedCode(prompt, payload);
-    if (terminalEvents.has(event.eventType)) await this.finalize(event.runId);
+    if (terminalEvents.has(event.eventType)) {
+      prompt.status = event.eventType.endsWith("FAILED") ? "FAILED" : "COMPLETED";
+      await this.finalize(event.runId);
+    }
   }
 
   private async finalize(runId: string): Promise<void> {
@@ -113,6 +187,11 @@ export class PromptStore {
     const generatedCode = [...prompt.generatedCode.values()];
     const gitUser = prompt.events.length > 0 && prompt.events[0] && typeof prompt.events[0].payload?.gitUser === "string" && prompt.events[0].payload.gitUser.trim() !== "" ? prompt.events[0].payload.gitUser.trim() : "NOT_AVAILABLE";
     const result: PromptResult = {
+      promptId: prompt.promptId,
+      sessionId: prompt.sessionId,
+      projectName: prompt.projectName,
+      projectPath: prompt.projectPath,
+      status: prompt.status,
       promptQuery: prompt.promptQuery,
       agentName: prompt.agentName,
       modelName: prompt.modelName,
@@ -124,8 +203,8 @@ export class PromptStore {
       gitUser
     };
     await this.pool.execute(
-      "INSERT INTO prompt_results (`PromptQuery`,`AgentName`,`ModelName`,`Result`,`Resources`,`FilePaths`,`GeneratedCode`,`EncryptedGeneratedCode`,`GitUser`) VALUES (?,?,?,?,?,?,?,?,?)",
-      [result.promptQuery, result.agentName, result.modelName, result.result, JSON.stringify(result.resources), JSON.stringify(result.filePaths), JSON.stringify(result.generatedCode), JSON.stringify(result.encryptedGeneratedCode), result.gitUser]
+      "INSERT INTO prompt_results (`PromptQuery`,`AgentName`,`ModelName`,`Result`,`Resources`,`FilePaths`,`GeneratedCode`,`EncryptedGeneratedCode`,`GitUser`,`PromptId`,`SessionId`,`RunId`,`ProjectName`,`ProjectPath`,`Status`) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE `PromptId` = `PromptId`",
+      [result.promptQuery, result.agentName, result.modelName, result.result, JSON.stringify(result.resources), JSON.stringify(result.filePaths), JSON.stringify(result.generatedCode), JSON.stringify(result.encryptedGeneratedCode), result.gitUser, result.promptId, result.sessionId, runId, result.projectName, result.projectPath, result.status]
     );
     await this.writeCaptureFiles(runId, result, prompt.events);
     this.active.delete(runId);
@@ -133,24 +212,30 @@ export class PromptStore {
 
   private async writeCaptureFiles(runId: string, result: PromptResult, events: readonly StoredEvent[]): Promise<void> {
     await mkdir(this.captureDir, { recursive: true });
-    const folder = `${runId}--0001--${slug(result.promptQuery)}`;
+    const folder = `${slug(runId)}--${sha256(result.promptId).slice(0, 24)}--${slug(result.promptQuery)}`;
     const capturePath = resolve(this.captureDir, folder);
     const eventsPath = resolve(capturePath, "events");
     await mkdir(eventsPath, { recursive: true });
 
     const updatedAt = new Date().toISOString();
-    const promptEventId = `prompt-${runId}`;
+    const promptEventId = result.promptId;
     const summary = {
       runId,
-      sessionId: runId,
+      sessionId: result.sessionId,
+      projectName: result.projectName,
+      projectPath: result.projectPath,
       promptEventId,
-      status: "COMPLETED",
+      status: result.status,
       eventCount: events.length,
       artifactCount: result.generatedCode.length,
       updatedAt
     };
     const promptJson = {
       runId,
+      promptId: result.promptId,
+      sessionId: result.sessionId,
+      projectName: result.projectName,
+      projectPath: result.projectPath,
       prompt: result.promptQuery,
       agentName: result.agentName,
       modelName: result.modelName,
@@ -179,7 +264,7 @@ export class PromptStore {
     ];
 
     for (const event of events) {
-      const fileName = `${String(event.sequence).padStart(6, "0")}--${event.eventType}--${sha256(`${runId}:${event.sequence}:${event.eventType}`).slice(0, 36)}.json`;
+      const fileName = `${String(event.sequence).padStart(6, "0")}--${event.eventType.replace(/[^A-Z_]/gu, "_")}--${sha256(`${runId}:${event.sequence}:${event.eventType}`).slice(0, 36)}.json`;
       const eventJson = {
         runId,
         sequence: event.sequence,
@@ -193,11 +278,15 @@ export class PromptStore {
     await this.updateIndex({ runId, folder, prompt: result.promptQuery, updatedAt });
   }
 
-  private async updateIndex(entry: CaptureIndexEntry): Promise<void> {
-    const indexPath = resolve(this.captureDir, "index.json");
-    const entries = await this.readIndex(indexPath);
-    const next = [entry, ...entries.filter((value) => value.folder !== entry.folder)];
-    await writeFile(indexPath, `${JSON.stringify(next, null, 2)}\n`, "utf8");
+  private updateIndex(entry: CaptureIndexEntry): Promise<void> {
+    const pending = this.indexQueue.catch(() => {}).then(async () => {
+      const indexPath = resolve(this.captureDir, "index.json");
+      const entries = await this.readIndex(indexPath);
+      const next = [entry, ...entries.filter((value) => value.folder !== entry.folder)];
+      await atomicWrite(indexPath, next);
+    });
+    this.indexQueue = pending;
+    return pending;
   }
 
   private async readIndex(indexPath: string): Promise<readonly CaptureIndexEntry[]> {
