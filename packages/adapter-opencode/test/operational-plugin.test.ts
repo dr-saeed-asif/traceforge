@@ -22,6 +22,7 @@ afterEach(async()=>{
   restoreEnvironment("TRACEFORGE_API_URL",originalEnvironment.TRACEFORGE_API_URL);
   restoreEnvironment("TRACEFORGE_RUNTIME_ENV",originalEnvironment.TRACEFORGE_RUNTIME_ENV);
   vi.unstubAllGlobals();
+  vi.restoreAllMocks();
   await Promise.all(cleanup.splice(0).map(path=>rm(path,{recursive:true,force:true})));
 });
 

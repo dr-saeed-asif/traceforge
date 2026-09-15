@@ -202,6 +202,24 @@ export class PromptStore {
       encryptedGeneratedCode: encryptGeneratedCode(generatedCode, this.generatedCodeKey),
       gitUser
     };
+    console.log("[TF:DB] final prompt record");
+    console.table([
+      { Field: "PromptQuery", Value: terminalValue(result.promptQuery) },
+      { Field: "AgentName", Value: terminalValue(result.agentName) },
+      { Field: "ModelName", Value: terminalValue(result.modelName) },
+      { Field: "Result", Value: terminalValue(result.result) },
+      { Field: "Resources", Value: terminalValue(result.resources) },
+      { Field: "FilePaths", Value: terminalValue(result.filePaths) },
+      { Field: "GeneratedCode", Value: terminalValue(result.generatedCode) },
+      { Field: "EncryptedGeneratedCode", Value: terminalValue(result.encryptedGeneratedCode) },
+      { Field: "GitUser", Value: terminalValue(result.gitUser) },
+      { Field: "PromptId", Value: terminalValue(result.promptId) },
+      { Field: "SessionId", Value: terminalValue(result.sessionId) },
+      { Field: "RunId", Value: terminalValue(runId) },
+      { Field: "ProjectName", Value: terminalValue(result.projectName ?? "NOT_AVAILABLE") },
+      { Field: "ProjectPath", Value: terminalValue(result.projectPath ?? "NOT_AVAILABLE") },
+      { Field: "Status", Value: terminalValue(result.status) }
+    ]);
     await this.pool.execute(
       "INSERT INTO prompt_results (`PromptQuery`,`AgentName`,`ModelName`,`Result`,`Resources`,`FilePaths`,`GeneratedCode`,`EncryptedGeneratedCode`,`GitUser`,`PromptId`,`SessionId`,`RunId`,`ProjectName`,`ProjectPath`,`Status`) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE `PromptId` = `PromptId`",
       [result.promptQuery, result.agentName, result.modelName, result.result, JSON.stringify(result.resources), JSON.stringify(result.filePaths), JSON.stringify(result.generatedCode), JSON.stringify(result.encryptedGeneratedCode), result.gitUser, result.promptId, result.sessionId, runId, result.projectName, result.projectPath, result.status]
@@ -314,6 +332,12 @@ function isCaptureIndexEntry(value: unknown): value is CaptureIndexEntry {
 
 function text(value: unknown): string {
   return typeof value === "string" && value.trim() !== "" ? value : "NOT_AVAILABLE";
+}
+
+function terminalValue(value: unknown, limit = 80): string {
+  const serialized = typeof value === "string" ? value : JSON.stringify(value);
+  const singleLine = (serialized ?? "NOT_AVAILABLE").replace(/\s+/gu, " ").trim();
+  return singleLine.length <= limit ? singleLine : `${singleLine.slice(0, limit - 1)}…`;
 }
 
 function sha256(input: string): string {

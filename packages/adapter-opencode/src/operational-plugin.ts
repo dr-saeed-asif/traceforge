@@ -122,9 +122,15 @@ export const TraceForgePlugin: Plugin = async (input) => {
         if (typeof info.id === "string" && typeof info.role === "string") messages.set(`${sessionId}:${info.id}`, { role: info.role, ...(typeof info.parentID === "string" ? { parentID: info.parentID } : {}) });
       }
       return serial(sessionId, async () => {
-      if (event.type === "session.idle") await capture(sessionId, "AGENT_COMPLETED", { status: "COMPLETED" }, undefined, prompts.get(sessionId));
-      if (event.type === "session.deleted") await capture(sessionId, "SESSION_COMPLETED", { status: "COMPLETED" }, undefined, prompts.get(sessionId));
-      if (event.type === "session.error") await capture(sessionId, "AGENT_FAILED", { status: "FAILED" }, undefined, prompts.get(sessionId));
+      if (event.type === "session.idle") {
+        await capture(sessionId, "AGENT_COMPLETED", { status: "COMPLETED" }, undefined, prompts.get(sessionId));
+      }
+      if (event.type === "session.deleted") {
+        await capture(sessionId, "SESSION_COMPLETED", { status: "COMPLETED" }, undefined, prompts.get(sessionId));
+      }
+      if (event.type === "session.error") {
+        await capture(sessionId, "AGENT_FAILED", { status: "FAILED" }, undefined, prompts.get(sessionId));
+      }
       if (event.type === "message.part.updated") {
         const part = properties.part as TextPart | undefined;
         if (part?.type === "text" && typeof part.text === "string" && part.time?.end !== undefined && part.id && part.messageID) {
@@ -137,7 +143,9 @@ export const TraceForgePlugin: Plugin = async (input) => {
     },
     "tool.execute.after": async (input) => serial(input.sessionID, async () => {
       const resources = resourcesForTool(input.tool, input.args, workspace);
-      for (const resource of resources) await capture(input.sessionID, "RESOURCE_ACCESSED", resource, undefined, `${input.callID}:${JSON.stringify(resource)}`);
+      for (const resource of resources) {
+        await capture(input.sessionID, "RESOURCE_ACCESSED", resource, undefined, `${input.callID}:${JSON.stringify(resource)}`);
+      }
       for (const generated of await generatedCodeFor(resources, input.tool, workspace)) {
         await capture(input.sessionID, "GENERATED_CODE_CAPTURED", generated, undefined, `${input.callID}:${String(generated.path)}`);
       }
