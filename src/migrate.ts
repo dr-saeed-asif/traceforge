@@ -1,18 +1,11 @@
-import { readdir, readFile } from "node:fs/promises";
-import { resolve } from "node:path";
-import { createPool } from "mysql2/promise";
+import { openSqliteDatabase } from "./infrastructure/sqlite/sqlite-database.js";
+import { applySqliteMigrations } from "./infrastructure/sqlite/sqlite-migrator.js";
 
-const databaseUrl = process.env.DATABASE_URL;
-if (!databaseUrl) throw new Error("DATABASE_URL is required");
-const pool = createPool({ uri: databaseUrl, connectionLimit: 1, timezone: "Z", multipleStatements: true });
+const databasePath = process.env.TRACEFORGE_DATABASE_PATH?.trim() || "./data/traceforge.sqlite";
+const database = openSqliteDatabase(databasePath);
 try {
-  const migrationDirectory = resolve("infrastructure/mysql-migrations");
-  const migrations = (await readdir(migrationDirectory)).filter((name) => name.endsWith(".sql")).sort();
-  for (const migration of migrations) {
-    const sql = await readFile(resolve(migrationDirectory, migration), "utf8");
-    await pool.query(sql);
-  }
-  process.stdout.write("prompt_results is ready\n");
+  await applySqliteMigrations(database);
+  process.stdout.write(`TraceForge SQLite database is ready at ${databasePath}\n`);
 } finally {
-  await pool.end();
+  database.close();
 }

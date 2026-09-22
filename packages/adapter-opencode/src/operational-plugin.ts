@@ -31,6 +31,17 @@ interface PendingEvent {
   actor?: { name: string };
 }
 
+interface FileSnapshot {
+  readonly path: string;
+  readonly existed: boolean;
+  readonly hash: string | null;
+}
+
+interface CommandInvocation {
+  readonly command: string;
+  readonly workingDirectory: string;
+}
+
 export const TraceForgePlugin: Plugin = async (input) => {
   const settings = loadSettings();
   const apiUrl = settings.TRACEFORGE_API_URL ?? "http://127.0.0.1:8080";
@@ -56,6 +67,7 @@ export const TraceForgePlugin: Plugin = async (input) => {
   };
   const prompts = new Map<string, string>();
   const messages = new Map<string, { role: string; parentID?: string }>();
+  const fileSnapshots = new Map<string, readonly FileSnapshot[]>();
   const promptIdFor = (sessionId: string, messageId: string) => digest(`${projectPath}:${sessionId}:${messageId}`);
   const outboxPath = settings.TRACEFORGE_OUTBOX_DIR ?? resolve(dirname(fileURLToPath(import.meta.url)), "../../../.traceforge/outbox", digest(`${apiUrl}:${projectPath}`));
   const outbox = new DurableOutbox<PendingEvent>(outboxPath, async entry => {
@@ -98,7 +110,7 @@ export const TraceForgePlugin: Plugin = async (input) => {
   };
 
   return {
-    dispose: async () => { await Promise.allSettled(queues.values()); await outbox.close(); },
+    dispose: async () => { await Promise.allSettled(queues.values()); fileSnapshots.clear(); await outbox.close(); },
     "chat.message": async (chat, output) => serial(chat.sessionID, async () => {
       const model = chat.model ?? output.message.model;
       const agent = chat.agent ?? output.message.agent ?? "OpenCode";
@@ -141,14 +153,56 @@ export const TraceForgePlugin: Plugin = async (input) => {
       }
       });
     },
-    "tool.execute.after": async (input) => serial(input.sessionID, async () => {
+    "tool.execute.before": async (input, output) => serial(input.sessionID, async () => {
+      const resources = resourcesForTool(input.tool, output.args, workspace);
+      const snapshots = await snapshotsForResources(resources, workspace);
+      if (snapshots.length > 0) fileSnapshots.set(`${input.sessionID}:${input.callID}`, snapshots);
+      const command = commandForTool(input.tool, output.args, workspace);
+      if (command) {
+        await capture(input.sessionID, "COMMAND_STARTED", {
+          command: command.command,
+          workingDirectory: command.workingDirectory,
+          tool: input.tool
+        }, undefined, `${input.callID}:command-start`);
+      }
+    }),
+    "tool.execute.after": async (input, output) => serial(input.sessionID, async () => {
+      const invocationKey = `${input.sessionID}:${input.callID}`;
+      const command = commandForTool(input.tool, input.args, workspace);
+      if (command) {
+        const completion = commandCompletion(command, output);
+        await capture(input.sessionID, completion.eventType, { ...completion.payload, toolName: input.tool }, undefined, `${input.callID}:command-complete`);
+      }
+
       const resources = resourcesForTool(input.tool, input.args, workspace);
       for (const resource of resources) {
         await capture(input.sessionID, "RESOURCE_ACCESSED", resource, undefined, `${input.callID}:${JSON.stringify(resource)}`);
       }
-      for (const generated of await generatedCodeFor(resources, input.tool, workspace)) {
-        await capture(input.sessionID, "GENERATED_CODE_CAPTURED", generated, undefined, `${input.callID}:${String(generated.path)}`);
+
+      const generated = await generatedCodeFor(resources, input.tool, workspace);
+      const generatedByPath = new Map(generated.filter(value => typeof value.path === "string").map(value => [String(value.path).replace(/\\/gu, "/"), value]));
+      const snapshots = fileSnapshots.get(invocationKey) ?? [];
+      for (const snapshot of snapshots) {
+        const after = await snapshotFile(snapshot.path, workspace);
+        if (!after) continue;
+        const current = generatedByPath.get(snapshot.path);
+        const payload = {
+          ...(current ?? {}),
+          path: snapshot.path,
+          operation: input.tool,
+          toolName: input.tool,
+          fileExistedBefore: snapshot.existed,
+          fileExistsAfter: after.existed,
+          fileHashBefore: snapshot.hash,
+          fileHashAfter: after.hash
+        };
+        await capture(input.sessionID, "GENERATED_CODE_CAPTURED", payload, undefined, `${input.callID}:file:${snapshot.path}`);
+        generatedByPath.delete(snapshot.path);
       }
+      for (const value of generatedByPath.values()) {
+        await capture(input.sessionID, "GENERATED_CODE_CAPTURED", value, undefined, `${input.callID}:${String(value.path)}`);
+      }
+      fileSnapshots.delete(invocationKey);
     })
   };
 };
@@ -246,6 +300,112 @@ async function generatedCodeFor(resources: readonly Record<string, unknown>[], t
     }
   }
   return generated;
+}
+
+/**
+ * Takes a pre-tool snapshot for writable file resources. The snapshot is kept
+ * in memory only until the matching after-hook, where it is paired with the
+ * post-tool hash to classify create/modify/delete events.
+ */
+async function snapshotsForResources(
+  resources: readonly Record<string, unknown>[],
+  workspace: string
+): Promise<FileSnapshot[]> {
+  const snapshots: FileSnapshot[] = [];
+  for (const resource of resources) {
+    if (resource.resourceType !== "file" || resource.accessType !== "write" || typeof resource.path !== "string") continue;
+    const snapshot = await snapshotFile(resource.path, workspace);
+    if (snapshot) snapshots.push(snapshot);
+  }
+  return snapshots;
+}
+
+/** Reads one safe workspace file and returns its existence/hash state. */
+async function snapshotFile(path: string, workspace: string): Promise<FileSnapshot | undefined> {
+  const absolute = isAbsolute(path) ? resolve(path) : resolve(workspace, path);
+  const local = relative(workspace, absolute);
+  if (local.startsWith("..") || isAbsolute(local) || isSensitivePath(local)) return undefined;
+  const normalizedPath = workspacePath(absolute, workspace);
+  try {
+    const content = await readFile(absolute);
+    return { path: normalizedPath, existed: true, hash: digestBytes(content) };
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+      return { path: normalizedPath, existed: false, hash: null };
+    }
+    return undefined;
+  }
+}
+
+/** Identifies shell-like tool invocations without coupling to one provider name. */
+function commandForTool(tool: string, args: unknown, workspace: string): CommandInvocation | undefined {
+  if (!isRecord(args)) return undefined;
+  const command = firstString(args, ["command", "cmd", "script"]);
+  if (!command) return undefined;
+  const normalizedTool = tool.toLowerCase().replace(/[^a-z0-9]/gu, "");
+  const shellTool = ["bash", "shell", "exec", "terminal", "run", "runcommand", "powershell", "cmd"].includes(normalizedTool);
+  if (!shellTool && args.command === undefined && args.cmd === undefined && args.script === undefined) return undefined;
+  const requestedDirectory = firstString(args, ["workingDirectory", "cwd", "directory"]);
+  const workingDirectory = requestedDirectory ? resolve(workspace, requestedDirectory) : resolve(workspace);
+  return { command, workingDirectory: workingDirectory.replace(/\\/gu, "/") };
+}
+
+/** Converts a command result into a canonical completion event and safe payload. */
+function commandCompletion(
+  command: CommandInvocation,
+  output: Record<string, unknown>
+): { eventType: string; payload: Record<string, unknown> } {
+  const outputText = typeof output.output === "string" ? output.output : undefined;
+  const metadata = isRecord(output.metadata) ? output.metadata : {};
+  const exitCode = firstNumber(metadata, ["exitCode", "exit_code", "code"])
+    ?? firstNumber(output, ["exitCode", "exit_code", "code"]);
+  const counts = parseTestCounts(outputText);
+  const eventType = commandEventType(command.command);
+  return {
+    eventType,
+    payload: {
+      command: command.command,
+      workingDirectory: command.workingDirectory,
+      ...(exitCode !== undefined ? { exitCode, status: exitCode === 0 ? "SUCCEEDED" : "FAILED" } : {}),
+      ...(outputText ? { output: outputText, outputHash: digest(outputText), outputLength: outputText.length } : {}),
+      ...counts
+    }
+  };
+}
+
+function commandEventType(command: string): "COMMAND_COMPLETED" | "TEST_COMPLETED" | "BUILD_COMPLETED" {
+  if (/\b(?:npm\s+(?:run\s+)?test|pnpm\s+(?:run\s+)?test|yarn\s+test|vitest|jest|pytest|phpunit|cargo\s+test|go\s+test)\b/iu.test(command)) {
+    return "TEST_COMPLETED";
+  }
+  if (/\b(?:npm\s+run\s+build|pnpm\s+(?:run\s+)?build|yarn\s+build|tsc|webpack|vite\s+build|cargo\s+build|go\s+build)\b/iu.test(command)) {
+    return "BUILD_COMPLETED";
+  }
+  return "COMMAND_COMPLETED";
+}
+
+function parseTestCounts(output: string | undefined): Record<string, number> {
+  if (!output) return {};
+  const values: Record<string, number> = {};
+  const passed = /(?:^|[,\s])(\d+)\s+passed\b/iu.exec(output)?.[1];
+  const failed = /(?:^|[,\s])(\d+)\s+failed\b/iu.exec(output)?.[1];
+  const skipped = /(?:^|[,\s])(\d+)\s+(?:skipped|pending)\b/iu.exec(output)?.[1];
+  if (passed !== undefined) values.passed = Number(passed);
+  if (failed !== undefined) values.failed = Number(failed);
+  if (skipped !== undefined) values.skipped = Number(skipped);
+  return values;
+}
+
+function firstNumber(value: Record<string, unknown>, keys: readonly string[]): number | undefined {
+  for (const key of keys) {
+    const candidate = value[key];
+    if (typeof candidate === "number" && Number.isInteger(candidate)) return candidate;
+    if (typeof candidate === "string" && /^-?\d+$/u.test(candidate.trim())) return Number(candidate);
+  }
+  return undefined;
+}
+
+function digestBytes(value: Uint8Array): string {
+  return createHash("sha256").update(value).digest("hex");
 }
 
 async function getGitIdentity(workspace: string | undefined): Promise<string> {

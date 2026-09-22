@@ -11,14 +11,14 @@ async function fixture() {
   const dir = await mkdtemp(join(tmpdir(), "traceforge-recovery-"));
   cleanup.push(dir);
   // Models the database UNIQUE PromptId constraint, including ambiguous successful inserts.
-  const rows = new Map<string, unknown[]>();
-  const execute = vi.fn(async (_sql: string, parameters: unknown[]) => {
-    const id = String(parameters[9]);
-    if (!rows.has(id)) rows.set(id, parameters);
-    return [[], []];
+  const rows = new Map<string, Record<string, unknown>>();
+  const save = vi.fn(async (input: Record<string, unknown>) => {
+    const id = String(input.promptId);
+    if (!rows.has(id)) rows.set(id, input);
+    return rows.size;
   });
-  const restart = () => new PromptStore({ execute } as never, dir, Buffer.alloc(32, 7));
-  return { dir, rows, execute, restart, store: restart() };
+  const restart = () => new PromptStore({ save } as never, dir, Buffer.alloc(32, 7));
+  return { dir, rows, save, restart, store: restart() };
 }
 
 function event(eventType: string, eventId: string, extra: Partial<CaptureEvent> = {}): CaptureEvent {
@@ -41,8 +41,8 @@ it("recovers an unfinished prompt after restart and deduplicates events and assi
   await restarted.ingest(end);
   await restarted.ingest(end);
   expect(f.rows.size).toBe(1);
-  expect(f.rows.get("prompt-b")?.[3]).toBe("Done");
-  expect(f.rows.get("prompt-b")?.slice(9)).toEqual(["prompt-b", "session-b", "run-b", "project-b", "H:/projects/project-b", "COMPLETED"]);
+  expect(f.rows.get("prompt-b")?.result).toBe("Done");
+  expect(f.rows.get("prompt-b")).toMatchObject({ promptId: "prompt-b", sessionId: "session-b", runId: "run-b", projectName: "project-b", projectPath: "H:/projects/project-b", status: "COMPLETED" });
   await f.restart().initialize();
   expect(f.rows.size).toBe(1);
   const index = JSON.parse(await readFile(join(f.dir, "index.json"), "utf8"));
@@ -51,15 +51,30 @@ it("recovers an unfinished prompt after restart and deduplicates events and assi
   expect(saved).toMatchObject({ projectName: "project-b", projectPath: "H:/projects/project-b", sessionId: "session-b", promptId: "prompt-b" });
 });
 
+it("does not replay an acknowledged completed prompt after its database row is removed", async () => {
+  const f = await fixture();
+  await f.store.ingest(start);
+  await f.store.ingest(response);
+  await f.store.ingest(end);
+  expect(f.rows.size).toBe(1);
+
+  f.rows.clear();
+  f.save.mockClear();
+  await f.restart().initialize();
+
+  expect(f.rows.size).toBe(0);
+  expect(f.save).not.toHaveBeenCalled();
+});
+
 it("retries a database failure without poisoning the run or duplicating response text", async () => {
   const f = await fixture();
   await f.store.ingest(start);
   await f.store.ingest(response);
-  f.execute.mockRejectedValueOnce(new Error("database temporarily unavailable"));
+  f.save.mockRejectedValueOnce(new Error("database temporarily unavailable"));
   await expect(f.store.ingest(end)).rejects.toThrow("temporarily unavailable");
   await f.store.ingest(end);
   expect(f.rows.size).toBe(1);
-  expect(f.rows.get("prompt-b")?.[3]).toBe("Done");
+  expect(f.rows.get("prompt-b")?.result).toBe("Done");
 });
 
 it("repairs capture files after SQL succeeded but file writing failed", async () => {
@@ -84,7 +99,7 @@ it("separates repeated prompt text and ignores late responses for a previous pro
   await f.store.ingest({ ...response, eventId: "user-part", promptId: "prompt-2", payload: { role: "user", responseText: "User prompt" } });
   await f.store.ingest({ ...end, eventId: "end-2", promptId: "prompt-2" });
   expect(f.rows.size).toBe(2);
-  expect(f.rows.get("prompt-2")?.[3]).toBe("NOT_AVAILABLE");
+  expect(f.rows.get("prompt-2")?.result).toBe("NOT_AVAILABLE");
   const folders = (await readdir(f.dir)).filter(name => !name.startsWith(".") && name !== "index.json");
   expect(folders).toHaveLength(2);
 });
@@ -104,6 +119,6 @@ it("records interruption and failure status accurately", async () => {
   await f.store.ingest(start);
   await f.store.ingest({ ...start, eventId: "submit-2", promptId: "prompt-2" });
   await f.store.ingest({ ...end, eventType: "AGENT_FAILED", promptId: "prompt-2" });
-  expect(f.rows.get("prompt-b")?.[14]).toBe("INTERRUPTED");
-  expect(f.rows.get("prompt-2")?.[14]).toBe("FAILED");
+  expect(f.rows.get("prompt-b")?.status).toBe("INTERRUPTED");
+  expect(f.rows.get("prompt-2")?.status).toBe("FAILED");
 });

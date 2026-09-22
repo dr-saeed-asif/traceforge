@@ -58,14 +58,49 @@ describe("TraceForgePlugin resource capture",()=>{
   });
 
   it("does not create a resource for tools without a resource target",async()=>{
-    const fetchMock=vi.fn();
+    const requests:Record<string,unknown>[]=[];
+    const fetchMock=vi.fn(async(_url:string|URL|Request,init?:RequestInit)=>{
+      const body=JSON.parse(String(init?.body)) as Record<string,unknown>;
+      requests.push(body);
+      if("externalSessionId" in body)return new Response(JSON.stringify({context:{taskId:"task-1",sessionId:"session-1",runId:"run-1"}}),{status:200});
+      return new Response(JSON.stringify({status:"accepted"}),{status:202});
+    });
     vi.stubGlobal("fetch",fetchMock);
     const workspace=resolve("fixture-workspace");
     const hooks=await TraceForgePlugin({directory:workspace,worktree:workspace} as never);
 
     await hooks["tool.execute.after"]!({tool:"bash",sessionID:"session-1",callID:"call-1",args:{command:"npm test"}},{title:"done",output:"",metadata:{}});
 
-    expect(fetchMock).not.toHaveBeenCalled();
+    expect(requests.filter(request=>request.eventType==="RESOURCE_ACCESSED")).toHaveLength(0);
+    expect(requests.filter(request=>request.eventType==="TEST_COMPLETED")).toHaveLength(1);
+  });
+
+  it("captures command completion metadata and before/after file hashes",async()=>{
+    const requests:Record<string,unknown>[]=[];
+    vi.stubGlobal("fetch",vi.fn(async(_url:string|URL|Request,init?:RequestInit)=>{
+      const body=JSON.parse(String(init?.body)) as Record<string,unknown>;
+      requests.push(body);
+      if("externalSessionId" in body)return new Response(JSON.stringify({context:{taskId:"task-1",sessionId:"session-1",runId:"run-1"}}),{status:200});
+      return new Response(JSON.stringify({status:"accepted"}),{status:202});
+    }));
+
+    const workspace=await mkdtemp(join(tmpdir(),"traceforge-plugin-hashes-"));
+    cleanup.push(workspace);
+    await mkdir(join(workspace,"src"));
+    const filePath=join(workspace,"src","app.ts");
+    await writeFile(filePath,"export const version = 1;\n","utf8");
+    const hooks=await TraceForgePlugin({directory:workspace,worktree:workspace} as never);
+
+    await hooks["tool.execute.before"]!({tool:"edit",sessionID:"session-1",callID:"call-edit"},{args:{filePath}});
+    await writeFile(filePath,"export const version = 2;\n","utf8");
+    await hooks["tool.execute.after"]!({tool:"edit",sessionID:"session-1",callID:"call-edit",args:{filePath}},{title:"done",output:"",metadata:{}});
+    await hooks["tool.execute.after"]!({tool:"bash",sessionID:"session-1",callID:"call-test",args:{command:"npm test"}},{title:"done",output:"12 passed, 0 failed",metadata:{exitCode:0}});
+
+    const generated=requests.find(request=>request.eventType==="GENERATED_CODE_CAPTURED")?.payload as Record<string,unknown>;
+    expect(generated).toMatchObject({path:"src/app.ts",fileExistedBefore:true,fileExistsAfter:true});
+    expect(generated?.fileHashBefore).not.toBe(generated?.fileHashAfter);
+    const test=requests.find(request=>request.eventType==="TEST_COMPLETED")?.payload as Record<string,unknown>;
+    expect(test).toMatchObject({command:"npm test",exitCode:0,passed:12,failed:0});
   });
 
   it("captures final generated code and excludes sensitive files",async()=>{

@@ -1,0 +1,340 @@
+.listStack {
+  display: grid;
+  gap: 1rem;
+}
+
+.filterPanel {
+  padding: 1rem 1.1rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.filter {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.dateField {
+  display: grid;
+  min-width: 10.5rem;
+  gap: 0.35rem;
+}
+
+.dateField label {
+  color: var(--color-text-subtle);
+  font-size: 0.69rem;
+  font-weight: 750;
+  letter-spacing: 0.045em;
+  text-transform: uppercase;
+}
+
+.dateField input {
+  min-height: 2.25rem;
+  padding: 0.45rem 0.65rem;
+  color: var(--color-text-strong);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-strong);
+  border-radius: 0.55rem;
+}
+
+.dateField input:focus-visible {
+  border-color: var(--color-focus);
+  outline: 3px solid color-mix(in srgb, var(--color-focus) 20%, transparent);
+  outline-offset: 1px;
+}
+
+.filterActions,
+.paginationActions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.tableCard {
+  overflow: hidden;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.tableSummary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.15rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.tableSummary h2 {
+  margin: 0;
+  color: var(--color-text-strong);
+  font-size: 0.95rem;
+}
+
+.tableSummary p {
+  margin: 0.25rem 0 0;
+  color: var(--color-text-subtle);
+  font-size: 0.78rem;
+}
+
+.tableDate {
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.tableMetric {
+  color: var(--color-text-strong);
+  font-variant-numeric: tabular-nums;
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.8rem 1rem;
+  color: var(--color-text-subtle);
+  font-size: 0.76rem;
+  background: var(--color-surface-subtle);
+  border-top: 1px solid var(--color-border);
+}
+
+.pagination p {
+  margin: 0;
+}
+
+.pagination strong {
+  color: var(--color-text-strong);
+}
+
+.disabledPageAction {
+  display: inline-flex;
+  min-height: 2.25rem;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 0.75rem;
+  color: var(--color-text-subtle);
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1;
+  background: var(--color-neutral-soft);
+  border: 1px solid var(--color-border);
+  border-radius: 0.6rem;
+  opacity: 0.65;
+}
+
+@media (max-width: 42rem) {
+  .filterPanel {
+    padding: 0.9rem;
+  }
+
+  .filter,
+  .dateField,
+  .filterActions {
+    width: 100%;
+  }
+
+  .filterActions > * {
+    flex: 1;
+  }
+
+  .tableSummary,
+  .pagination {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .paginationActions > * {
+    flex: 1;
+  }
+}
+
+.verifiedCount {
+  color: var(--color-success-strong);
+  font-variant-numeric: tabular-nums;
+}
+
+.contradictedCount {
+  color: var(--color-danger-strong);
+  font-variant-numeric: tabular-nums;
+}
+
+.unsupportedCount {
+  color: var(--color-warning-strong);
+  font-variant-numeric: tabular-nums;
+}
+
+.unverifiableCount {
+  color: var(--color-neutral-strong);
+  font-variant-numeric: tabular-nums;
+}
+
+.claimText {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.claimText strong {
+  color: var(--color-text-strong);
+  font-size: 0.8rem;
+}
+
+.claimText small {
+  color: var(--color-text-muted);
+  font-size: 0.71rem;
+}
+
+.claimIndex {
+  color: var(--color-text-subtle);
+  font-size: 0.71rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.expandButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  color: var(--color-text-muted);
+  background: transparent;
+  border: none;
+  border-radius: 0.35rem;
+  cursor: pointer;
+  transition: color 140ms ease, background 140ms ease;
+}
+
+.expandButton:hover {
+  color: var(--color-text-strong);
+  background: var(--color-surface-subtle);
+}
+
+.expandButton:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.expandIcon {
+  width: 1rem;
+  height: 1rem;
+  transition: transform 140ms ease;
+}
+
+.expandIcon.expanded {
+  transform: rotate(90deg);
+}
+
+.expandedRow {
+  animation: slideDown 180ms ease;
+}
+
+@keyframes slideDown {
+  from {
+    max-height: 0;
+    opacity: 0;
+  }
+
+  to {
+    max-height: 500px;
+    opacity: 1;
+  }
+}
+
+.expandedContent {
+  margin: 0 -1.5rem;
+  padding: 1rem 1.5rem;
+  background: var(--color-surface-subtle);
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.expandedSection {
+  margin-bottom: 1.5rem;
+}
+
+.expandedSection:last-child {
+  margin-bottom: 0;
+}
+
+.expandedSection h4 {
+  margin: 0 0 0.75rem;
+  color: var(--color-text-strong);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.noClaimsMessage {
+  margin: 0;
+  color: var(--color-text-subtle);
+  font-size: 0.8rem;
+}
+
+.claimList {
+  display: grid;
+  gap: 1rem;
+}
+
+.claimBlock {
+  display: grid;
+  gap: 1rem;
+  padding: 1rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.expandedDetails,
+.evidenceDetails {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.5rem 1rem;
+  margin: 0;
+  padding: 0;
+  font-size: 0.8rem;
+}
+
+.expandedDetails dt,
+.evidenceDetails dt {
+  color: var(--color-text-subtle);
+  font-weight: 600;
+}
+
+.expandedDetails dd,
+.evidenceDetails dd {
+  margin: 0;
+  color: var(--color-text);
+}
+
+.expandedDetails code,
+.evidenceDetails code {
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 0.71rem;
+}
+
+.evidenceList {
+  display: grid;
+  gap: 1rem;
+}
+
+.evidenceCard {
+  overflow: hidden;
+}
+
+.evidenceDetails pre {
+  margin: 0;
+  padding: 0.75rem;
+  overflow-x: auto;
+  font-size: 0.71rem;
+  line-height: 1.5;
+  background: var(--color-surface-subtle);
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+}

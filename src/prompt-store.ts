@@ -1,9 +1,17 @@
 import { createHash } from "node:crypto";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
-import type { Pool } from "mysql2/promise";
 import { encryptGeneratedCode, type EncryptedGeneratedCode } from "./generated-code-crypto.js";
 import { atomicWrite, EventJournal, type JournalEvent } from "./event-journal.js";
+import type { PromptResultRepository } from "./persistence/prompt-result-repository.js";
+import {
+  CLAIM_VERIFICATION_POLICY_VERSION,
+  mapCaptureEventToTraceEvent,
+  type ClaimExtractor,
+  type ExecutionStatus,
+  VerificationApplicationService,
+  type VerificationRepository
+} from "./modules/verification/index.js";
 
 export interface CaptureEvent {
   readonly eventId?: string;
@@ -76,17 +84,21 @@ export class PromptStore {
   private readonly queues = new Map<string, Promise<void>>();
   private readonly captureDir: string;
   private readonly journal: EventJournal;
+  private readonly verificationService: VerificationApplicationService | undefined;
   private readonly processed = new Map<string, number>();
   private initialization: Promise<void> | undefined;
   private indexQueue = Promise.resolve();
 
   public constructor(
-    private readonly pool: Pick<Pool, "execute">,
+    private readonly promptResults: PromptResultRepository,
     captureDir: string | undefined,
-    private readonly generatedCodeKey: Buffer
+    private readonly generatedCodeKey: Buffer,
+    private readonly verificationRepository?: VerificationRepository,
+    claimExtractor?: ClaimExtractor
   ) {
     this.captureDir = captureDir ?? resolve(".", "opencode-activity-captures");
     this.journal = new EventJournal(resolve(this.captureDir, ".journal"));
+    this.verificationService = verificationRepository ? new VerificationApplicationService(verificationRepository, claimExtractor) : undefined;
   }
 
   public initialize(): Promise<void> {
@@ -114,14 +126,26 @@ export class PromptStore {
   }
 
   private async drainRun(runId: string): Promise<void> {
-    const events = this.journal.runs.get(runId) ?? [];
-    while ((this.processed.get(runId) ?? 0) < events.length) {
+    while (true) {
+      const events = this.journal.runs.get(runId) ?? [];
       const index = this.processed.get(runId) ?? 0;
+      if (index >= events.length) return;
+      const event = events[index]!;
       const previous = this.active.get(runId);
       const snapshot = previous ? structuredClone(previous) : undefined;
       try {
-        await this.process(events[index]!);
-        this.processed.set(runId, index + 1);
+        await this.process(event);
+        if (terminalEvents.has(event.eventType)) {
+          await this.journal.acknowledge(runId, index + 1);
+          this.processed.set(runId, 0);
+        } else if (event.eventType === "PROMPT_SUBMITTED" && previous) {
+          // A new prompt implicitly finalizes the previous prompt in the same run.
+          // Retain the new prompt event and acknowledge only the completed prefix.
+          await this.journal.acknowledge(runId, index);
+          this.processed.set(runId, 1);
+        } else {
+          this.processed.set(runId, index + 1);
+        }
       } catch (error) {
         if (snapshot) this.active.set(runId, snapshot);
         else this.active.delete(runId);
@@ -136,7 +160,7 @@ export class PromptStore {
       const previous = this.active.get(event.runId);
       if (previous) previous.status = "INTERRUPTED";
       await this.finalize(event.runId);
-      this.active.set(event.runId, {
+      const prompt: ActivePrompt = {
         promptId: event.promptId ?? sha256(`${event.runId}:${event.eventId}`),
         sessionId: event.sessionId ?? event.runId,
         projectName: event.projectName ?? null,
@@ -150,7 +174,10 @@ export class PromptStore {
         resources: [],
         generatedCode: new Map(),
         events: [{ sequence: 1, eventType: event.eventType, payload }]
-      });
+      };
+      this.active.set(event.runId, prompt);
+      await this.createVerificationSession(event, prompt);
+      await this.persistTraceEvent(event, prompt);
       return;
     }
 
@@ -175,13 +202,14 @@ export class PromptStore {
     }
     if (event.eventType === "RESOURCE_ACCESSED") addResource(prompt, payload);
     if (event.eventType === "GENERATED_CODE_CAPTURED") addGeneratedCode(prompt, payload);
+    await this.persistTraceEvent(event, prompt);
     if (terminalEvents.has(event.eventType)) {
       prompt.status = event.eventType.endsWith("FAILED") ? "FAILED" : "COMPLETED";
-      await this.finalize(event.runId);
+      await this.finalize(event.runId, event.occurredAt);
     }
   }
 
-  private async finalize(runId: string): Promise<void> {
+  private async finalize(runId: string, completedAt = new Date().toISOString()): Promise<void> {
     const prompt = this.active.get(runId);
     if (!prompt) return;
     const generatedCode = [...prompt.generatedCode.values()];
@@ -220,12 +248,66 @@ export class PromptStore {
       { Field: "ProjectPath", Value: terminalValue(result.projectPath ?? "NOT_AVAILABLE") },
       { Field: "Status", Value: terminalValue(result.status) }
     ]);
-    await this.pool.execute(
-      "INSERT INTO prompt_results (`PromptQuery`,`AgentName`,`ModelName`,`Result`,`Resources`,`FilePaths`,`GeneratedCode`,`EncryptedGeneratedCode`,`GitUser`,`PromptId`,`SessionId`,`RunId`,`ProjectName`,`ProjectPath`,`Status`) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE `PromptId` = `PromptId`",
-      [result.promptQuery, result.agentName, result.modelName, result.result, JSON.stringify(result.resources), JSON.stringify(result.filePaths), JSON.stringify(result.generatedCode), JSON.stringify(result.encryptedGeneratedCode), result.gitUser, result.promptId, result.sessionId, runId, result.projectName, result.projectPath, result.status]
-    );
+    const promptResultId = await this.promptResults.save({ ...result, runId });
+    if (this.verificationRepository) {
+      await this.verificationRepository.attachPromptResult(result.promptId, promptResultId);
+      if (this.verificationService) {
+        try {
+          await this.verificationService.verifyPrompt({
+            promptId: result.promptId,
+            externalSessionId: result.sessionId,
+            runId,
+            finalResponse: result.result,
+            extractorModel: result.modelName,
+            executionStatus: executionStatus(result.status),
+            completedAt
+          });
+        } catch (error) {
+          // Verification failure must not discard the already durable legacy capture.
+          console.warn("[TF:Verification] claim processing failed", error);
+        }
+      }
+    }
     await this.writeCaptureFiles(runId, result, prompt.events);
     this.active.delete(runId);
+  }
+
+  private async createVerificationSession(event: JournalEvent, prompt: ActivePrompt): Promise<void> {
+    if (!this.verificationRepository) return;
+    await this.verificationRepository.createSession({
+      promptId: prompt.promptId,
+      externalSessionId: prompt.sessionId,
+      runId: event.runId,
+      promptResultId: null,
+      projectName: prompt.projectName,
+      projectPath: prompt.projectPath,
+      agentName: prompt.agentName,
+      modelName: prompt.modelName,
+      policyVersion: CLAIM_VERIFICATION_POLICY_VERSION,
+      startedAt: event.occurredAt
+    });
+    // Query-level identity is created once; later lifecycle events are evidence.
+  }
+
+  private async persistTraceEvent(event: JournalEvent, prompt: ActivePrompt): Promise<void> {
+    if (!this.verificationRepository) return;
+    const mapping = mapCaptureEventToTraceEvent(event);
+    if (!mapping) return;
+    await this.verificationRepository.appendTraceEvent({
+      promptId: prompt.promptId,
+      externalSessionId: prompt.sessionId,
+      runId: event.runId,
+      sourceEventId: event.eventId,
+      eventType: mapping.eventType,
+      outcome: mapping.outcome,
+      occurredAt: event.occurredAt,
+      ...(mapping.target ? { target: mapping.target } : {}),
+      metadata: mapping.metadata,
+      ...(mapping.projections ? { projections: mapping.projections } : {})
+    });
+    // appendTraceEvent is the durable source of truth. Verification reloads
+    // the completed prompt timeline from the repository instead of retaining
+    // a second in-memory evidence list.
   }
 
   private async writeCaptureFiles(runId: string, result: PromptResult, events: readonly StoredEvent[]): Promise<void> {
@@ -332,6 +414,11 @@ function isCaptureIndexEntry(value: unknown): value is CaptureIndexEntry {
 
 function text(value: unknown): string {
   return typeof value === "string" && value.trim() !== "" ? value : "NOT_AVAILABLE";
+}
+
+function executionStatus(value: string): ExecutionStatus {
+  if (value === "COMPLETED" || value === "FAILED" || value === "INTERRUPTED" || value === "IN_PROGRESS") return value;
+  return "FAILED";
 }
 
 function terminalValue(value: unknown, limit = 80): string {
