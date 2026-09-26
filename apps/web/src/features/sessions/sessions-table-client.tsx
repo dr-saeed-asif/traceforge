@@ -35,9 +35,7 @@ export function SessionsContent({
         }
         action={
           page > 1 ? (
-            <ButtonLink href={sessionListHref(values, page - 1)}>
-              Previous page
-            </ButtonLink>
+            <ButtonLink href={sessionListHref(values, page - 1)}>Previous page</ButtonLink>
           ) : (
             <ButtonLink href="/sessions">Show all dates</ButtonLink>
           )
@@ -55,12 +53,7 @@ export function SessionsContent({
         </div>
       </header>
       <SessionsTable days={days} />
-      <SessionPagination
-        values={values}
-        page={page}
-        returned={returned}
-        hasMore={hasMore}
-      />
+      <SessionPagination values={values} page={page} returned={returned} hasMore={hasMore} />
     </section>
   );
 }
@@ -71,9 +64,7 @@ interface SessionsErrorProps {
 }
 
 export function SessionsError({ description, action }: SessionsErrorProps) {
-  return (
-    <ErrorState description={description} action={action} />
-  );
+  return <ErrorState description={description} action={action} />;
 }
 
 interface SessionsFrameProps {

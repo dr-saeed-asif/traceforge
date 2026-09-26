@@ -1,7 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { SessionsContent, SessionsError, SessionsFrame } from "@/features/sessions/sessions-table-client";
+import {
+  SessionsContent,
+  SessionsError,
+  SessionsFrame
+} from "@/features/sessions/sessions-table-client";
 import type { VerificationSessionDaysResponse } from "@traceforge/verification-contracts";
 import type { SessionSearchParams } from "@/features/sessions/date-range";
 import { parseSessionListQuery, sessionListHref } from "@/features/sessions/session-list-query";
@@ -39,13 +43,17 @@ export function SessionsClientWrapper({ searchParams }: SessionsClientWrapperPro
       try {
         const response = await fetch(`/api/sessions?${queryParams.toString()}`);
         if (!response.ok) throw new Error("Failed to fetch sessions");
-        const data = await response.json() as VerificationSessionDaysResponse;
+        const data = (await response.json()) as VerificationSessionDaysResponse;
         if (!cancelled) {
           setState({ sessionDays: data, values: parsed.values, page: parsed.page });
         }
       } catch {
         if (!cancelled) {
-          setState({ error: "Failed to load sessions. Please try again.", values: parsed.values, page: parsed.page });
+          setState({
+            error: "Failed to load sessions. Please try again.",
+            values: parsed.values,
+            page: parsed.page
+          });
         }
       }
     };

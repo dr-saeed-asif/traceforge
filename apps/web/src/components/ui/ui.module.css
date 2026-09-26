@@ -419,7 +419,9 @@
   border: none;
   border-radius: 0.5rem;
   cursor: pointer;
-  transition: color 140ms ease, background 140ms ease;
+  transition:
+    color 140ms ease,
+    background 140ms ease;
 }
 
 .modalClose:hover {

@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
     ...(limit !== undefined ? { limit } : {}),
     ...(offset !== undefined ? { offset } : {}),
     ...(startedAfter !== undefined ? { startedAfter } : {}),
-    ...(startedBefore !== undefined ? { startedBefore } : {}),
+    ...(startedBefore !== undefined ? { startedBefore } : {})
   };
 
   try {
@@ -45,9 +45,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(response);
   } catch (error) {
     console.error("API Error:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch sessions" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to fetch sessions" }, { status: 500 });
   }
 }

@@ -1,5 +1,6 @@
 export * from "./application/ports/verification-repository.js";
 export * from "./application/claim-extractor.js";
+export * from "./application/ollama-claim-extractor.js";
 export * from "./application/claim-verifier.js";
 export * from "./application/trace-event-mapper.js";
 export * from "./application/verification-service.js";

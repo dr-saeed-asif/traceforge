@@ -207,7 +207,9 @@
   border: none;
   border-radius: 0.35rem;
   cursor: pointer;
-  transition: color 140ms ease, background 140ms ease;
+  transition:
+    color 140ms ease,
+    background 140ms ease;
 }
 
 .expandButton:hover {

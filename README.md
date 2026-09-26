@@ -1,282 +1,182 @@
 # TraceForge
 
-TraceForge ab ek minimal OpenCode prompt capture service hai.
+TraceForge verifies what a coding agent says it completed. It captures OpenCode execution events, extracts atomic claims from the final response, checks those claims against prompt-scoped evidence, and presents the verdicts in a web dashboard.
 
-Ye do jagah output save karta hai:
+TraceForge is designed for reproducible research and practical auditing. A local Ollama model extracts claims, but deterministic rules assign verdicts. The model cannot mark its own claims as verified.
 
-- MySQL table: `traceforge.prompt_results`
-- Folder output: `opencode-activity-captures/`
+## What TraceForge verifies
 
-<<<<<<< HEAD
-## Stored Fields
+| Verdict        | Meaning                                                                        |
+| -------------- | ------------------------------------------------------------------------------ |
+| `VERIFIED`     | Required evidence matches the claim.                                           |
+| `CONTRADICTED` | Captured evidence directly conflicts with the claim.                           |
+| `UNSUPPORTED`  | The claim is checkable, but matching or complete evidence is missing or stale. |
+| `UNVERIFIABLE` | No deterministic rule can establish the claim.                                 |
 
-Har completed prompt ke liye ye 8 fields save hoti hain:
-=======
-- provider-independent domain entities and normalized event envelope;
-- deterministic canonical JSON and SHA-256 event chaining;
-- event and chain verification with failure diagnostics;
-- byte-level artifact hashing and deterministic manifest hashing;
-- configurable secret redaction;
-- architectural boundary and critical integrity tests.
-- validated collector ingress with per-run serialized processing;
-- idempotency using explicit, provider, or deterministic content keys;
-- bounded queue backpressure and graceful draining;
-- sanitized durable buffering and outage replay;
-- in-memory event persistence and content-addressed filesystem artifact storage.
-- normalized MySQL 8 schema and checksum-protected migration runner;
-- transactionally locked event append, idempotency receipt, and outbox insertion;
-- lease-based, multi-worker-safe outbox claims;
-- append-only event-log permissions for the runtime database role.
-- provider-neutral SDK with task, session, run, prompt, model, tool, artifact, and completion recording;
-- collector-backed SDK transport and lifecycle enforcement;
-- executable synthetic end-to-end workflow with chain and artifact verification.
-- shell-safe Git commit inspection with before, after, and binary-diff hashes;
-- evidence-qualified artifact-to-commit correlation;
-- explicit artifact or manifest approval/rejection events;
-- MySQL approval and commit-provenance query repositories.
-- AES-256-GCM envelope encryption with replaceable key-provider contracts;
-- encrypted artifact storage with plaintext verification and ciphertext deduplication metadata;
-- MySQL encrypted-blob metadata that explicitly forbids plaintext data keys;
-- signed, hash-chained local integrity anchoring containing only root hashes and proof metadata.
-- OpenCode 1.18.21 plugin adapter compiled against the official hook types;
-- observed prompt, provider/model, response metadata, tool, bash, file-diff, resource, and visible-part mappings;
-- explicit OpenCode capability matrix and provider-neutral collector bridge.
-- Ollama `/api/chat` and `/api/generate` wrapper with bounded streaming capture;
-- non-destructive response cloning and an explicit provenance-completion promise;
-- observed response metrics and model-requested tool calls without claiming tool execution.
-- provider-neutral hosted-model gateway contract with isolated OpenAI Responses, Anthropic Messages, and DeepSeek Chat Completions profiles;
-- JSON and SSE response normalization with non-destructive forwarding, bounded capture, and explicit provenance completion;
-- structured tool-call observation without execution claims, and deliberate suppression of provider-exposed reasoning/thinking content.
-- versioned framework-neutral REST API handler with bearer authentication and endpoint scopes;
-- validated, bounded task and approval DTOs with authenticated identity binding;
-- allowlisted task, run, event, resource, artifact, approval, and commit-provenance responses;
-- explicit event-chain and artifact-byte verification endpoints with security audit hooks.
-- responsive provenance workbench with run integrity, event filtering, artifact verification, approvals, and Git correlation views;
-- server-rendered dashboard build for Cloudflare-compatible Sites hosting;
-- private hosted dashboard preview with an explicitly labeled demo dataset and production API integration boundary.
-- MySQL-backed production API composition with KMS envelope-decrypted artifact access;
-- workspace-authenticated dashboard aggregation through a private Sites service binding;
-- explicit live, connecting, unavailable, and demo states without silently substituting demo evidence.
-- master-prompt event taxonomy including explicit failure, rename, update, unavailable, and not-observed states;
-- research completeness scoring and operation-overhead measurement primitives;
-- separately authorized, integrity-checked secure artifact content access;
-- typed production configuration and structured API audit/error logs.
+The reliable first-paper scope is file creation/modification, command completion, build results, and test results. A changed file hash proves that a file changed; it does not prove semantic claims such as “the bug is fixed.” Those claims require an independent acceptance test and otherwise remain `UNVERIFIABLE`.
 
-OpenCode, Ollama, OpenAI, Anthropic, and DeepSeek adapters, the REST API boundary, production composition, and dashboard are implemented. A live installation still requires provisioned MySQL 8, AWS KMS, API credentials, artifact storage, and a Sites private tunnel binding.
->>>>>>> 77d0ac5dd22531c7fe1d20e068f1a2defb816c14
+## System flow
 
-- `PromptQuery`
-- `AgentName`
-- `ModelName`
-- `Result`
-- `Resources`
-- `FilePaths`
-- `GeneratedCode`
-- `EncryptedGeneratedCode`
+```mermaid
+flowchart LR
+  A[OpenCode agent] --> B[TraceForge adapter]
+  B --> C[Durable outbox]
+  C --> D[Capture API]
+  D --> E[(SQLite)]
+  D --> F[Prompt aggregation]
+  F --> G[Ollama or heuristic claim extraction]
+  G --> H[Deterministic verifier]
+  E --> H
+  H --> E
+  E --> I[Verification API]
+  I --> J[Next.js dashboard]
+```
 
-## Project Structure
+1. The OpenCode adapter captures the prompt, final assistant response, file state, commands, builds, and tests.
+2. A disk-backed outbox retries delivery when the API is unavailable.
+3. The API stores an ordered, hash-linked trace for each prompt.
+4. The extractor converts only the final response into atomic claims. Ollama output is schema-validated and must quote the source response.
+5. Deterministic rules select prompt-scoped evidence, check exact results and evidence freshness, and assign verdicts.
+6. The dashboard shows daily summaries, individual queries, claims, verdict explanations, and evidence events.
 
-| Path | Purpose |
-| --- | --- |
-<<<<<<< HEAD
-| `src/server.ts` | Minimal HTTP API |
-| `src/prompt-store.ts` | Prompt aggregation + MySQL insert + capture files |
-| `src/migrate.ts` | MySQL migration runner |
-| `packages/adapter-opencode/` | OpenCode plugin |
-| `infrastructure/mysql-migrations/` | MySQL schema |
-| `opencode-activity-captures/` | Prompt-wise JSON capture output |
-=======
-| `packages/domain` | Core event and entity rules with no infrastructure dependencies |
-| `packages/application` | Use-case ports implemented by infrastructure adapters |
-| `packages/provenance`, `packages/collector` | Redaction, normalization, ordering, hashing, and collection |
-| `packages/database`, `packages/crypto`, `packages/git`, `packages/anchor` | Infrastructure adapters |
-| `packages/adapter-*` | OpenCode, Ollama, and hosted-model integration boundaries |
-| `packages/api`, `packages/sdk` | Transport-neutral API and client contracts |
-| `infrastructure` | MySQL migrations and deployment configuration |
-| `scripts` | Operational, migration, smoke-test, documentation, and cleanup commands |
-| `docs` | Architecture decisions, API guides, security, and evaluation documentation |
-| `opencode-activity-captures` | Runtime prompt-by-prompt evidence projection; preserved by cleanup |
-| `examples/login-form` | Generated login-form sample moved out of the application root |
->>>>>>> 77d0ac5dd22531c7fe1d20e068f1a2defb816c14
+## Technology
+
+- Node.js and TypeScript
+- OpenCode plugin hooks
+- SQLite using `node:sqlite`
+- Ollama through its loopback HTTP API
+- Next.js and React
+- Vitest
+
+## Repository structure
+
+| Path                                | Responsibility                                                   |
+| ----------------------------------- | ---------------------------------------------------------------- |
+| `packages/adapter-opencode/`        | OpenCode hooks, event normalization, durable delivery            |
+| `src/server.ts`                     | Capture and read-only verification HTTP API                      |
+| `src/prompt-store.ts`               | Prompt lifecycle, final-response selection, capture files        |
+| `src/modules/verification/`         | Claim extraction, evidence policies, verdict rules, repositories |
+| `packages/verification-contracts/`  | Runtime-validated API contracts shared with the web app          |
+| `apps/web/`                         | Verification dashboard                                           |
+| `infrastructure/sqlite-migrations/` | Versioned SQLite schema                                          |
+| `research/`                         | Labeled-dataset format and evaluation instructions               |
+| `opencode-activity-captures/`       | Human-readable capture bundles generated at runtime              |
+
+Dependencies point inward: presentation and adapters call application services; application services depend on domain contracts and repository ports; infrastructure implements those ports.
 
 ## Requirements
 
-- Node.js 22+
-- MySQL 8+
-
-## Environment
-
-Use `.env`:
-
-```env
-DATABASE_URL=mysql://root:1234@127.0.0.1:3306/traceforge
-TRACEFORGE_API_URL=http://127.0.0.1:8080
-TRACEFORGE_HOST=127.0.0.1
-TRACEFORGE_PORT=8080
-TRACEFORGE_API_TOKEN=traceforge-local-dev-token-change-me
-TRACEFORGE_GENERATED_CODE_PRIVATE_KEY=<base64-encoded-32-byte-key>
-```
+- Node.js 22.22.2 or newer
+- npm 11 or newer
+- OpenCode for live capture
+- Ollama with a local extraction model when model-based extraction is enabled
 
 ## Install
 
 ```powershell
+git clone <repository-url>
+cd traceforge
 npm install
-npm run build
+Copy-Item .env.example .env
+Copy-Item apps/web/.env.example apps/web/.env.local
+npm run key:generate
 ```
 
-## Create Table
+Put the generated encryption key in `.env`. Set the same `TRACEFORGE_API_TOKEN` in `.env` and `apps/web/.env.local`. Never commit either file.
 
-```powershell
-<<<<<<< HEAD
-=======
-node scripts/smoke-opencode-capture.mjs
+For local model extraction, install Ollama and a local model. Configure:
+
+```env
+TRACEFORGE_EXTRACTOR=ollama
+TRACEFORGE_LLM_ENDPOINT=http://127.0.0.1:11434/api/chat
+TRACEFORGE_LLM_MODEL=qwen3.5:4b
+TRACEFORGE_LLM_TIMEOUT_MS=180000
 ```
 
-Start the central MySQL-backed ingestion API after configuring `.traceforge/operational/runtime.env`:
+The extractor is restricted to a loopback Ollama endpoint. The adapter and browser never access the model service.
 
-```powershell
-docker compose --env-file .env -f infrastructure/docker/compose.yml up -d
-npm run api:start
-```
+## Start TraceForge
 
-The server applies pending migrations, starts the redacting and hash-chaining collector, and listens on `TRACEFORGE_HOST:TRACEFORGE_PORT` (defaults `127.0.0.1:8080`). `GET /healthz` is unauthenticated; all `/api/v1/*` routes require the configured bearer token. Independent projects load `packages/adapter-opencode/dist/operational-plugin.js` from their project-local `opencode.json` and send events to this API.
-
-The hosted dashboard continues to show its clearly labeled demo data when no live run/API binding is supplied. With the private API binding configured, open it using `?runId=<captured-run-id>` to render that run from MySQL.
-
-### MySQL development
-
-For a local MySQL 8 instance or the included Docker service:
-
-```sh
-docker compose --env-file .env -f infrastructure/docker/compose.yml up -d
->>>>>>> 77d0ac5dd22531c7fe1d20e068f1a2defb816c14
-npm run db:migrate
-```
-
-This creates:
-
-```sql
-prompt_results(
-  PromptQuery,
-  AgentName,
-  ModelName,
-  Result,
-  Resources,
-  FilePaths,
-  GeneratedCode,
-  EncryptedGeneratedCode
-)
-```
-
-<<<<<<< HEAD
-## Start API
-=======
-Apply `infrastructure/database/runtime-permissions.sql` separately as a MySQL administrator. It creates roles without login credentials and grants the runtime role no update or delete privilege on provenance events. Deployment tooling is responsible for login roles and secret-managed passwords. MySQL Workbench can connect to the same host, port, database, and credentials in `DATABASE_URL`.
->>>>>>> 77d0ac5dd22531c7fe1d20e068f1a2defb816c14
-
-```powershell
-npm run api:start
-```
-
-Safer option:
+Run the API and dashboard in separate terminals from the repository root.
 
 ```powershell
 npm run api:up
 ```
 
-Ye pehle migration run karta hai, phir server start karta hai.
-
-Health check:
-
-```text
-http://127.0.0.1:8080/healthz
+```powershell
+npm run web:dev
 ```
 
-<<<<<<< HEAD
-## OpenCode Setup
-=======
-- Hosted-provider gateways require callers to supply authentication and provider-version headers; no credentials are persisted by the adapters.
-- MySQL integration tests require an externally available MySQL database and skip when `TEST_DATABASE_URL` is absent.
-- Local encryption and anchor keys must be supplied outside source control; production uses AWS workload credentials and an explicitly configured KMS key.
-- Hash chains alone do not detect deletion of an unanchored chain suffix.
-- Automatic secret detection is defense in depth, not a guarantee that arbitrary secrets are recognizable.
-- Gateway capture covers only calls deliberately routed through TraceForge; SDK traffic that bypasses the gateway is not observable.
->>>>>>> 77d0ac5dd22531c7fe1d20e068f1a2defb816c14
+Open `http://localhost:3000`. Check API health at `http://127.0.0.1:8080/healthz` and web health at `http://localhost:3000/api/health`.
 
-Project `opencode.json` should load:
+## Connect an OpenCode project
+
+Build the adapter with `npm run build`, then add its absolute file URL to the target project's `opencode.json`:
 
 ```json
 {
   "$schema": "https://opencode.ai/config.json",
   "plugin": [
-    "file:///H:/aqibDev/opencode-works/TraceForge/packages/adapter-opencode/dist/operational-plugin.js"
+    "file:///E:/absolute/path/traceforge/packages/adapter-opencode/dist/operational-plugin.js"
   ]
 }
 ```
 
-If needed before running `opencode`:
+Use forward slashes and encode spaces as `%20`. If the adapter cannot discover TraceForge's `.env`, set it before starting OpenCode:
 
 ```powershell
-$env:TRACEFORGE_RUNTIME_ENV="H:\aqibDev\opencode-works\TraceForge\.env"
+$env:TRACEFORGE_RUNTIME_ENV = "E:\absolute\path\traceforge\.env"
+opencode
 ```
 
-## Workflow
+Restart an existing OpenCode process after rebuilding the adapter.
 
-When a prompt is sent:
+## Data and security
 
-1. OpenCode plugin sends `PROMPT_SUBMITTED`
-2. Plugin sends `AGENT_STARTED`
-3. Plugin sends `MODEL_REQUEST`
-4. Response text is sent as `MODEL_RESPONSE`
-5. `webfetch` URLs are sent as `RESOURCE_ACCESSED`
-6. On completion, TraceForge writes:
-   - one row into `prompt_results`
-   - one folder into `opencode-activity-captures/`
+The default database is `data/traceforge.sqlite`. Generated source snapshots are encrypted with AES-256-GCM. Sensitive paths such as `.env`, `.git`, and `node_modules` are excluded from source capture. Large, binary, invalid UTF-8, and out-of-workspace files are also excluded.
 
-## MySQL Query
+Every trace event stores its predecessor hash and its own hash. This detects later modification of the stored sequence; it does not prove that the original runtime observation was truthful. State that trust boundary in research reporting.
 
-```sql
-SELECT PromptQuery, AgentName, ModelName, Result, Resources, FilePaths, GeneratedCode, EncryptedGeneratedCode
-FROM traceforge.prompt_results;
-```
+## Research evaluation
 
-Decrypt generated code for an exact prompt query:
+The example dataset is synthetic and only checks the evaluation pipeline:
 
 ```powershell
-npm run code:decrypt -- "Create app"
+npm run research:export -- research/annotation-natural.jsonl
 ```
-
-Generate the private encryption key once if `.env` does not already contain it:
 
 ```powershell
-npm run key:generate
+npm run research:evaluate -- research/evaluation.example.jsonl heuristic
 ```
 
-## Capture Folder Output
-
-Each completed prompt gets a folder like:
-
-```text
-opencode-activity-captures/
-  <run-id>--0001--<prompt-slug>/
-    README.md
-    summary.json
-    prompt.json
-    resources.json
-    generated-code.json
-    events/
-      000001--PROMPT_SUBMITTED--....json
-      000002--MODEL_RESPONSE--....json
-```
-
-Root file:
-
-```text
-opencode-activity-captures/index.json
-```
-
-## Test
+After preparing an independently labeled dataset and starting Ollama:
 
 ```powershell
-npm test
+npm run research:evaluate -- research/your-labelled-dataset.jsonl ollama
 ```
+
+The report includes extraction precision, recall, F1, verdict accuracy, and a confusion matrix. See [research/README.md](research/README.md) for the dataset protocol. Do not report results from `evaluation.example.jsonl` as an experiment.
+
+## Quality commands
+
+| Command                 | Purpose                                  |
+| ----------------------- | ---------------------------------------- |
+| `npm run build`         | Build the backend and OpenCode adapter   |
+| `npm run build:all`     | Build backend, adapter, and dashboard    |
+| `npm run typecheck:all` | Type-check all workspaces                |
+| `npm test`              | Run backend, adapter, and contract tests |
+| `npm run web:test`      | Run dashboard tests                      |
+| `npm run quality:all`   | Run the complete quality suite           |
+| `npm run web:test:e2e`  | Run dashboard HTTP end-to-end tests      |
+
+## Current limitations
+
+- Local extraction speed and quality depend on the selected model and available hardware.
+- Semantic implementation claims require an independent acceptance oracle.
+- Shell commands are captured, but file-state evidence is strongest when OpenCode uses recognized file-writing tools.
+- Test counts depend on supported output formats; unsupported formats produce incomplete evidence rather than guessed values.
+- The included research dataset is a format example, not a publication dataset.
+
+## License and citation
+
+Add the chosen open-source license before public release. Add the paper citation and archival dataset DOI after acceptance or preprint publication.

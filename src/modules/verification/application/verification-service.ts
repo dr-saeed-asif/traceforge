@@ -1,9 +1,19 @@
-import type { ExtractedClaim, VerificationEvidence } from "../domain/contracts.js";
+import type {
+  ExtractedClaim,
+  VerificationEvidence,
+} from "../domain/contracts.js";
 import { CLAIM_VERIFICATION_POLICY_VERSION } from "../domain/claim-verification-policy.js";
-import { calculateReliabilitySummary, type ReliabilitySummary } from "../domain/reliability.js";
+import {
+  calculateReliabilitySummary,
+  type ReliabilitySummary,
+} from "../domain/reliability.js";
 import type { ExecutionStatus, ProcessingStatus } from "../domain/statuses.js";
 import type { VerificationRepository } from "./ports/verification-repository.js";
-import { EXTRACTION_PROMPT_VERSION, HeuristicClaimExtractor, type ClaimExtractor } from "./claim-extractor.js";
+import {
+  EXTRACTION_PROMPT_VERSION,
+  HeuristicClaimExtractor,
+  type ClaimExtractor,
+} from "./claim-extractor.js";
 import { verifyClaims } from "./claim-verifier.js";
 import type { ClaimVerificationResult } from "../domain/contracts.js";
 
@@ -32,44 +42,64 @@ export interface VerifyPromptResult {
 export class VerificationApplicationService {
   public constructor(
     private readonly repository: VerificationRepository,
-    private readonly extractor: ClaimExtractor = new HeuristicClaimExtractor()
+    private readonly extractor: ClaimExtractor = new HeuristicClaimExtractor(),
   ) {}
 
-  public async verifyPrompt(input: VerifyPromptInput): Promise<VerifyPromptResult> {
+  public async verifyPrompt(
+    input: VerifyPromptInput,
+  ): Promise<VerifyPromptResult> {
     let claims: readonly ExtractedClaim[] = [];
     let extractionComplete = false;
     try {
-      claims = await this.extractor.extract({ finalResponse: input.finalResponse, modelName: input.extractorModel });
+      claims = await this.extractor.extract({
+        finalResponse: input.finalResponse,
+        modelName: input.extractorModel,
+      });
+      const extractorModel = this.extractor.modelName ?? input.extractorModel;
       for (const claim of claims) {
         await this.repository.saveExtractedClaim({
           ...claim,
           promptId: input.promptId,
-          extractorModel: input.extractorModel,
+          extractorModel,
           extractionPromptVersion: EXTRACTION_PROMPT_VERSION,
-          verificationRuleVersion: CLAIM_VERIFICATION_POLICY_VERSION
+          verificationRuleVersion: CLAIM_VERIFICATION_POLICY_VERSION,
         });
       }
       extractionComplete = true;
-      await this.updateStatus(input, "SUCCEEDED", "PENDING", calculateReliabilitySummary([]));
+      await this.updateStatus(
+        input,
+        "SUCCEEDED",
+        "PENDING",
+        calculateReliabilitySummary([]),
+      );
       // Evidence is loaded by prompt_id from durable storage. Callers cannot
       // accidentally pass events from another prompt/session into a verdict.
-      const evidence = await this.repository.loadVerificationEvidence(input.promptId);
+      const evidence = await this.repository.loadVerificationEvidence(
+        input.promptId,
+      );
       const verifications = verifyClaims(claims, evidence, {
         promptId: input.promptId,
-        ruleVersion: CLAIM_VERIFICATION_POLICY_VERSION
+        ruleVersion: CLAIM_VERIFICATION_POLICY_VERSION,
       });
       for (const verification of verifications) {
         await this.repository.saveClaimVerification({
           ...verification,
           promptId: input.promptId,
-          verifiedAt: input.completedAt ?? new Date().toISOString()
+          verifiedAt: input.completedAt ?? new Date().toISOString(),
         });
       }
-      const summary = calculateReliabilitySummary(verifications.map(value => value.verdict));
+      const summary = calculateReliabilitySummary(
+        verifications.map((value) => value.verdict),
+      );
       await this.updateStatus(input, "SUCCEEDED", "SUCCEEDED", summary);
       return { claims, verifications, summary };
     } catch (error) {
-      await this.updateStatus(input, extractionComplete ? "SUCCEEDED" : "FAILED", extractionComplete ? "FAILED" : "NOT_STARTED", calculateReliabilitySummary([])).catch(() => undefined);
+      await this.updateStatus(
+        input,
+        extractionComplete ? "SUCCEEDED" : "FAILED",
+        extractionComplete ? "FAILED" : "NOT_STARTED",
+        calculateReliabilitySummary([]),
+      ).catch(() => undefined);
       throw error;
     }
   }
@@ -78,7 +108,7 @@ export class VerificationApplicationService {
     input: VerifyPromptInput,
     extractionStatus: ProcessingStatus,
     verificationStatus: ProcessingStatus,
-    summary: ReliabilitySummary
+    summary: ReliabilitySummary,
   ): Promise<void> {
     return this.repository.updateSessionSummary({
       promptId: input.promptId,
@@ -86,7 +116,7 @@ export class VerificationApplicationService {
       extractionStatus,
       verificationStatus,
       summary,
-      completedAt: input.completedAt
+      completedAt: input.completedAt,
     });
   }
 }

@@ -48,28 +48,42 @@ export function SessionsTable({ days }: Readonly<{ days: readonly VerificationSe
             header: "Verified",
             align: "end",
             width: "11%",
-            cell: (summary) => <span className={styles.verifiedCount}>{formatCount(summary.verifiedClaims)}</span>
+            cell: (summary) => (
+              <span className={styles.verifiedCount}>{formatCount(summary.verifiedClaims)}</span>
+            )
           },
           {
             key: "contradicted",
             header: "Contradicted",
             align: "end",
             width: "12%",
-            cell: (summary) => <span className={styles.contradictedCount}>{formatCount(summary.contradictedClaims)}</span>
+            cell: (summary) => (
+              <span className={styles.contradictedCount}>
+                {formatCount(summary.contradictedClaims)}
+              </span>
+            )
           },
           {
             key: "unsupported",
             header: "Unsupported",
             align: "end",
             width: "12%",
-            cell: (summary) => <span className={styles.unsupportedCount}>{formatCount(summary.unsupportedClaims)}</span>
+            cell: (summary) => (
+              <span className={styles.unsupportedCount}>
+                {formatCount(summary.unsupportedClaims)}
+              </span>
+            )
           },
           {
             key: "unverifiable",
             header: "Unverifiable",
             align: "end",
             width: "12%",
-            cell: (summary) => <span className={styles.unverifiableCount}>{formatCount(summary.unverifiableClaims)}</span>
+            cell: (summary) => (
+              <span className={styles.unverifiableCount}>
+                {formatCount(summary.unverifiableClaims)}
+              </span>
+            )
           },
           {
             key: "reliability",
@@ -77,7 +91,9 @@ export function SessionsTable({ days }: Readonly<{ days: readonly VerificationSe
             align: "end",
             width: "10%",
             cell: (summary) => (
-              <strong className={styles.tableMetric}>{formatPercent(summary.reliabilityPercent)}</strong>
+              <strong className={styles.tableMetric}>
+                {formatPercent(summary.reliabilityPercent)}
+              </strong>
             )
           }
         ]}

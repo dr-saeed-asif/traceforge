@@ -75,9 +75,7 @@ export function DataTable<TRow>({
                 </tr>
                 {renderExpandedRow && renderExpandedRow(row) && (
                   <tr>
-                    <td colSpan={columns.length}>
-                      {renderExpandedRow(row)}
-                    </td>
+                    <td colSpan={columns.length}>{renderExpandedRow(row)}</td>
                   </tr>
                 )}
               </React.Fragment>

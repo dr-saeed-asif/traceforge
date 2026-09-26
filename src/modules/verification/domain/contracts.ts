@@ -30,6 +30,19 @@ export interface ExtractedClaim {
   readonly claimType: ClaimType;
   readonly target: string;
   readonly expectedResult: string;
+  /** Exact text from the final response; never an invented quotation. */
+  readonly sourceQuote?: string;
+  readonly expectation?: ClaimExpectation;
+}
+
+/** Machine-readable assertions. A changed hash cannot prove functional behavior. */
+export interface ClaimExpectation {
+  readonly outcome: "success" | "failure";
+  readonly basis: "operation" | "behavior" | "unverifiable";
+  readonly passed?: number;
+  readonly failed?: number;
+  readonly skipped?: number;
+  readonly paths?: readonly string[];
 }
 
 /**
@@ -56,7 +69,9 @@ export interface VerificationEvidence {
  * or architecture evidence without weakening the common event envelope.
  */
 export interface TraceEventRecord<
-  TMetadata extends Readonly<Record<string, unknown>> = Readonly<Record<string, unknown>>
+  TMetadata extends Readonly<Record<string, unknown>> = Readonly<
+    Record<string, unknown>
+  >,
 > extends VerificationSessionIdentity {
   readonly eventId: string;
   readonly sequenceNumber: number;
@@ -97,7 +112,9 @@ export interface FileChangeEvidence extends Readonly<Record<string, unknown>> {
 }
 
 /** Evidence captured when a shell, build, or test command completes. */
-export interface CommandCompletionEvidence extends Readonly<Record<string, unknown>> {
+export interface CommandCompletionEvidence extends Readonly<
+  Record<string, unknown>
+> {
   readonly command: string;
   readonly workingDirectory: string;
   readonly exitCode: number;

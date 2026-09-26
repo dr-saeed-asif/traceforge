@@ -59,7 +59,11 @@ export function createTraceForgeApiClient(
         parseVerificationSessionDaysResponse
       );
     } catch (error) {
-      if (!(error instanceof TraceForgeApiError) || error.code !== "HTTP_ERROR" || error.status !== 404) {
+      if (
+        !(error instanceof TraceForgeApiError) ||
+        error.code !== "HTTP_ERROR" ||
+        error.status !== 404
+      ) {
         throw error;
       }
       return getSessionDaysFromLegacyApi(query);
@@ -109,11 +113,7 @@ export function createTraceForgeApiClient(
   ): Promise<VerificationSessionsResponse> {
     const requestedLimit = query.limit;
     if (requestedLimit === undefined || requestedLimit >= 100) {
-      return request(
-        "/api/v1/verification/sessions",
-        query,
-        parseVerificationSessionsResponse
-      );
+      return request("/api/v1/verification/sessions", query, parseVerificationSessionsResponse);
     }
 
     // Fetch one extra record at the server boundary. This gives the UI exact
@@ -131,8 +131,7 @@ export function createTraceForgeApiClient(
         limit: requestedLimit,
         offset: response.pagination.offset,
         returned: sessions.length,
-        hasMore:
-          response.sessions.length > requestedLimit || response.pagination.hasMore
+        hasMore: response.sessions.length > requestedLimit || response.pagination.hasMore
       }
     };
   }
@@ -194,7 +193,6 @@ export function createTraceForgeApiClient(
       clearTimeout(timeout);
     }
   }
-
 }
 
 function groupSessionsByDay(sessions: readonly VerificationSession[]): VerificationSessionDay[] {
@@ -207,11 +205,11 @@ function groupSessionsByDay(sessions: readonly VerificationSession[]): Verificat
   }
 
   return [...grouped.entries()].map(([date, daySessions]) => {
-    const totalClaims = sum(daySessions, session => session.totalClaims);
-    const verifiedClaims = sum(daySessions, session => session.verifiedClaims);
-    const contradictedClaims = sum(daySessions, session => session.contradictedClaims);
-    const unsupportedClaims = sum(daySessions, session => session.unsupportedClaims);
-    const unverifiableClaims = sum(daySessions, session => session.unverifiableClaims);
+    const totalClaims = sum(daySessions, (session) => session.totalClaims);
+    const verifiedClaims = sum(daySessions, (session) => session.verifiedClaims);
+    const contradictedClaims = sum(daySessions, (session) => session.contradictedClaims);
+    const unsupportedClaims = sum(daySessions, (session) => session.unsupportedClaims);
+    const unverifiableClaims = sum(daySessions, (session) => session.unverifiableClaims);
     const scoredClaims = verifiedClaims + contradictedClaims + unsupportedClaims;
     return {
       date,

@@ -1,4 +1,7 @@
-import type { VerificationSession, VerificationSessionDay } from "@traceforge/verification-contracts";
+import type {
+  VerificationSession,
+  VerificationSessionDay
+} from "@traceforge/verification-contracts";
 
 export interface DailySummary {
   date: string;

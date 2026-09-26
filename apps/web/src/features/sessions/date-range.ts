@@ -11,9 +11,7 @@ export interface SessionDateRange {
   readonly error: string | null;
 }
 
-export type SessionSearchParams = Readonly<
-  Record<string, string | readonly string[] | undefined>
->;
+export type SessionSearchParams = Readonly<Record<string, string | readonly string[] | undefined>>;
 
 export function parseSessionDateRange(searchParams: SessionSearchParams): SessionDateRange {
   const values = {
