@@ -41,8 +41,26 @@ const server = createServer(async (request, response) => {
       request.url ?? "/",
       `http://${request.headers.host ?? "localhost"}`,
     );
-    if (request.method === "GET" && requestUrl.pathname === "/healthz")
-      return send(response, 200, { status: "ok" });
+    if (request.method === "GET" && requestUrl.pathname === "/healthz") {
+      let databaseReady = false;
+      try {
+        database.prepare("SELECT 1").get();
+        databaseReady = true;
+      } catch {
+        databaseReady = false;
+      }
+      const llmReady = claimExtractor ? await checkLlm(config.llm!.endpoint) : null;
+      return send(response, 200, {
+        status: databaseReady ? "ok" : "error",
+        checks: {
+          backend: true,
+          database: databaseReady,
+          extraction: config.extractor === "heuristic" || llmReady === true,
+          llm: config.extractor === "heuristic" ? null : llmReady,
+          extractor: config.extractor,
+        },
+      });
+    }
     if (request.headers.authorization !== `Bearer ${config.apiToken}`)
       return send(response, 401, { error: "unauthorized" });
 
@@ -84,6 +102,18 @@ const server = createServer(async (request, response) => {
     send(response, 500, { error: "internal_error" });
   }
 });
+
+async function checkLlm(endpoint: string): Promise<boolean> {
+  try {
+    const url = new URL(endpoint);
+    url.pathname = "/api/tags";
+    url.search = "";
+    const response = await fetch(url, { signal: AbortSignal.timeout(2000) });
+    return response.ok;
+  } catch {
+    return false;
+  }
+}
 
 server.listen(config.port, config.host, () =>
   process.stdout.write(

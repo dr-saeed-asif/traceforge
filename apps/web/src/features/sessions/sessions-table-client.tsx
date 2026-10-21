@@ -6,6 +6,7 @@ import { ButtonLink, EmptyState, ErrorState } from "@/components/ui";
 import { PageContainer, PageHeader } from "@/components/page-container";
 import { SessionFilter } from "@/features/sessions/session-filter";
 import styles from "@/features/sessions/sessions.module.css";
+import { InfrastructureStatus } from "@/features/infrastructure-status/infrastructure-status";
 
 interface SessionsContentProps {
   days: readonly import("@traceforge/verification-contracts").VerificationSessionDay[];
@@ -81,6 +82,7 @@ export function SessionsFrame({ values, children }: SessionsFrameProps) {
         description="Review captured agent runs and inspect each extracted claim against its supporting trace evidence."
       />
       <div className={styles.listStack}>
+        <InfrastructureStatus />
         <div className={styles.filterPanel}>
           <SessionFilter values={values} />
         </div>
