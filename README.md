@@ -440,7 +440,7 @@ The Move source, build instructions, record schema, and contract behavior are do
 
 ### Latency measurement notes
 
-The Sui claim UI currently displays an end-to-end duration covering wallet approval and Sui execution. This is not a pure network-latency measurement because approval time depends on how quickly the user responds. Sepolia's UI does not currently report a corresponding elapsed duration, so a direct Sepolia-versus-Sui comparison is not yet available. Any future comparison should use clearly defined, consistently captured timings and report wallet approval separately from chain submission/confirmation.
+The session details page shows a per-claim comparison after an anchor succeeds on one or both chains. It saves successful Sepolia and Sui Testnet timings in the current browser, keyed by prompt, run, and claim. When both are available, it displays the observed difference and transaction links. These end-to-end durations include wallet approval and confirmation time, so they are useful for comparing the user experience of these runs, not as pure network-latency benchmarks. Timing data is browser-local and is not uploaded to the TraceForge API or written to either chain.
 
 ---
 

@@ -15,6 +15,7 @@ import {
   verifyVerifiedClaimAnchor
 } from "./blockchain-anchor-client";
 import styles from "./claim-anchoring.module.css";
+import { recordBlockchainLatencyMeasurement } from "../blockchain-latency/latency-storage";
 
 export function BlockchainAnchorButton({
   session,
@@ -33,6 +34,7 @@ export function BlockchainAnchorButton({
   const [anchored, setAnchored] = useState(false);
   const [pending, setPending] = useState(false);
   const [integrityVerified, setIntegrityVerified] = useState(false);
+  const [elapsedMs, setElapsedMs] = useState<number | null>(null);
 
   async function handleAnchor() {
     setBusy(true);
@@ -41,8 +43,11 @@ export function BlockchainAnchorButton({
     setTransactionUrl("");
     setTransactionHash("");
     setBlockNumber(null);
+    setElapsedMs(null);
+    const startedAt = performance.now();
     try {
       const result = await anchorVerifiedClaim(session, claim, traceEvents);
+      const elapsed = Math.round(performance.now() - startedAt);
       if (result.txHash) {
         setTransactionHash(result.txHash);
         setTransactionUrl(getSepoliaTransactionUrl(result.txHash));
@@ -56,6 +61,15 @@ export function BlockchainAnchorButton({
 
       setAnchored(result.status === "confirmed");
       setPending(result.status === "pending");
+      if (result.status === "confirmed" && result.txHash) {
+        setElapsedMs(elapsed);
+        recordBlockchainLatencyMeasurement(
+          { promptId: session.promptId, runId: session.runId, claimIndex: claim.claimIndex },
+          "sepolia",
+          elapsed,
+          result.txHash
+        );
+      }
       setMessage(
         result.status === "confirmed"
           ? "Confirmed on Sepolia. The claim commitment is anchored."
@@ -137,6 +151,12 @@ export function BlockchainAnchorButton({
           {blockNumber ? ` · Block ${blockNumber}` : pending ? " · Awaiting block" : ""}
           <br />
           Transaction: {transactionHash}
+        </span>
+      ) : null}
+      {elapsedMs !== null ? (
+        <span className={styles.blockchainAnchorMessage}>
+          End-to-end time: {(elapsedMs / 1000).toFixed(2)} s (wallet approval + Sepolia
+          confirmation)
         </span>
       ) : null}
       {transactionUrl ? (

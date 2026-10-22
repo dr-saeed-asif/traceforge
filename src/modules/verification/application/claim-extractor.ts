@@ -123,15 +123,15 @@ export function classifyClaimType(statement: string): ClaimType | null {
     /(?:\b(?:command|ran|run|executed|exit\s*code|exitcode)\b|\b(?:npm|pnpm|yarn|npx|node|pytest|vitest|jest|cargo|go)\s+[\w:.-]+)/iu.test(
       value,
     ) &&
-    /\b(?:success|successful|succeeded|passed|complete|completed|zero)\b/iu.test(
-      value,
-    )
+    ( /\b(?:success|successful|succeeded|passed|complete|completed|zero)\b/iu.test(value) ||
+      /\bexit(?:ed)?\s+(?:with\s+)?(?:code\s*)?0\b/iu.test(value) )
   )
     return "COMMAND_SUCCEEDED";
   if (
     /\b(?:new\s+file|file\s+(?:was\s+)?(?:created|added|generated)|created\s+(?:a\s+)?(?:new\s+)?file|added\s+(?:a\s+)?(?:new\s+)?file)\b/iu.test(
       value,
     ) ||
+    /\b(?:created|generated|added)\s+[`"']?(?:[\w.-]+[\\/])*[\w.-]+\.[\w-]+\b/iu.test(value) ||
     /^(?:i\s+)?(?:created|generated|added)\s+[`"']?(?:[\w.-]+[\\/])+[\w.-]+/iu.test(
       value,
     )

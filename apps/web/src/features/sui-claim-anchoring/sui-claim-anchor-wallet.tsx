@@ -15,6 +15,7 @@ import {
 } from "./sui-anchor-client";
 import { suiDAppKit } from "./sui-dapp-kit";
 import styles from "./sui-claim-anchoring.module.css";
+import { recordBlockchainLatencyMeasurement } from "../blockchain-latency/latency-storage";
 
 export function SuiClaimAnchorWallet({
   session,
@@ -66,8 +67,8 @@ export function SuiClaimAnchorWallet({
 
       setBusy(true);
       setMessage("Review and approve the Sui Testnet transaction in your wallet.");
-      const transaction = await createSuiAnchorTransaction(session, claim, traceEvents, deployment);
       const startedAt = performance.now();
+      const transaction = await createSuiAnchorTransaction(session, claim, traceEvents, deployment);
       const result = await dAppKit.signAndExecuteTransaction({
         transaction,
         account,
@@ -89,6 +90,12 @@ export function SuiClaimAnchorWallet({
 
       setDigest(result.Transaction.digest);
       setElapsedMs(elapsed);
+      recordBlockchainLatencyMeasurement(
+        { promptId: session.promptId, runId: session.runId, claimIndex: claim.claimIndex },
+        "sui",
+        elapsed,
+        result.Transaction.digest
+      );
       setAnchored(true);
       setMessage("Confirmed on Sui Testnet. The verified-claim commitment is anchored.");
     } catch (error) {

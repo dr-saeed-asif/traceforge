@@ -1,4 +1,4 @@
-import { buildClaimExtractionPrompt, expectationFor, extractTargetAndExpectedResult, parseExtractedClaims, type ClaimExtractionRequest, type ClaimExtractor, type ExtractionResult } from "./claim-extractor.js";
+import { buildClaimExtractionPrompt, classifyClaimType, expectationFor, extractClaims, extractTargetAndExpectedResult, parseExtractedClaims, type ClaimExtractionRequest, type ClaimExtractor, type ExtractionResult } from "./claim-extractor.js";
 import { CLAIM_TYPES, isClaimType } from "../domain/claim-types.js";
 import type { ExtractedClaim } from "../domain/contracts.js";
 
@@ -54,14 +54,41 @@ export class OllamaClaimExtractor implements ClaimExtractor {
     const body = await response.json() as { done?: boolean; done_reason?: string; message?: { content?: string }; model?: string; prompt_eval_count?: number; eval_count?: number };
     if (!body.done || body.done_reason === "length" || typeof body.message?.content !== "string")
       throw new Error("Local extraction returned incomplete output");
-    const parsed = JSON.parse(body.message.content) as { claims?: unknown };
     let claims: readonly ExtractedClaim[];
+    let usedExactQuoteFallback = false;
     try {
+      const parsed = JSON.parse(body.message.content) as { claims?: unknown };
       claims = parseExtractedClaims(normalizeClaims(parsed.claims, request.finalResponse), request.finalResponse);
     } catch (error) {
-      claims = await this.repair(request.finalResponse, body.message.content, error);
+      try {
+        claims = await this.repair(request.finalResponse, body.message.content, error);
+      } catch (repairError) {
+        // Small local models sometimes paraphrase sourceQuote even after repair.
+        // Never persist that ungrounded output; recover only exact, rule-shaped
+        // statements from the actual final response instead.
+        claims = extractClaims(request.finalResponse);
+        if (claims.length === 0) throw repairError;
+        usedExactQuoteFallback = true;
+        console.warn(
+          `[TF:Verification] Ollama returned ungrounded claims; used exact-quote fallback (${claims.length} claims).`,
+        );
+      }
+    }
+    // Some Ollama models return a schema-valid but empty list despite clear
+    // objective claims. Recover exact statements locally rather than reporting
+    // a successful extraction with zero claims.
+    if (!usedExactQuoteFallback && claims.length === 0) {
+      const exactClaims = extractClaims(request.finalResponse);
+      if (exactClaims.length > 0) {
+        claims = exactClaims;
+        usedExactQuoteFallback = true;
+        console.warn(
+          `[TF:Verification] Ollama returned no claims; used exact-quote fallback (${claims.length} claims).`,
+        );
+      }
     }
     return { claims, metadata: { provider: "ollama", model: body.model ?? this.modelName, latencyMs: Date.now() - started,
+      ...(usedExactQuoteFallback ? { fallback: "exact-quote-heuristic" } : {}),
       temperature: 0, seed: 42, usage: { input_tokens: body.prompt_eval_count ?? 0, output_tokens: body.eval_count ?? 0 } } };
   }
 
@@ -87,10 +114,13 @@ function normalizeClaims(value: unknown, finalResponse: string): unknown {
   return value.map((candidate) => {
     if (!candidate || typeof candidate !== "object" || Array.isArray(candidate)) return candidate;
     const sourceQuote = (candidate as Record<string, unknown>).sourceQuote;
-    const claimType = (candidate as Record<string, unknown>).claimType;
-    if (typeof sourceQuote !== "string" || !finalResponse.includes(sourceQuote) || !isClaimType(claimType)) return candidate;
+    const modelClaimType = (candidate as Record<string, unknown>).claimType;
+    if (typeof sourceQuote !== "string" || !finalResponse.includes(sourceQuote) || !isClaimType(modelClaimType)) return candidate;
+    // The model can confuse a passing test run with a passing build. Prefer the
+    // locally inferred type whenever the exact quoted statement is recognizable.
+    const claimType = classifyClaimType(sourceQuote) ?? modelClaimType;
     const details = extractTargetAndExpectedResult(sourceQuote, claimType);
-    return { ...candidate, claimText: sourceQuote, target: details.target, expectedResult: details.expectedResult,
+    return { ...candidate, claimText: sourceQuote, claimType, target: details.target, expectedResult: details.expectedResult,
       expectation: expectationFor(sourceQuote, claimType) };
   });
 }

@@ -10,6 +10,7 @@ import Link from "next/link";
 import { Badge, Card, CardHeader, DataTable, VerdictBadge } from "@/components/ui";
 import { BlockchainAnchorButton } from "../claim-anchoring/blockchain-anchor-button";
 import { SuiClaimAnchorButton } from "../sui-claim-anchoring/sui-claim-anchor-button";
+import { BlockchainLatencyComparison } from "../blockchain-latency/latency-comparison";
 import { eventDomId, humanize } from "./format";
 import styles from "./session-details.module.css";
 
@@ -120,6 +121,31 @@ export function ClaimsTable({
           ]}
         />
       </div>
+      {claims.some((claim) => claim.verdict === "VERIFIED") ? (
+        <section className={styles.latencySection} aria-labelledby="blockchain-latency-title">
+          <div className={styles.latencySectionHeader}>
+            <h3 id="blockchain-latency-title">Blockchain latency comparison</h3>
+            <p>
+              Compare successful anchor times for each verified claim. Times include wallet approval
+              and transaction confirmation. Measurements are saved in this browser.
+            </p>
+          </div>
+          <div className={styles.latencyGrid}>
+            {claims
+              .filter((claim) => claim.verdict === "VERIFIED")
+              .map((claim) => (
+                <BlockchainLatencyComparison
+                  key={claim.claimIndex}
+                  identity={{
+                    promptId: session.promptId,
+                    runId: session.runId,
+                    claimIndex: claim.claimIndex
+                  }}
+                />
+              ))}
+          </div>
+        </section>
+      ) : null}
     </Card>
   );
 }

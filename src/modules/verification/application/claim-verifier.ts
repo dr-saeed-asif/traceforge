@@ -608,6 +608,11 @@ function targetMatches(
 ): boolean {
   if (!target || claimType === "DEPENDENCY_RULE") return true;
   const expected = normalize(target);
+  if (
+    claimType === "COMMAND_SUCCEEDED" &&
+    ["command", "command execution", "test execution", "build"].includes(expected)
+  )
+    return true;
   const actual = normalize(eventTarget(event));
   if (!actual) return false;
   if (
