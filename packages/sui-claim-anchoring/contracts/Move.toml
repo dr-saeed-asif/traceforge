@@ -1,0 +1,6 @@
+[package]
+name = "traceforge_claim_anchoring"
+edition = "2024"
+
+[addresses]
+sui_claim_anchoring = "0x0"

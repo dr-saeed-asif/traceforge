@@ -22,6 +22,7 @@ import { EmptyState, ErrorState, LoadingState } from "@/components/ui/states";
 import { Icon } from "@/components/icons";
 import { humanize } from "@/features/session-details/format";
 import { BlockchainAnchorButton } from "@/features/claim-anchoring/blockchain-anchor-button";
+import { SuiClaimAnchorButton } from "@/features/sui-claim-anchoring/sui-claim-anchor-button";
 import { formatDateTime, formatPercent, type DailySummary } from "./daily-summary";
 import styles from "./sessions.module.css";
 
@@ -266,11 +267,18 @@ function ExpandedQueryView({ query }: { query: QueryDetails }) {
                           <div className={styles.verdictAnchorActions}>
                             <VerdictBadge verdict={claim.verdict} />
                             {claim.verdict === "VERIFIED" ? (
-                              <BlockchainAnchorButton
-                                session={session}
-                                claim={claim}
-                                traceEvents={traceEvents}
-                              />
+                              <>
+                                <BlockchainAnchorButton
+                                  session={session}
+                                  claim={claim}
+                                  traceEvents={traceEvents}
+                                />
+                                <SuiClaimAnchorButton
+                                  session={session}
+                                  claim={claim}
+                                  traceEvents={traceEvents}
+                                />
+                              </>
                             ) : null}
                           </div>
                         </dd>

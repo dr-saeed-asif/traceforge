@@ -9,6 +9,7 @@ import type {
 import Link from "next/link";
 import { Badge, Card, CardHeader, DataTable, VerdictBadge } from "@/components/ui";
 import { BlockchainAnchorButton } from "../claim-anchoring/blockchain-anchor-button";
+import { SuiClaimAnchorButton } from "../sui-claim-anchoring/sui-claim-anchor-button";
 import { eventDomId, humanize } from "./format";
 import styles from "./session-details.module.css";
 
@@ -100,11 +101,18 @@ export function ClaimsTable({
               header: "Blockchain",
               cell: (claim) =>
                 claim.verdict === "VERIFIED" ? (
-                  <BlockchainAnchorButton
-                    session={session}
-                    claim={claim}
-                    traceEvents={traceEvents}
-                  />
+                  <div className={styles.blockchainAnchorActions}>
+                    <BlockchainAnchorButton
+                      session={session}
+                      claim={claim}
+                      traceEvents={traceEvents}
+                    />
+                    <SuiClaimAnchorButton
+                      session={session}
+                      claim={claim}
+                      traceEvents={traceEvents}
+                    />
+                  </div>
                 ) : (
                   <span className={styles.noEvidence}>Verified claims only</span>
                 )

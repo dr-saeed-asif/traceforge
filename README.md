@@ -379,6 +379,71 @@ Open `http://localhost:3000`. Check API health at `http://127.0.0.1:8080/healthz
 
 ---
 
+## Blockchain Claim Anchoring (Sepolia and Sui Testnet)
+
+TraceForge can anchor a commitment for a **VERIFIED** claim on either Ethereum Sepolia or Sui Testnet. The dashboards provide separate **Anchor on Sepolia** and **Anchor on Sui** actions beside eligible claims. Each chain stores hashes and audit metadata; prompt text, source files, claim text, and evidence contents remain off-chain.
+
+### What gets anchored
+
+The contract records a session/run hash, claim index, claim/audit manifest hash, evidence-root hash, schema version, chain timestamp, sender address, and a verified attestation. The raw prompt, source code, and evidence content are not sent to either chain. Each chain records its own transaction and event.
+
+### Ethereum Sepolia workflow
+
+1. **Prepare a wallet.** Install/unlock MetaMask, select **Sepolia**, and ensure the account has Sepolia test ETH for gas. Never use mainnet funds for this test workflow.
+2. **Run TraceForge.** Start the API and web dashboard as described above, then open a session with at least one `VERIFIED` claim.
+3. **Anchor the claim.** In the session details page, click **Anchor on Sepolia** next to the verified claim. Approve the transaction in MetaMask. If MetaMask asks to switch networks, approve switching to Sepolia.
+4. **Wait for confirmation.** The claim should show its anchored status and a **View transaction** link. Open the link to inspect the transaction on Sepolia Etherscan.
+5. **Check integrity.** Click **Verify on Sepolia**. TraceForge recomputes the expected hashes from its local audit data and compares them with the record returned by the contract.
+
+The current Sepolia deployment is configured in `apps/web/src/features/claim-anchoring/blockchain-anchor-client.ts`:
+
+- Network: Sepolia (chain ID `11155111`)
+- Registry: `0x91027C349BDF0aaad3EF3d964f24C94B7c07fDF2`
+- Deployment transaction: `0x02924effcdb84ee68ffabd272b430ee4b2b7e526e16bbc484321dd4916bb57f7`
+
+### Sui Testnet workflow
+
+1. **Install a Sui wallet and CLI.** Use a Wallet Standard-compatible wallet such as Slush, set it to **Testnet**, and install the official Sui CLI. The wallet and CLI accounts are separate unless you deliberately import the same account; never share or paste a recovery phrase/private key.
+2. **Create/fund a Testnet account.** Create or select a CLI address, set the CLI environment to `testnet`, and request test SUI from [the Sui Testnet faucet](https://faucet.sui.io/?network=testnet). Confirm `sui client active-env` reports `testnet` and `sui client balance` shows funds.
+3. **Build and publish the Move package** (first deployment only):
+
+   ```powershell
+   cd packages/sui-claim-anchoring/contracts
+   sui move build
+   sui client publish . --gas-budget 100000000 --json
+   ```
+
+   Keep the published **package ID**, shared **Registry object ID**, and **AdminCap object ID** from the output. Publishing is an on-chain Testnet transaction and costs test SUI.
+
+4. **Give the connected wallet the AdminCap.** The wallet used to approve TraceForge anchors must own the `AdminCap` created at publish time. Transfer that object from the publishing CLI address to the Slush/Testnet wallet address, using the IDs from your publish output:
+
+   ```powershell
+   sui client transfer --to <SUI_WALLET_PUBLIC_ADDRESS> --object-id <ADMIN_CAP_OBJECT_ID> --gas-budget 10000000
+   ```
+
+   Confirm the transfer succeeded and that the AdminCap owner is the wallet you will connect to TraceForge. The address and object IDs are public; the wallet secret is not.
+
+5. **Configure the web app.** Set the deployment IDs in `apps/web/.env.local`:
+
+   ```env
+   NEXT_PUBLIC_SUI_ANCHOR_PACKAGE_ID=<PACKAGE_ID>
+   NEXT_PUBLIC_SUI_ANCHOR_REGISTRY_ID=<REGISTRY_OBJECT_ID>
+   NEXT_PUBLIC_SUI_ANCHOR_ADMIN_CAP_ID=<ADMIN_CAP_OBJECT_ID>
+   ```
+
+   Restart the web development server after changing environment variables. These are public on-chain IDs, not secrets.
+
+6. **Anchor the claim.** Open a session containing a `VERIFIED` claim, click **Anchor on Sui**, connect the wallet that owns the AdminCap, and approve the transaction. Confirm the claim shows **Anchored on Sui** and use **View Sui transaction** to inspect the result in Sui Explorer.
+7. **Inspect the on-chain event.** A successful call emits `ClaimAnchored`. The shared Registry is used for the claim records; the AdminCap authorizes the publisher wallet to write.
+
+The Move source, build instructions, record schema, and contract behavior are documented in [`packages/sui-claim-anchoring/contracts/README.md`](packages/sui-claim-anchoring/contracts/README.md). The app's Sui wallet setup is in [`apps/web/src/features/sui-claim-anchoring/README.md`](apps/web/src/features/sui-claim-anchoring/README.md).
+
+### Latency measurement notes
+
+The Sui claim UI currently displays an end-to-end duration covering wallet approval and Sui execution. This is not a pure network-latency measurement because approval time depends on how quickly the user responds. Sepolia's UI does not currently report a corresponding elapsed duration, so a direct Sepolia-versus-Sui comparison is not yet available. Any future comparison should use clearly defined, consistently captured timings and report wallet approval separately from chain submission/confirmation.
+
+---
+
 ## Connect an OpenCode Project
 
 1. Build adapter: `npm run build`

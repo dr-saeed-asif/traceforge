@@ -144,6 +144,12 @@
   min-width: 10rem;
 }
 
+.blockchainAnchorActions {
+  display: grid;
+  justify-items: start;
+  gap: 0.45rem;
+}
+
 .evidenceLinks {
   display: flex;
   min-width: 7rem;
