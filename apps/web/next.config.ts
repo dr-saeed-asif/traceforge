@@ -12,7 +12,7 @@ const nextConfig: NextConfig = {
   distDir: process.env.TRACEFORGE_NEXT_DIST_DIR?.trim() || ".next",
   poweredByHeader: false,
   reactStrictMode: true,
-  transpilePackages: ["@traceforge/verification-contracts"],
+  transpilePackages: ["@traceforge/claim-anchoring", "@traceforge/verification-contracts"],
   typescript: {
     tsconfigPath: process.env.TRACEFORGE_NEXT_TSCONFIG?.trim() || "tsconfig.json"
   },

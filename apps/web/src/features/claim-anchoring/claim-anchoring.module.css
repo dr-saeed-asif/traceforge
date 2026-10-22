@@ -1,0 +1,25 @@
+.blockchainAnchor {
+  display: grid;
+  justify-items: start;
+  gap: 0.35rem;
+  min-width: 10rem;
+}
+
+.blockchainAnchorMessage {
+  max-width: 16rem;
+  color: var(--color-text-subtle);
+  font-size: 0.68rem;
+  line-height: 1.4;
+}
+
+.blockchainAnchorLink {
+  color: var(--color-accent-strong);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.blockchainAnchorLink:hover {
+  text-decoration: underline;
+  text-underline-offset: 0.15rem;
+}

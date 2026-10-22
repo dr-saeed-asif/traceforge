@@ -6,6 +6,7 @@ import type {
   VerificationSessionDetailsResponse,
   VerificationTraceEvent
 } from "@traceforge/verification-contracts";
+import { ButtonLink } from "@/components/ui/button";
 import { useCallback, useEffect, useState } from "react";
 import {
   Badge,
@@ -20,6 +21,7 @@ import { Modal } from "@/components/ui/modal";
 import { EmptyState, ErrorState, LoadingState } from "@/components/ui/states";
 import { Icon } from "@/components/icons";
 import { humanize } from "@/features/session-details/format";
+import { BlockchainAnchorButton } from "@/features/claim-anchoring/blockchain-anchor-button";
 import { formatDateTime, formatPercent, type DailySummary } from "./daily-summary";
 import styles from "./sessions.module.css";
 
@@ -215,6 +217,14 @@ function ExpandedQueryView({ query }: { query: QueryDetails }) {
               </dd>
             </div>
           </dl>
+          <ButtonLink
+            className={styles.openSessionLink}
+            href={`/sessions/${encodeURIComponent(session.promptId)}`}
+            size="sm"
+            variant="secondary"
+          >
+            Open session details
+          </ButtonLink>
         </div>
 
         <div className={styles.expandedSection}>
@@ -253,7 +263,16 @@ function ExpandedQueryView({ query }: { query: QueryDetails }) {
                       <div>
                         <dt>Verdict</dt>
                         <dd>
-                          <VerdictBadge verdict={claim.verdict} />
+                          <div className={styles.verdictAnchorActions}>
+                            <VerdictBadge verdict={claim.verdict} />
+                            {claim.verdict === "VERIFIED" ? (
+                              <BlockchainAnchorButton
+                                session={session}
+                                claim={claim}
+                                traceEvents={traceEvents}
+                              />
+                            ) : null}
+                          </div>
                         </dd>
                       </div>
                       {claim.reasonCode && (

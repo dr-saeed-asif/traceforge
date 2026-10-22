@@ -1,0 +1,26 @@
+{
+  "name": "@traceforge/claim-anchoring",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./abi": "./contracts/VerifiedClaimRegistry.abi.json"
+  },
+  "files": [
+    "contracts",
+    "src"
+  ],
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@traceforge/verification-contracts": "*"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.2"
+  },
+  "engines": {
+    "node": ">=22.22.2"
+  }
+}

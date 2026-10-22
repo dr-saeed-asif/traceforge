@@ -1,19 +1,25 @@
+"use client";
+
 import type {
   VerificationClaim,
+  VerificationSession,
   VerificationTraceEvent,
   VerificationVerdict
 } from "@traceforge/verification-contracts";
 import Link from "next/link";
 import { Badge, Card, CardHeader, DataTable, VerdictBadge } from "@/components/ui";
+import { BlockchainAnchorButton } from "../claim-anchoring/blockchain-anchor-button";
 import { eventDomId, humanize } from "./format";
 import styles from "./session-details.module.css";
 
 export function ClaimsTable({
   claims,
-  traceEvents
+  traceEvents,
+  session
 }: Readonly<{
   claims: readonly VerificationClaim[];
   traceEvents: readonly VerificationTraceEvent[];
+  session: VerificationSession;
 }>) {
   const sequenceByEventId = new Map(
     traceEvents.map((event) => [event.eventId, event.sequenceNumber] as const)
@@ -87,6 +93,20 @@ export function ClaimsTable({
                       </Link>
                     ))}
                   </div>
+                )
+            },
+            {
+              key: "blockchain",
+              header: "Blockchain",
+              cell: (claim) =>
+                claim.verdict === "VERIFIED" ? (
+                  <BlockchainAnchorButton
+                    session={session}
+                    claim={claim}
+                    traceEvents={traceEvents}
+                  />
+                ) : (
+                  <span className={styles.noEvidence}>Verified claims only</span>
                 )
             }
           ]}

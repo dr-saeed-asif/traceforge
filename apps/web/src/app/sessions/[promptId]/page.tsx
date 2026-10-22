@@ -67,7 +67,11 @@ export default async function SessionDetailPage({ params }: SessionDetailPagePro
       />
       <div className={styles.detailStack}>
         <SessionSummary session={response.session} />
-        <ClaimsTable claims={response.claims} traceEvents={response.traceEvents} />
+        <ClaimsTable
+          session={response.session}
+          claims={response.claims}
+          traceEvents={response.traceEvents}
+        />
         <TraceTimeline traceEvents={response.traceEvents} claims={response.claims} />
       </div>
     </PageContainer>

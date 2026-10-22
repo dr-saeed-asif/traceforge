@@ -273,6 +273,10 @@
   text-transform: uppercase;
 }
 
+.openSessionLink {
+  margin-top: 1rem;
+}
+
 .noClaimsMessage {
   margin: 0;
   color: var(--color-text-subtle);
@@ -291,6 +295,13 @@
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
+}
+
+.verdictAnchorActions {
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 0.75rem;
 }
 
 .expandedDetails,
