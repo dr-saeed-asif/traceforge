@@ -37,6 +37,28 @@ export class ContractValidationError extends TypeError {
   }
 }
 
+export function parseAnchorLookupResponse(
+  value: unknown,
+): import("./types").AnchorLookupResponse {
+  const input = record(value, "$response");
+  return {
+    matches: array(input.matches, "$response.matches", (value, path) => {
+      const match = record(value, path);
+      const sessionHash = nonEmptyString(
+        match.sessionHash,
+        `${path}.sessionHash`,
+      );
+      if (!/^0x[0-9a-f]{64}$/.test(sessionHash))
+        fail("expected a session SHA-256 hash", path);
+      return {
+        session: parseSession(match.session, `${path}.session`),
+        sessionHash,
+        claims: array(match.claims, `${path}.claims`, parseClaim),
+      };
+    }),
+  };
+}
+
 export function parseVerificationOverviewResponse(
   value: unknown,
 ): VerificationOverviewResponse {

@@ -12,6 +12,7 @@ import {
 import { openSqliteDatabase } from "./infrastructure/sqlite/sqlite-database.js";
 import { applySqliteMigrations } from "./infrastructure/sqlite/sqlite-migrator.js";
 import { SqlitePromptResultRepository } from "./infrastructure/sqlite/sqlite-prompt-result-repository.js";
+import { AnchorLookup } from "./modules/verification/application/anchor-lookup.js";
 
 const config = loadConfig();
 const database = openSqliteDatabase(config.databasePath);
@@ -22,6 +23,7 @@ const verificationRepository = new SqliteVerificationRepository(database);
 const verificationQueries = new VerificationQueryService(
   verificationRepository,
 );
+const anchorLookup = new AnchorLookup(database, verificationRepository);
 const claimExtractor =
   config.extractor === "ollama" && config.llm
     ? new OllamaClaimExtractor(config.llm)
@@ -49,7 +51,9 @@ const server = createServer(async (request, response) => {
       } catch {
         databaseReady = false;
       }
-      const llmReady = claimExtractor ? await checkLlm(config.llm!.endpoint) : null;
+      const llmReady = claimExtractor
+        ? await checkLlm(config.llm!.endpoint)
+        : null;
       return send(response, 200, {
         status: databaseReady ? "ok" : "error",
         checks: {
@@ -127,6 +131,16 @@ async function handleVerificationGet(
   response: import("node:http").ServerResponse,
 ): Promise<void> {
   const window = parseDateWindow(requestUrl.searchParams);
+  if (requestUrl.pathname === "/api/v1/verification/anchor-lookup") {
+    const input = Object.fromEntries(
+      ["sessionHash", "manifestHash", "claimIndex"].flatMap((key) =>
+        requestUrl.searchParams.has(key)
+          ? [[key, requestUrl.searchParams.get(key)!]]
+          : [],
+      ),
+    );
+    return send(response, 200, await anchorLookup.search(input));
+  }
   if (requestUrl.pathname === "/api/v1/verification/overview") {
     const result = await verificationQueries.getOverview({
       ...window,

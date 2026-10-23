@@ -25,6 +25,7 @@ import {
   type DecodedAnchorPayload
 } from "./anchor-decoder";
 import styles from "./anchor-inspector.module.css";
+import { AnchorHashSearch } from "./anchor-hash-search";
 
 const meanings = {
   sessionHash: "SHA-256 of the session/run identity.",
@@ -70,19 +71,22 @@ export function AnchorInspector({
     }
   }
 
-  async function loadClaim() {
+  async function loadClaim(requestedPromptId = promptId, requestedClaimIndex = claimIndex) {
     setBusy(true);
     setLoaded(null);
     setMessage("");
     setChainResult("");
     try {
-      const index = Number(claimIndex);
-      if (!promptId.trim() || !Number.isSafeInteger(index) || index < 0)
+      const index = Number(requestedClaimIndex);
+      if (!requestedPromptId.trim() || !Number.isSafeInteger(index) || index < 0)
         throw new Error("Enter a prompt ID and a non-negative integer claim index.");
-      const response = await fetch(`/api/sessions/${encodeURIComponent(promptId.trim())}`, {
-        cache: "no-store",
-        signal: AbortSignal.timeout(15000)
-      });
+      const response = await fetch(
+        `/api/sessions/${encodeURIComponent(requestedPromptId.trim())}`,
+        {
+          cache: "no-store",
+          signal: AbortSignal.timeout(15000)
+        }
+      );
       if (!response.ok)
         throw new Error(
           "Could not load this TraceForge session. Check the prompt ID and API availability."
@@ -205,6 +209,15 @@ export function AnchorInspector({
           </div>
         </div>
       </section>
+      <AnchorHashSearch
+        decoded={decoded}
+        disabled={busy}
+        onSelect={(selectedPrompt, selectedIndex) => {
+          setPromptId(selectedPrompt);
+          setClaimIndex(String(selectedIndex));
+          void loadClaim(selectedPrompt, String(selectedIndex));
+        }}
+      />
       <section className={styles.card}>
         <h2>2. Recompute from a saved claim</h2>
         <div className={styles.form}>

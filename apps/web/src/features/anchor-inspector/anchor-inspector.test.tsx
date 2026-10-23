@@ -73,7 +73,10 @@ it("keeps decoded-field matching separate from reading the actual stored anchor"
   });
   vi.stubGlobal(
     "fetch",
-    vi.fn(async () => ({ ok: true, json: async () => details }))
+    vi.fn(async (url: string) => ({
+      ok: true,
+      json: async () => (url.startsWith("/api/anchor-lookup") ? { matches: [] } : details)
+    }))
   );
   mocks.verify.mockResolvedValue({ matches: true });
   render(<AnchorInspector initialPromptId="p" initialClaimIndex="2" />);

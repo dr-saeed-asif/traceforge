@@ -103,6 +103,14 @@ export interface ProcessingMetrics {
   readonly verificationDurationMs: number | null;
 }
 
+export interface AnchorLookupResponse {
+  readonly matches: readonly {
+    readonly session: VerificationSession;
+    readonly sessionHash: string;
+    readonly claims: readonly VerificationClaim[];
+  }[];
+}
+
 export interface VerificationSession {
   readonly processingMetrics?: ProcessingMetrics | null;
   readonly promptId: string;
