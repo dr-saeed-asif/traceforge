@@ -11,7 +11,7 @@ import { decodeFunctionResult, encodeFunctionData, type Abi } from "viem";
 import verifiedClaimRegistryAbi from "@traceforge/claim-anchoring/abi";
 
 export const SEPOLIA_CHAIN_ID = "0xaa36a7";
-export const VERIFIED_CLAIM_REGISTRY_ADDRESS = "0x9f616593277FF560Af07B2cae6AdEfB49844B8E9";
+export const VERIFIED_CLAIM_REGISTRY_ADDRESS = "0xbeADd119bef9F7F8A0844A505627eA91cF06F8b6";
 export const VERIFIED_CLAIM_REGISTRY_DEPLOYMENT_TX =
   "0xd3ed6cee4b16fdf09cfbcd69d86ec8a880cc6d57be8aac675235cddea300ba74";
 // MetaMask's EIP-7702 smart-account wrapper consumed enough gas that its
@@ -19,6 +19,15 @@ export const VERIFIED_CLAIM_REGISTRY_DEPLOYMENT_TX =
 // the wrapper as well as the contract execution.
 const ANCHOR_GAS_LIMIT = "0x16e360"; // 1,500,000 gas
 const VERIFIED_CLAIM_REGISTRY_ABI = verifiedClaimRegistryAbi as Abi;
+const AUTHORIZED_ANCHOR_ABI = [{
+  type: "function", name: "anchorVerifiedClaimWithAuthorization", stateMutability: "nonpayable",
+  inputs: [
+    { name: "sessionHash", type: "bytes32" }, { name: "claimIndex", type: "uint32" },
+    { name: "manifestHash", type: "bytes32" }, { name: "evidenceRoot", type: "bytes32" },
+    { name: "schemaVersion", type: "uint32" }, { name: "nonce", type: "uint256" },
+    { name: "deadline", type: "uint64" }, { name: "signature", type: "bytes" }
+  ], outputs: [{ name: "recordId", type: "bytes32" }]
+}] as Abi;
 const SEPOLIA_EXPLORER = "https://sepolia.etherscan.io";
 
 interface EthereumProvider {
@@ -49,7 +58,6 @@ export async function anchorVerifiedClaim(
   const provider = getProvider();
   const account = await getActiveAccount(provider);
   await switchToSepolia(provider);
-  await assertContractOwner(provider, account);
 
   const manifest = createBlockchainClaimAnchorManifest(session, claim, traceEvents);
   const payload = await createBlockchainClaimAnchorPayload(manifest);
@@ -66,7 +74,13 @@ export async function anchorVerifiedClaim(
     };
   }
 
-  const txHash = await sendAnchorTransaction(provider, account, payload);
+  const authorizationResponse = await fetch("/api/claim-anchor-authorization", {
+    method: "POST", headers: { "content-type": "application/json" },
+    body: JSON.stringify({ promptId: session.promptId, claimIndex: claim.claimIndex })
+  });
+  const authorization = await authorizationResponse.json() as { error?: string; nonce: string; deadline: number; signature: string };
+  if (!authorizationResponse.ok) throw new Error(authorization.error ?? "The claim could not be authorized.");
+  const txHash = await sendAnchorTransaction(provider, account, payload, authorization);
   // eth_sendTransaction resolves with a hash after wallet approval/broadcast.
   const submittedAt = performance.now();
   saveTransaction(key, txHash);
@@ -197,21 +211,6 @@ async function switchToSepolia(provider: EthereumProvider): Promise<void> {
   }
 }
 
-async function assertContractOwner(provider: EthereumProvider, account: string): Promise<void> {
-  const ownerData = await ethCall(
-    provider,
-    encodeFunctionData({ abi: VERIFIED_CLAIM_REGISTRY_ABI, functionName: "owner" })
-  );
-  const owner = decodeFunctionResult({
-    abi: VERIFIED_CLAIM_REGISTRY_ABI,
-    functionName: "owner",
-    data: ownerData
-  }) as string;
-  if (owner.toLowerCase() !== account.toLowerCase()) {
-    throw new Error("This contract only accepts anchors from its deploying MetaMask account.");
-  }
-}
-
 async function readRecordId(
   provider: EthereumProvider,
   sessionHash: string,
@@ -248,17 +247,21 @@ async function isAlreadyAnchored(provider: EthereumProvider, recordId: string): 
 async function sendAnchorTransaction(
   provider: EthereumProvider,
   account: string,
-  payload: Awaited<ReturnType<typeof createBlockchainClaimAnchorPayload>>
+  payload: Awaited<ReturnType<typeof createBlockchainClaimAnchorPayload>>,
+  authorization: { nonce: string; deadline: number; signature: string }
 ): Promise<string> {
   const data = encodeFunctionData({
-    abi: VERIFIED_CLAIM_REGISTRY_ABI,
-    functionName: "anchorVerifiedClaim",
+    abi: AUTHORIZED_ANCHOR_ABI,
+    functionName: "anchorVerifiedClaimWithAuthorization",
     args: [
       payload.sessionHash as `0x${string}`,
       payload.claimIndex,
       payload.manifestHash as `0x${string}`,
       payload.evidenceRoot as `0x${string}`,
-      payload.schemaVersion
+      payload.schemaVersion,
+      BigInt(authorization.nonce),
+      authorization.deadline,
+      authorization.signature as `0x${string}`
     ]
   });
   const result = await provider.request({

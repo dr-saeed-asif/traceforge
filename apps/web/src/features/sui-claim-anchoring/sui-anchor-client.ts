@@ -20,6 +20,13 @@ export interface SuiAnchorDeployment {
   readonly adminCapId: string;
 }
 
+export interface SuiAnchorAuthorization {
+  readonly nonce: string;
+  readonly deadlineMs: number;
+  readonly signature: string;
+  readonly signerPublicKey: string;
+}
+
 export interface SuiAnchorResult {
   readonly digest: string;
   readonly explorerUrl: string;
@@ -119,21 +126,36 @@ export async function createSuiAnchorTransaction(
 
 export function buildSuiAnchorTransaction(
   payload: BlockchainClaimAnchorPayload,
+  deployment: SuiAnchorDeployment,
+  authorization?: SuiAnchorAuthorization
+): Transaction {
+  const transaction = new Transaction();
+  transaction.moveCall({
+    target: `${deployment.packageId}::${SUI_CLAIM_ANCHOR_MODULE}::${authorization ? "anchor_verified_claim_with_authorization" : "anchor_verified_claim"}`,
+    arguments: authorization ? [
+      transaction.object(deployment.registryId), transaction.object("0x6"),
+      transaction.pure.vector("u8", hexToBytes32(payload.sessionHash)), transaction.pure.u32(payload.claimIndex),
+      transaction.pure.vector("u8", hexToBytes32(payload.manifestHash)), transaction.pure.vector("u8", hexToBytes32(payload.evidenceRoot)),
+      transaction.pure.u32(payload.schemaVersion), transaction.pure.vector("u8", hexToBytes(authorization.nonce)),
+      transaction.pure.u64(authorization.deadlineMs), transaction.pure.vector("u8", hexToBytes(authorization.signature))
+    ] : [
+      transaction.object(deployment.registryId), transaction.object(deployment.adminCapId), transaction.object("0x6"),
+      transaction.pure.vector("u8", hexToBytes32(payload.sessionHash)), transaction.pure.u32(payload.claimIndex),
+      transaction.pure.vector("u8", hexToBytes32(payload.manifestHash)), transaction.pure.vector("u8", hexToBytes32(payload.evidenceRoot)), transaction.pure.u32(payload.schemaVersion)
+    ]
+  });
+  return transaction;
+}
+
+/** One-time publisher setup: store the server's compressed secp256k1 public key. */
+export function buildSuiSignerSetupTransaction(
+  signerPublicKey: string,
   deployment: SuiAnchorDeployment
 ): Transaction {
   const transaction = new Transaction();
   transaction.moveCall({
-    target: `${deployment.packageId}::${SUI_CLAIM_ANCHOR_MODULE}::anchor_verified_claim`,
-    arguments: [
-      transaction.object(deployment.registryId),
-      transaction.object(deployment.adminCapId),
-      transaction.object("0x6"),
-      transaction.pure.vector("u8", hexToBytes32(payload.sessionHash)),
-      transaction.pure.u32(payload.claimIndex),
-      transaction.pure.vector("u8", hexToBytes32(payload.manifestHash)),
-      transaction.pure.vector("u8", hexToBytes32(payload.evidenceRoot)),
-      transaction.pure.u32(payload.schemaVersion)
-    ]
+    target: `${deployment.packageId}::${SUI_CLAIM_ANCHOR_MODULE}::set_signer_public_key`,
+    arguments: [transaction.object(deployment.registryId), transaction.object(deployment.adminCapId), transaction.pure.vector("u8", hexToBytes(signerPublicKey))]
   });
   return transaction;
 }
@@ -156,6 +178,11 @@ function hexToBytes32(value: string): number[] {
   return Array.from({ length: 32 }, (_, index) =>
     Number.parseInt(value.slice(2 + index * 2, 4 + index * 2), 16)
   );
+}
+
+function hexToBytes(value: string): number[] {
+  if (!/^0x[0-9a-f]*$/i.test(value) || value.length % 2 !== 0) throw new TypeError("Sui authorization bytes are invalid.");
+  return Array.from({ length: (value.length - 2) / 2 }, (_, index) => Number.parseInt(value.slice(2 + index * 2, 4 + index * 2), 16));
 }
 
 export const SUI_ANCHOR_TESTNET = SUI_TESTNET_NETWORK;
