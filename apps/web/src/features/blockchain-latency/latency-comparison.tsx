@@ -40,7 +40,8 @@ export function BlockchainLatencyComparison({
       <header className={styles.heading}>
         <div>
           <span className={styles.claimLabel}>Claim {identity.claimIndex}</span>
-          <h4>Anchor completion time</h4>
+          <h4>Transaction confirmation time</h4>
+          <p>Wallet approval excluded.</p>
         </div>
       </header>
       <div className={styles.measurements}>

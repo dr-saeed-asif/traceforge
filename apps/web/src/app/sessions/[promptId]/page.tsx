@@ -3,6 +3,8 @@ import { PageContainer, PageHeader } from "@/components/page-container";
 import { ButtonLink, ErrorState } from "@/components/ui";
 import { ClaimsTable } from "@/features/session-details/claims-table";
 import { SessionSummary } from "@/features/session-details/session-summary";
+import { SessionAutoRefresh } from "@/features/session-details/session-auto-refresh";
+import { isProcessing } from "@/features/session-details/processing-state";
 import styles from "@/features/session-details/session-details.module.css";
 import { TraceTimeline } from "@/features/session-details/trace-timeline";
 import { createTraceForgeApiClient, TraceForgeApiError } from "@/lib/traceforge-api";
@@ -66,7 +68,12 @@ export default async function SessionDetailPage({ params }: SessionDetailPagePro
         }
       />
       <div className={styles.detailStack}>
-        <SessionSummary session={response.session} />
+        {isProcessing(response.session) ? <SessionAutoRefresh active /> : null}
+        <SessionSummary
+          session={response.session}
+          extractorModel={response.claims[0]?.extractorModel}
+          traceEvents={response.traceEvents}
+        />
         <ClaimsTable
           session={response.session}
           claims={response.claims}

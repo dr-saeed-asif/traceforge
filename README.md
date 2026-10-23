@@ -398,7 +398,7 @@ The contract records a session/run hash, claim index, claim/audit manifest hash,
 The current Sepolia deployment is configured in `apps/web/src/features/claim-anchoring/blockchain-anchor-client.ts`:
 
 - Network: Sepolia (chain ID `11155111`)
-- Registry: `0x91027C349BDF0aaad3EF3d964f24C94B7c07fDF2`
+- Registry: `0x9f616593277FF560Af07B2cae6AdEfB49844B8E9`
 - Deployment transaction: `0x02924effcdb84ee68ffabd272b430ee4b2b7e526e16bbc484321dd4916bb57f7`
 
 ### Sui Testnet workflow

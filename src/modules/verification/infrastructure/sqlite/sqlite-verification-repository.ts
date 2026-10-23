@@ -28,6 +28,7 @@ interface LastEventRow { readonly sequence_number: number; readonly event_hash: 
 interface ClaimIdRow { readonly id: number; }
 
 interface SessionSummaryRow {
+  readonly processing_metrics_json: string | null;
   readonly id: number;
   readonly prompt_id: string;
   readonly prompt_query: string | null;
@@ -122,7 +123,7 @@ const SESSION_SUMMARY_SELECT = `SELECT session.id, session.prompt_id,
   session.total_claims, session.verified_claims, session.contradicted_claims,
   session.unsupported_claims, session.unverifiable_claims, session.scored_claims,
   session.reliability_percent, session.coverage_percent, session.started_at,
-  session.completed_at
+  session.completed_at, session.processing_metrics_json
   FROM execution_sessions AS session
   LEFT JOIN prompt_results AS result ON result.id = session.prompt_result_id`;
 
@@ -292,12 +293,14 @@ export class SqliteVerificationRepository implements VerificationRepository {
        verification_status = ?, total_claims = ?, verified_claims = ?,
        contradicted_claims = ?, unsupported_claims = ?, unverifiable_claims = ?,
        scored_claims = ?, reliability_percent = ?, coverage_percent = ?, completed_at = ?,
+       processing_metrics_json = COALESCE(?, processing_metrics_json),
        updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now') WHERE id = ?`
     ).run(
       input.executionStatus, input.extractionStatus, input.verificationStatus,
       counts.totalClaims, counts.verified, counts.contradicted, counts.unsupported,
       counts.unverifiable, input.summary.scoredClaims, input.summary.reliabilityPercent,
-      input.summary.coveragePercent, isoDateTime(input.completedAt), sessionId
+      input.summary.coveragePercent, isoDateTime(input.completedAt),
+      input.processingMetrics ? JSON.stringify(input.processingMetrics) : null, sessionId
     );
   }
 
@@ -478,6 +481,7 @@ function mapSessionSummary(row: SessionSummaryRow): VerificationSessionSummaryRe
     projectPath: row.project_path,
     agentName: row.agent_name,
     modelName: row.model_name,
+    processingMetrics: row.processing_metrics_json ? JSON.parse(row.processing_metrics_json) : null,
     executionStatus: row.execution_status,
     extractionStatus: row.extraction_status,
     verificationStatus: row.verification_status,

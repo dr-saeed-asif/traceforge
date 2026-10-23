@@ -16,6 +16,7 @@ import {
 } from "./claim-extractor.js";
 import { verifyClaims } from "./claim-verifier.js";
 import type { ClaimVerificationResult } from "../domain/contracts.js";
+import type { ProcessingMetrics } from "../domain/processing-metrics.js";
 
 export interface VerifyPromptInput {
   readonly promptId: string;
@@ -50,11 +51,39 @@ export class VerificationApplicationService {
   ): Promise<VerifyPromptResult> {
     let claims: readonly ExtractedClaim[] = [];
     let extractionComplete = false;
+    const extractionStart = performance.now();
+    let verificationStart: number | undefined;
+    let metrics: ProcessingMetrics = {
+      extractorModel: this.extractor.modelName ?? input.extractorModel,
+      extractionStartedAt: new Date().toISOString(),
+      extractionCompletedAt: null,
+      extractionDurationMs: null,
+      extractorDurationMs: null,
+      verificationStartedAt: null,
+      verificationCompletedAt: null,
+      verificationDurationMs: null,
+    };
     try {
-      claims = await this.extractor.extract({
-        finalResponse: input.finalResponse,
-        modelName: input.extractorModel,
-      });
+      // Publish completion before awaiting the potentially slow local model.
+      await this.updateStatus(
+        input,
+        "PENDING",
+        "NOT_STARTED",
+        calculateReliabilitySummary([]),
+        metrics,
+      );
+      const extractorStart = performance.now();
+      try {
+        claims = await this.extractor.extract({
+          finalResponse: input.finalResponse,
+          modelName: input.extractorModel,
+        });
+      } finally {
+        metrics = {
+          ...metrics,
+          extractorDurationMs: Math.round(performance.now() - extractorStart),
+        };
+      }
       const extractorModel = this.extractor.modelName ?? input.extractorModel;
       for (const claim of claims) {
         await this.repository.saveExtractedClaim({
@@ -66,11 +95,19 @@ export class VerificationApplicationService {
         });
       }
       extractionComplete = true;
+      metrics = {
+        ...metrics,
+        extractionCompletedAt: new Date().toISOString(),
+        extractionDurationMs: Math.round(performance.now() - extractionStart),
+        verificationStartedAt: new Date().toISOString(),
+      };
+      verificationStart = performance.now();
       await this.updateStatus(
         input,
         "SUCCEEDED",
         "PENDING",
         calculateReliabilitySummary([]),
+        metrics,
       );
       // Evidence is loaded by prompt_id from durable storage. Callers cannot
       // accidentally pass events from another prompt/session into a verdict.
@@ -91,14 +128,43 @@ export class VerificationApplicationService {
       const summary = calculateReliabilitySummary(
         verifications.map((value) => value.verdict),
       );
-      await this.updateStatus(input, "SUCCEEDED", "SUCCEEDED", summary);
+      metrics = {
+        ...metrics,
+        verificationCompletedAt: new Date().toISOString(),
+        verificationDurationMs: Math.round(
+          performance.now() - verificationStart,
+        ),
+      };
+      await this.updateStatus(
+        input,
+        "SUCCEEDED",
+        "SUCCEEDED",
+        summary,
+        metrics,
+      );
       return { claims, verifications, summary };
     } catch (error) {
+      metrics = extractionComplete
+        ? {
+            ...metrics,
+            verificationCompletedAt: new Date().toISOString(),
+            verificationDurationMs: Math.round(
+              performance.now() - verificationStart!,
+            ),
+          }
+        : {
+            ...metrics,
+            extractionCompletedAt: new Date().toISOString(),
+            extractionDurationMs: Math.round(
+              performance.now() - extractionStart,
+            ),
+          };
       await this.updateStatus(
         input,
         extractionComplete ? "SUCCEEDED" : "FAILED",
         extractionComplete ? "FAILED" : "NOT_STARTED",
         calculateReliabilitySummary([]),
+        metrics,
       ).catch(() => undefined);
       throw error;
     }
@@ -109,6 +175,7 @@ export class VerificationApplicationService {
     extractionStatus: ProcessingStatus,
     verificationStatus: ProcessingStatus,
     summary: ReliabilitySummary,
+    processingMetrics: ProcessingMetrics,
   ): Promise<void> {
     return this.repository.updateSessionSummary({
       promptId: input.promptId,
@@ -117,6 +184,7 @@ export class VerificationApplicationService {
       verificationStatus,
       summary,
       completedAt: input.completedAt,
+      processingMetrics,
     });
   }
 }

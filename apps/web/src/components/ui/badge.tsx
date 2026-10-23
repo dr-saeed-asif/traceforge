@@ -42,8 +42,11 @@ const statusTone = {
 export function ProcessingStatusBadge({ status }: Readonly<{ status: ProcessingStatus }>) {
   return (
     <Badge tone={statusTone[status]}>
-      <span className={styles.badgeDot} aria-hidden="true" />
-      {humanize(status)}
+      <span
+        className={status === "PENDING" ? styles.badgeSpinner : styles.badgeDot}
+        aria-hidden="true"
+      />
+      {status === "PENDING" ? "Processing" : humanize(status)}
     </Badge>
   );
 }
@@ -58,7 +61,10 @@ const executionStatusTone = {
 export function ExecutionStatusBadge({ status }: Readonly<{ status: ExecutionStatus }>) {
   return (
     <Badge tone={executionStatusTone[status]}>
-      <span className={styles.badgeDot} aria-hidden="true" />
+      <span
+        className={status === "IN_PROGRESS" ? styles.badgeSpinner : styles.badgeDot}
+        aria-hidden="true"
+      />
       {humanize(status)}
     </Badge>
   );

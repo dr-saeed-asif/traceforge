@@ -74,10 +74,7 @@ export function parseVerificationSessionsResponse(
     hasMore:
       paginationInput.hasMore === undefined
         ? basePagination.returned === basePagination.limit
-        : booleanValue(
-            paginationInput.hasMore,
-            "$response.pagination.hasMore",
-          ),
+        : booleanValue(paginationInput.hasMore, "$response.pagination.hasMore"),
   };
   assertReturnedCount(
     pagination,
@@ -211,6 +208,17 @@ function parseSession(value: unknown, path: string): VerificationSession {
     projectPath: nullableString(input.projectPath, `${path}.projectPath`),
     agentName: nonEmptyString(input.agentName, `${path}.agentName`),
     modelName: nonEmptyString(input.modelName, `${path}.modelName`),
+    ...(input.processingMetrics === undefined
+      ? {}
+      : {
+          processingMetrics:
+            input.processingMetrics === null
+              ? null
+              : parseProcessingMetrics(
+                  input.processingMetrics,
+                  `${path}.processingMetrics`,
+                ),
+        }),
     executionStatus: enumValue(
       input.executionStatus,
       EXECUTION_STATUSES,
@@ -268,6 +276,48 @@ function parseSession(value: unknown, path: string): VerificationSession {
   return session;
 }
 
+function parseProcessingMetrics(value: unknown, path: string) {
+  const input = record(value, path);
+  return {
+    ...(input.extractorDurationMs === undefined
+      ? {}
+      : {
+          extractorDurationMs: nullableNonNegativeInteger(
+            input.extractorDurationMs,
+            `${path}.extractorDurationMs`,
+          ),
+        }),
+    extractorModel: nonEmptyString(
+      input.extractorModel,
+      `${path}.extractorModel`,
+    ),
+    extractionStartedAt: isoDate(
+      input.extractionStartedAt,
+      `${path}.extractionStartedAt`,
+    ),
+    extractionCompletedAt: nullableIsoDate(
+      input.extractionCompletedAt,
+      `${path}.extractionCompletedAt`,
+    ),
+    extractionDurationMs: nullableNonNegativeInteger(
+      input.extractionDurationMs,
+      `${path}.extractionDurationMs`,
+    ),
+    verificationStartedAt: nullableIsoDate(
+      input.verificationStartedAt,
+      `${path}.verificationStartedAt`,
+    ),
+    verificationCompletedAt: nullableIsoDate(
+      input.verificationCompletedAt,
+      `${path}.verificationCompletedAt`,
+    ),
+    verificationDurationMs: nullableNonNegativeInteger(
+      input.verificationDurationMs,
+      `${path}.verificationDurationMs`,
+    ),
+  };
+}
+
 function parseSessionDay(value: unknown, path: string): VerificationSessionDay {
   const input = record(value, path);
   const sessions = array(input.sessions, `${path}.sessions`, parseSession);
@@ -279,7 +329,10 @@ function parseSessionDay(value: unknown, path: string): VerificationSessionDay {
     date,
     queries: nonNegativeInteger(input.queries, `${path}.queries`),
     totalClaims: nonNegativeInteger(input.totalClaims, `${path}.totalClaims`),
-    verifiedClaims: nonNegativeInteger(input.verifiedClaims, `${path}.verifiedClaims`),
+    verifiedClaims: nonNegativeInteger(
+      input.verifiedClaims,
+      `${path}.verifiedClaims`,
+    ),
     contradictedClaims: nonNegativeInteger(
       input.contradictedClaims,
       `${path}.contradictedClaims`,

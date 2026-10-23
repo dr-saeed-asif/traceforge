@@ -5,7 +5,8 @@ import type {
   BlockchainLatencyMeasurements
 } from "./latency-types";
 
-const STORAGE_PREFIX = "traceforge:blockchain-latency:v1:";
+// v1 included wallet approval; never present those values as confirmation times.
+const STORAGE_PREFIX = "traceforge:blockchain-latency:v2:";
 const UPDATED_EVENT = "traceforge:blockchain-latency-updated";
 
 export function getBlockchainLatencyStorageKey(identity: BlockchainLatencyIdentity): string {

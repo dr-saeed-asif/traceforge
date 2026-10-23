@@ -439,3 +439,22 @@
   padding: 1.5rem;
   flex: 1;
 }
+
+.badgeSpinner {
+  width: 0.7rem;
+  height: 0.7rem;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: badge-spin 0.8s linear infinite;
+}
+@keyframes badge-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .badgeSpinner {
+    animation: none;
+  }
+}

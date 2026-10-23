@@ -4,12 +4,22 @@ import {
   CardBody,
   CardHeader,
   ExecutionStatusBadge,
-  ProcessingStatusBadge
+  ProcessingStatusBadge,
+  ButtonLink
 } from "@/components/ui";
 import { formatCount, formatDateTime, formatPercent } from "./format";
 import styles from "./session-details.module.css";
+import { ProcessingMetricsPanel } from "./processing-metrics";
 
-export function SessionSummary({ session }: Readonly<{ session: VerificationSession }>) {
+export function SessionSummary({
+  session,
+  traceEvents,
+  extractorModel
+}: Readonly<{
+  session: VerificationSession;
+  extractorModel?: string | undefined;
+  traceEvents?: readonly import("@traceforge/verification-contracts").VerificationTraceEvent[];
+}>) {
   return (
     <Card>
       <CardHeader
@@ -36,6 +46,18 @@ export function SessionSummary({ session }: Readonly<{ session: VerificationSess
           <Metric label="Coverage" value={formatPercent(session.coveragePercent)} />
         </div>
 
+        <ProcessingMetricsPanel
+          session={session}
+          extractorModel={extractorModel}
+          {...(traceEvents ? { traceEvents } : {})}
+        />
+        <ButtonLink
+          href={`/anchor-inspector?promptId=${encodeURIComponent(session.promptId)}`}
+          variant="secondary"
+          size="sm"
+        >
+          Inspect blockchain payload
+        </ButtonLink>
         <dl className={styles.sessionMetadata}>
           <Metadata label="Agent" value={session.agentName} />
           <Metadata label="Model" value={session.modelName} />

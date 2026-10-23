@@ -80,6 +80,11 @@ export function SessionsFrame({ values, children }: SessionsFrameProps) {
         eyebrow="Evidence audit"
         title="Agent verification sessions"
         description="Review captured agent runs and inspect each extracted claim against its supporting trace evidence."
+        actions={
+          <ButtonLink href="/anchor-inspector" variant="secondary">
+            Anchor inspector
+          </ButtonLink>
+        }
       />
       <div className={styles.listStack}>
         <InfrastructureStatus />

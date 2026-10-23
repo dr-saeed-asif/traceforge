@@ -1,5 +1,5 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import { encodeFunctionResult, type Abi } from "viem";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { decodeFunctionData, encodeFunctionResult, type Abi } from "viem";
 import {
   createBlockchainClaimAnchorManifest,
   createBlockchainClaimAnchorPayload
@@ -10,7 +10,9 @@ import type {
   VerificationTraceEvent
 } from "@traceforge/verification-contracts";
 import registryAbi from "@traceforge/claim-anchoring/abi";
-import { verifyVerifiedClaimAnchor } from "./blockchain-anchor-client";
+import { anchorVerifiedClaim, verifyVerifiedClaimAnchor } from "./blockchain-anchor-client";
+
+afterEach(() => vi.restoreAllMocks());
 
 const abi = registryAbi as Abi;
 const recordId = `0x${"ab".repeat(32)}` as const;
@@ -108,6 +110,55 @@ function installProvider(anchor: Record<string, unknown>) {
 }
 
 describe("verifyVerifiedClaimAnchor", () => {
+  it("excludes the wallet approval wait from Sepolia confirmation timing", async () => {
+    let clock = 0;
+    vi.spyOn(performance, "now").mockImplementation(() => clock);
+    const account = "0x1111111111111111111111111111111111111111";
+    const provider = {
+      request: vi.fn(
+        async ({ method, params }: { method: string; params?: readonly unknown[] }) => {
+          if (method === "eth_accounts") return [account];
+          if (method === "eth_chainId") return "0xaa36a7";
+          if (method === "eth_sendTransaction") {
+            clock += 60000;
+            return `0x${"12".repeat(32)}`;
+          }
+          if (method === "eth_getTransactionReceipt") {
+            clock += 750;
+            return { status: "0x1", blockNumber: "0x10" };
+          }
+          if (method === "eth_call") {
+            const { functionName } = decodeFunctionData({
+              abi,
+              data: (params?.[0] as { data: `0x${string}` }).data
+            });
+            if (functionName === "owner")
+              return encodeFunctionResult({ abi, functionName: "owner", result: account });
+            if (functionName === "getRecordId")
+              return encodeFunctionResult({ abi, functionName: "getRecordId", result: recordId });
+            return encodeFunctionResult({
+              abi,
+              functionName: "getAnchor",
+              result: {
+                sessionHash: `0x${"0".repeat(64)}`,
+                claimIndex: 0,
+                manifestHash: `0x${"0".repeat(64)}`,
+                evidenceRoot: `0x${"0".repeat(64)}`,
+                schemaVersion: 0,
+                anchoredAt: 0n,
+                anchoredBy: account,
+                verified: false
+              } as never
+            });
+          }
+          throw new Error(`Unexpected method ${method}`);
+        }
+      )
+    };
+    Object.defineProperty(window, "ethereum", { configurable: true, value: provider });
+    const result = await anchorVerifiedClaim(session, claim, traceEvents);
+    expect(result).toMatchObject({ status: "confirmed", confirmationTimeMs: 750 });
+  });
   beforeEach(() => {
     Reflect.deleteProperty(window, "ethereum");
   });

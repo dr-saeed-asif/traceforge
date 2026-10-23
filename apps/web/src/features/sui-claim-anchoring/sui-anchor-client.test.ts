@@ -1,9 +1,14 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { BlockchainClaimAnchorPayload } from "@traceforge/claim-anchoring";
+import { ObjectError } from "@mysten/sui/client";
 import {
   buildSuiAnchorTransaction,
   getSuiAnchorDeployment,
-  getSuiTestnetTransactionUrl
+  getSuiTestnetTransactionUrl,
+  findSuiClaimAnchor,
+  SuiAnchorRecord,
+  SuiAnchorKey,
+  type SuiAnchorReader
 } from "./sui-anchor-client";
 
 const deployment = {
@@ -23,6 +28,69 @@ const payload: BlockchainClaimAnchorPayload = {
 
 describe("Sui claim anchoring client", () => {
   afterEach(() => vi.unstubAllEnvs());
+
+  function reader(manifestByte = 34) {
+    return {
+      getDynamicField: vi.fn(async () => ({
+        dynamicField: {
+          fieldId: deployment.registryId,
+          previousTransaction: "existing-digest",
+          value: {
+            bcs: SuiAnchorRecord.serialize({
+              session_hash: Array(32).fill(17),
+              claim_index: 4,
+              manifest_hash: Array(32).fill(manifestByte),
+              evidence_root: Array(32).fill(51),
+              schema_version: 1,
+              anchored_at_ms: "1000",
+              anchored_by: deployment.adminCapId,
+              verified: true
+            }).toBytes()
+          }
+        }
+      }))
+    };
+  }
+
+  it("finds a matching commitment using the exact Move dynamic-field key", async () => {
+    const client = reader();
+    const result = await findSuiClaimAnchor(
+      client as unknown as SuiAnchorReader,
+      payload,
+      deployment
+    );
+    expect(result).toMatchObject({ matches: true, digest: "existing-digest" });
+    const request = client.getDynamicField.mock.calls[0] as unknown as [
+      { parentId: string; name: { type: string; bcs: Uint8Array } }
+    ];
+    expect(request[0].parentId).toBe(deployment.registryId);
+    expect(request[0].name.type).toBe(
+      `${deployment.packageId}::verified_claim_registry::AnchorKey`
+    );
+    expect(SuiAnchorKey.parse(request[0].name.bcs)).toEqual({
+      session_hash: Array(32).fill(17),
+      claim_index: 4
+    });
+  });
+
+  it("reports an existing record with different evidence as a mismatch", async () => {
+    expect(
+      await findSuiClaimAnchor(reader(99) as unknown as SuiAnchorReader, payload, deployment)
+    ).toMatchObject({ matches: false });
+  });
+
+  it("only treats a confirmed missing object as an absent anchor", async () => {
+    const client = {
+      getDynamicField: vi
+        .fn()
+        .mockRejectedValue(new ObjectError("notFound", "missing", { reason: "notFound" }))
+    };
+    expect(await findSuiClaimAnchor(client, payload, deployment)).toBeNull();
+    client.getDynamicField.mockRejectedValue(new Error("RPC unavailable"));
+    await expect(findSuiClaimAnchor(client, payload, deployment)).rejects.toThrow(
+      "RPC unavailable"
+    );
+  });
 
   it("builds a Move call for the verified-claim registry", () => {
     const transaction = buildSuiAnchorTransaction(payload, deployment);

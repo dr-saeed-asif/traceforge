@@ -10,7 +10,7 @@ export async function GET() {
     const config = loadTraceForgeApiConfig();
     const response = await fetch(`${config.baseUrl}/healthz`, {
       cache: "no-store",
-      signal: AbortSignal.timeout(2500),
+      signal: AbortSignal.timeout(2500)
     });
     if (response.ok) {
       backend = (await response.json()) as Record<string, unknown>;
@@ -24,7 +24,7 @@ export async function GET() {
       const probe = await fetch(`${config.baseUrl}/api/v1/verification/overview`, {
         headers: { authorization: `Bearer ${config.token}` },
         cache: "no-store",
-        signal: AbortSignal.timeout(config.timeoutMs),
+        signal: AbortSignal.timeout(config.timeoutMs)
       });
       databaseReady = probe.ok;
     }
@@ -42,9 +42,9 @@ export async function GET() {
         llm: typeof checks.llm === "boolean" ? checks.llm : null,
         extraction: typeof checks.extraction === "boolean" ? checks.extraction : null,
         database: dbReady,
-        extractor,
-      },
+        extractor
+      }
     },
-    { headers: { "cache-control": "no-store" } },
+    { headers: { "cache-control": "no-store" } }
   );
 }

@@ -1,6 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import { fromBase64 } from "@mysten/sui/utils";
+import {
+  createBlockchainClaimAnchorManifest,
+  createBlockchainClaimAnchorPayload,
+  type BlockchainClaimAnchorPayload
+} from "@traceforge/claim-anchoring";
 import { useCurrentAccount, useDAppKit, useWallets } from "@mysten/dapp-kit-react";
 import { Button } from "@/components/ui";
 import type {
@@ -10,12 +16,15 @@ import type {
 } from "@traceforge/verification-contracts";
 import {
   getSuiAnchorDeployment,
-  createSuiAnchorTransaction,
+  buildSuiAnchorTransaction,
+  findSuiClaimAnchor,
   getSuiTestnetTransactionUrl
 } from "./sui-anchor-client";
 import { suiDAppKit } from "./sui-dapp-kit";
 import styles from "./sui-claim-anchoring.module.css";
 import { recordBlockchainLatencyMeasurement } from "../blockchain-latency/latency-storage";
+
+class SuiAnchorConflictError extends Error {}
 
 export function SuiClaimAnchorWallet({
   session,
@@ -35,6 +44,7 @@ export function SuiClaimAnchorWallet({
   const [digest, setDigest] = useState("");
   const [elapsedMs, setElapsedMs] = useState<number | null>(null);
   const [anchored, setAnchored] = useState(false);
+  const [objectUrl, setObjectUrl] = useState("");
   const [walletChoicesOpen, setWalletChoicesOpen] = useState(false);
 
   async function handleAnchor() {
@@ -42,11 +52,39 @@ export function SuiClaimAnchorWallet({
     setDigest("");
     setElapsedMs(null);
     setAnchored(false);
+    setObjectUrl("");
+    setBusy(true);
+    let payload: BlockchainClaimAnchorPayload | undefined;
+    let deployment: ReturnType<typeof getSuiAnchorDeployment> | undefined;
+    let submissionAttempted = false;
+
+    function showExisting(existing: NonNullable<Awaited<ReturnType<typeof findSuiClaimAnchor>>>) {
+      setObjectUrl(existing.objectUrl);
+      if (!existing.matches) {
+        throw new SuiAnchorConflictError(
+          "A Sui anchor already exists for this claim, but its commitment differs from the current evidence. The immutable record cannot be overwritten."
+        );
+      }
+      setAnchored(true);
+      setDigest(existing.digest ?? "");
+      setMessage(
+        "This claim is already anchored on Sui Testnet. Its stored commitment matches the current claim and evidence; no new transaction is needed."
+      );
+    }
 
     try {
-      const deployment = getSuiAnchorDeployment();
+      deployment = getSuiAnchorDeployment();
       if (claim.verdict !== "VERIFIED") {
         throw new Error("Only verified claims can be anchored on Sui.");
+      }
+      setMessage("Checking the existing Sui Testnet anchor…");
+      payload = await createBlockchainClaimAnchorPayload(
+        createBlockchainClaimAnchorManifest(session, claim, traceEvents)
+      );
+      const existing = await findSuiClaimAnchor(dAppKit.getClient("testnet"), payload, deployment);
+      if (existing) {
+        showExisting(existing);
+        return;
       }
       if (!account) {
         const testnetWallets = wallets.filter((wallet) => wallet.chains.includes("sui:testnet"));
@@ -65,14 +103,16 @@ export function SuiClaimAnchorWallet({
         throw new Error("Switch your Sui wallet to Testnet, then try again.");
       }
 
-      setBusy(true);
       setMessage("Review and approve the Sui Testnet transaction in your wallet.");
+      const transaction = buildSuiAnchorTransaction(payload, deployment);
+      const signed = await dAppKit.signTransaction({ transaction, account, network: "testnet" });
+      const bytes = fromBase64(signed.bytes);
+      setMessage("Submitting the signed transaction to Sui Testnet…");
+      submissionAttempted = true;
       const startedAt = performance.now();
-      const transaction = await createSuiAnchorTransaction(session, claim, traceEvents, deployment);
-      const result = await dAppKit.signAndExecuteTransaction({
-        transaction,
-        account,
-        network: "testnet"
+      const result = await dAppKit.getClient("testnet").executeTransaction({
+        transaction: bytes,
+        signatures: [signed.signature]
       });
       const elapsed = Math.round(performance.now() - startedAt);
 
@@ -99,6 +139,26 @@ export function SuiClaimAnchorWallet({
       setAnchored(true);
       setMessage("Confirmed on Sui Testnet. The verified-claim commitment is anchored.");
     } catch (error) {
+      // Another tab may have anchored after our preflight. Confirm on-chain
+      // state instead of treating a Move abort as proof of success.
+      if (submissionAttempted && payload && deployment) {
+        try {
+          const existing = await findSuiClaimAnchor(
+            dAppKit.getClient("testnet"),
+            payload,
+            deployment
+          );
+          if (existing) {
+            showExisting(existing);
+            return;
+          }
+        } catch (lookupError) {
+          if (lookupError instanceof SuiAnchorConflictError) {
+            setMessage(lookupError.message);
+            return;
+          }
+        }
+      }
       setMessage(
         error instanceof Error ? error.message : "The Sui transaction could not be submitted."
       );
@@ -124,10 +184,13 @@ export function SuiClaimAnchorWallet({
 
   return (
     <div className={styles.suiAnchor}>
+      <span className={styles.suiMessage}>
+        Network: Sui Testnet. Select Testnet in your wallet before approving.
+      </span>
       <Button
         size="sm"
         variant="secondary"
-        disabled={busy || connecting || anchored}
+        disabled={busy || connecting || anchored || Boolean(objectUrl)}
         onClick={handleAnchor}
       >
         {busy
@@ -164,7 +227,8 @@ export function SuiClaimAnchorWallet({
       {account ? <span className={styles.suiMessage}>Wallet: {account.address}</span> : null}
       {elapsedMs !== null ? (
         <span className={styles.suiMessage}>
-          End-to-end time: {(elapsedMs / 1000).toFixed(2)} s (wallet approval + Sui execution)
+          Transaction confirmation time: {(elapsedMs / 1000).toFixed(2)} s (wallet approval
+          excluded)
         </span>
       ) : null}
       {digest ? (
@@ -175,6 +239,11 @@ export function SuiClaimAnchorWallet({
           rel="noreferrer"
         >
           View Sui transaction
+        </a>
+      ) : null}
+      {objectUrl ? (
+        <a className={styles.suiLink} href={objectUrl} target="_blank" rel="noreferrer">
+          View stored Sui anchor
         </a>
       ) : null}
     </div>

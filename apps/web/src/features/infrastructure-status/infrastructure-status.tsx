@@ -10,7 +10,7 @@ const labels: Record<CheckName, string> = {
   backend: "Backend API",
   llm: "LLM",
   extraction: "Extraction",
-  database: "Database",
+  database: "Database"
 };
 
 export function InfrastructureStatus() {
@@ -28,7 +28,10 @@ export function InfrastructureStatus() {
     };
     void refresh();
     const timer = window.setInterval(refresh, 15000);
-    return () => { active = false; window.clearInterval(timer); };
+    return () => {
+      active = false;
+      window.clearInterval(timer);
+    };
   }, []);
 
   const ready = health
@@ -43,17 +46,40 @@ export function InfrastructureStatus() {
       <div className={styles.heading}>
         <h2>Infrastructure</h2>
         <span className={`${styles.summary} ${ready ? styles.ready : styles.waiting}`}>
-          {health ? ready ? "All infrastructure is ready" : "Infrastructure needs attention" : "Checking infrastructure…"}
+          {health
+            ? ready
+              ? "All infrastructure is ready"
+              : "Infrastructure needs attention"
+            : "Checking infrastructure…"}
         </span>
       </div>
       <ul className={styles.checks}>
         {(Object.keys(labels) as CheckName[]).map((name) => {
           const value = health?.checks[name];
           const state = value === true ? "ready" : value === null ? "optional" : "waiting";
-          const detail = value === true ? "Ready" : value === null ? name === "llm" && health?.checks.extraction === true ? "Not required" : "Not reported" : health ? "Unavailable" : "Checking";
-          return <li key={name}><span className={`${styles.dot} ${styles[state]}`} aria-hidden="true" /><span>{labels[name]}</span><span className={styles.detail}>{detail}</span></li>;
+          const detail =
+            value === true
+              ? "Ready"
+              : value === null
+                ? name === "llm" && health?.checks.extraction === true
+                  ? "Not required"
+                  : "Not reported"
+                : health
+                  ? "Unavailable"
+                  : "Checking";
+          return (
+            <li key={name}>
+              <span className={`${styles.dot} ${styles[state]}`} aria-hidden="true" />
+              <span>{labels[name]}</span>
+              <span className={styles.detail}>{detail}</span>
+            </li>
+          );
         })}
       </ul>
+      <p className={styles.detail}>
+        Readiness confirms service connectivity. Claim extraction starts after OpenCode sends its
+        final response; the first request may also need to load the extraction model.
+      </p>
     </section>
   );
 }

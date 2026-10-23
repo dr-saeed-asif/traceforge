@@ -11,9 +11,9 @@ import { decodeFunctionResult, encodeFunctionData, type Abi } from "viem";
 import verifiedClaimRegistryAbi from "@traceforge/claim-anchoring/abi";
 
 export const SEPOLIA_CHAIN_ID = "0xaa36a7";
-export const VERIFIED_CLAIM_REGISTRY_ADDRESS = "0x91027C349BDF0aaad3EF3d964f24C94B7c07fDF2";
+export const VERIFIED_CLAIM_REGISTRY_ADDRESS = "0x9f616593277FF560Af07B2cae6AdEfB49844B8E9";
 export const VERIFIED_CLAIM_REGISTRY_DEPLOYMENT_TX =
-  "0x02924effcdb84ee68ffabd272b430ee4b2b7e526e16bbc484321dd4916bb57f7";
+  "0xd3ed6cee4b16fdf09cfbcd69d86ec8a880cc6d57be8aac675235cddea300ba74";
 // MetaMask's EIP-7702 smart-account wrapper consumed enough gas that its
 // default estimate left too little for the registry call. Keep headroom for
 // the wrapper as well as the contract execution.
@@ -26,6 +26,7 @@ interface EthereumProvider {
 }
 
 export type AnchorResult = {
+  readonly confirmationTimeMs: number | null;
   readonly status: "confirmed" | "pending" | "already-anchored";
   readonly txHash: string | null;
   readonly blockNumber: string | null;
@@ -59,16 +60,20 @@ export async function anchorVerifiedClaim(
     const txHash = readSavedTransaction(key);
     return {
       status: "already-anchored",
+      confirmationTimeMs: null,
       txHash,
       blockNumber: txHash ? await readTransactionBlockNumber(provider, txHash) : null
     };
   }
 
   const txHash = await sendAnchorTransaction(provider, account, payload);
+  // eth_sendTransaction resolves with a hash after wallet approval/broadcast.
+  const submittedAt = performance.now();
   saveTransaction(key, txHash);
   const receipt = await waitForReceipt(provider, txHash);
   return {
     status: receipt ? "confirmed" : "pending",
+    confirmationTimeMs: receipt ? Math.round(performance.now() - submittedAt) : null,
     txHash,
     blockNumber: receipt?.blockNumber ?? null
   };

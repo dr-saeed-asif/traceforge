@@ -6,7 +6,7 @@ import type {
   VerificationSession,
   VerificationTraceEvent
 } from "@traceforge/verification-contracts";
-import { Button } from "@/components/ui";
+import { Button, ButtonLink } from "@/components/ui";
 import {
   anchorVerifiedClaim,
   getSepoliaContractUrl,
@@ -44,10 +44,8 @@ export function BlockchainAnchorButton({
     setTransactionHash("");
     setBlockNumber(null);
     setElapsedMs(null);
-    const startedAt = performance.now();
     try {
       const result = await anchorVerifiedClaim(session, claim, traceEvents);
-      const elapsed = Math.round(performance.now() - startedAt);
       if (result.txHash) {
         setTransactionHash(result.txHash);
         setTransactionUrl(getSepoliaTransactionUrl(result.txHash));
@@ -61,7 +59,8 @@ export function BlockchainAnchorButton({
 
       setAnchored(result.status === "confirmed");
       setPending(result.status === "pending");
-      if (result.status === "confirmed" && result.txHash) {
+      if (result.status === "confirmed" && result.txHash && result.confirmationTimeMs !== null) {
+        const elapsed = result.confirmationTimeMs;
         setElapsedMs(elapsed);
         recordBlockchainLatencyMeasurement(
           { promptId: session.promptId, runId: session.runId, claimIndex: claim.claimIndex },
@@ -155,8 +154,8 @@ export function BlockchainAnchorButton({
       ) : null}
       {elapsedMs !== null ? (
         <span className={styles.blockchainAnchorMessage}>
-          End-to-end time: {(elapsedMs / 1000).toFixed(2)} s (wallet approval + Sepolia
-          confirmation)
+          Transaction confirmation time: {(elapsedMs / 1000).toFixed(2)} s (wallet approval
+          excluded)
         </span>
       ) : null}
       {transactionUrl ? (
@@ -177,6 +176,13 @@ export function BlockchainAnchorButton({
       >
         Contract
       </a>
+      <ButtonLink
+        href={`/anchor-inspector?promptId=${encodeURIComponent(session.promptId)}&claimIndex=${claim.claimIndex}`}
+        size="sm"
+        variant="ghost"
+      >
+        Inspect payload
+      </ButtonLink>
       <a
         className={styles.blockchainAnchorLink}
         href={getSepoliaDeploymentUrl()}

@@ -101,7 +101,7 @@ export function SessionsTable({ days }: Readonly<{ days: readonly VerificationSe
       <DailySummaryModal
         isOpen={selectedDay !== null}
         onClose={() => setSelectedDay(null)}
-        day={selectedDay}
+        day={dailySummaries.find((day) => day.date === selectedDay?.date) ?? selectedDay}
       />
     </>
   );

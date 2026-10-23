@@ -98,6 +98,12 @@ describe("SqliteVerificationRepository", () => {
         verifiedAt: "2026-09-22T10:00:02.000Z"
       });
       await verification.updateSessionSummary({
+        processingMetrics: {
+          extractorModel: "local-extractor", extractionStartedAt: "2026-09-22T10:00:02.000Z",
+          extractionCompletedAt: "2026-09-22T10:00:03.000Z", extractionDurationMs: 1000,
+          verificationStartedAt: "2026-09-22T10:00:03.000Z",
+          verificationCompletedAt: "2026-09-22T10:00:03.020Z", verificationDurationMs: 20,
+        },
         promptId: "prompt-sqlite",
         executionStatus: "COMPLETED",
         extractionStatus: "SUCCEEDED",
@@ -112,6 +118,7 @@ describe("SqliteVerificationRepository", () => {
       });
 
       const details = await verification.getSessionDetails("prompt-sqlite");
+      expect(details?.session.processingMetrics).toMatchObject({ extractorModel: "local-extractor", extractionDurationMs: 1000, verificationDurationMs: 20 });
       expect(details?.session).toMatchObject({ promptQuery: "Run tests", reliabilityPercent: 100 });
       expect(details?.claims[0]).toMatchObject({ verdict: "VERIFIED", evidenceEventIds: ["event-test"] });
       expect(details?.traceEvents).toHaveLength(1);

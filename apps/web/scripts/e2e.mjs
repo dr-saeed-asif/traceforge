@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
-import { rm, writeFile } from "node:fs/promises";
+import { readFile, rm, writeFile } from "node:fs/promises";
 import { createServer } from "node:http";
 import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
@@ -8,6 +8,8 @@ import { setTimeout as delay } from "node:timers/promises";
 import { fileURLToPath } from "node:url";
 
 const appDirectory = dirname(dirname(fileURLToPath(import.meta.url)));
+const nextEnvPath = join(appDirectory, "next-env.d.ts");
+const originalNextEnv = await readFile(nextEnvPath, "utf8");
 const token = "traceforge-e2e-server-token";
 const e2eDistDirectory = `.next-e2e-${process.pid}`;
 const e2eTsconfig = `.tsconfig-e2e-${process.pid}.json`;
@@ -34,7 +36,17 @@ const session = {
   reliabilityPercent: 100,
   coveragePercent: 100,
   startedAt: "2026-09-21T10:00:00.000Z",
-  completedAt: "2026-09-21T10:01:00.000Z"
+  completedAt: "2026-09-21T10:01:00.000Z",
+  processingMetrics: {
+    extractorModel: "local-extraction-model",
+    extractionStartedAt: "2026-09-21T10:01:00.000Z",
+    extractionCompletedAt: "2026-09-21T10:01:01.250Z",
+    extractionDurationMs: 1250,
+    extractorDurationMs: 1200,
+    verificationStartedAt: "2026-09-21T10:01:01.250Z",
+    verificationCompletedAt: "2026-09-21T10:01:01.270Z",
+    verificationDurationMs: 20
+  }
 };
 
 const traceEvent = {
@@ -109,6 +121,24 @@ const api = createServer((request, response) => {
       pagination: { limit: 20, offset: 0, returned: 1 }
     });
   }
+  if (url.pathname === "/api/v1/verification/session-days") {
+    return sendJson(response, 200, {
+      days: [
+        {
+          date: "2026-09-21",
+          queries: 1,
+          totalClaims: 1,
+          verifiedClaims: 1,
+          contradictedClaims: 0,
+          unsupportedClaims: 0,
+          unverifiableClaims: 0,
+          reliabilityPercent: 100,
+          sessions: [session]
+        }
+      ],
+      pagination: { limit: 10, offset: 0, returned: 1, hasMore: false }
+    });
+  }
   if (url.pathname === "/api/v1/verification/sessions/prompt-e2e") {
     return sendJson(response, 200, {
       session,
@@ -167,22 +197,33 @@ try {
   const baseUrl = `http://127.0.0.1:${webPort}`;
   await waitUntilReady(`${baseUrl}/api/health`, webProcess);
 
-  await expectPage(baseUrl, "/", ["Verification overview", "TraceForge E2E", "100%"]);
+  // The session list is hydrated in the browser; HTTP checks cover its shell
+  // and same-origin API separately. Component tests cover live polling.
+  await expectPage(baseUrl, "/", ["/sessions"]);
   await expectPage(baseUrl, "/sessions?from=2026-09-01&to=2026-09-21", [
-    "Captured sessions",
-    "OpenCode",
-    "prompt-e2e"
+    "Agent verification sessions",
+    "Loading sessions"
   ]);
   await expectPage(baseUrl, "/sessions/prompt-e2e", [
     "Extracted claims",
     "Required Evidence Confirmed",
     "Trace-event timeline",
-    "17 passed"
+    "17 passed",
+    "local-extraction-model",
+    "Extractor call time",
+    "1.2 s",
+    "20 ms"
   ]);
-  await expectPage(baseUrl, "/sessions?page=invalid", ["Invalid session filters"]);
+  const dayResponse = await fetch(
+    `${baseUrl}/api/sessions?limit=10&startedAfter=2026-09-01T00:00:00.000Z&startedBefore=2026-09-22T00:00:00.000Z`
+  );
+  assert.equal(dayResponse.status, 200);
+  const dayData = await dayResponse.json();
+  assert.equal(dayData.days[0].sessions[0].promptId, "prompt-e2e");
+  assert.equal(dayData.days[0].sessions[0].processingMetrics.extractorDurationMs, 1200);
 
   const filteredRequest = requestedApiUrls.find(
-    (url) => url.pathname === "/api/v1/verification/sessions"
+    (url) => url.pathname === "/api/v1/verification/session-days"
   );
   assert(filteredRequest, "The sessions route did not call the TraceForge API");
   assert.equal(filteredRequest.searchParams.get("startedAfter"), "2026-09-01T00:00:00.000Z");
@@ -205,6 +246,8 @@ try {
       ]);
     }
   }
+  // Next rewrites this shared file even with an isolated dist directory.
+  await writeFile(nextEnvPath, originalNextEnv, "utf8");
   await rm(join(appDirectory, e2eDistDirectory), {
     recursive: true,
     force: true,

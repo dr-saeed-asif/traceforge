@@ -7,7 +7,7 @@ import type {
   VerificationTraceEvent
 } from "@traceforge/verification-contracts";
 import { ButtonLink } from "@/components/ui/button";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Badge,
   ExecutionStatusBadge,
@@ -25,6 +25,8 @@ import { BlockchainAnchorButton } from "@/features/claim-anchoring/blockchain-an
 import { SuiClaimAnchorButton } from "@/features/sui-claim-anchoring/sui-claim-anchor-button";
 import { formatDateTime, formatPercent, type DailySummary } from "./daily-summary";
 import styles from "./sessions.module.css";
+import { ProcessingMetricsPanel } from "@/features/session-details/processing-metrics";
+import { isProcessing } from "@/features/session-details/processing-state";
 
 interface DailySummaryModalProps {
   isOpen: boolean;
@@ -44,36 +46,46 @@ export function DailySummaryModal({ isOpen, onClose, day }: DailySummaryModalPro
   const [error, setError] = useState<string | null>(null);
   const [expandedPromptId, setExpandedPromptId] = useState<string | null>(null);
 
-  const fetchDayDetails = useCallback(async () => {
-    if (!day) return;
-    setLoading(true);
-    setError(null);
-    try {
-      const responses = await Promise.all(
-        day.sessions.map(async (session): Promise<QueryDetails> => {
-          const response = await fetch(`/api/sessions/${encodeURIComponent(session.promptId)}`);
-          if (!response.ok) throw new Error("Failed to fetch session details");
-          const data = (await response.json()) as VerificationSessionDetailsResponse;
-          return {
-            session: data.session,
-            claims: data.claims,
-            traceEvents: data.traceEvents
-          };
-        })
-      );
-      setQueries(responses);
-    } catch {
-      setError("Failed to load queries for this day. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  }, [day]);
+  const [retry, setRetry] = useState(0);
+  const promptIds = JSON.stringify(day?.sessions.map((session) => session.promptId) ?? []);
 
   useEffect(() => {
-    if (!isOpen || !day) return;
-    const timer = window.setTimeout(() => void fetchDayDetails(), 0);
-    return () => window.clearTimeout(timer);
-  }, [isOpen, day, fetchDayDetails]);
+    if (!isOpen) return;
+    const controller = new AbortController();
+    let timer: number;
+    const load = async (initial: boolean) => {
+      if (initial) setLoading(true);
+      try {
+        const responses = await Promise.all(
+          (JSON.parse(promptIds) as string[]).map(async (promptId): Promise<QueryDetails> => {
+            const response = await fetch(`/api/sessions/${encodeURIComponent(promptId)}`, {
+              cache: "no-store",
+              signal: controller.signal
+            });
+            if (!response.ok) throw new Error("Failed to fetch session details");
+            return (await response.json()) as VerificationSessionDetailsResponse;
+          })
+        );
+        if (controller.signal.aborted) return;
+        setQueries(responses);
+        setError(null);
+        if (responses.some((query) => isProcessing(query.session))) {
+          timer = window.setTimeout(() => void load(false), 3000);
+        }
+      } catch {
+        if (!controller.signal.aborted) {
+          setError("Failed to refresh queries. Please retry to see the latest status.");
+        }
+      } finally {
+        if (!controller.signal.aborted) setLoading(false);
+      }
+    };
+    timer = window.setTimeout(() => void load(true), 0);
+    return () => {
+      controller.abort();
+      window.clearTimeout(timer);
+    };
+  }, [isOpen, promptIds, retry]);
 
   if (!isOpen || !day) return null;
 
@@ -90,7 +102,10 @@ export function DailySummaryModal({ isOpen, onClose, day }: DailySummaryModalPro
       {loading ? (
         <LoadingState label="Loading queries..." />
       ) : error ? (
-        <ErrorState description={error} action={<Button onClick={fetchDayDetails}>Retry</Button>} />
+        <ErrorState
+          description={error}
+          action={<Button onClick={() => setRetry((value) => value + 1)}>Retry</Button>}
+        />
       ) : queries.length === 0 ? (
         <EmptyState
           title="No queries found"
@@ -140,7 +155,14 @@ export function DailySummaryModal({ isOpen, onClose, day }: DailySummaryModalPro
               header: "Claims",
               align: "end",
               width: "8%",
-              cell: ({ session }) => session.totalClaims
+              cell: ({ session }) =>
+                session.executionStatus === "IN_PROGRESS" ? (
+                  <ExecutionStatusBadge status={session.executionStatus} />
+                ) : session.extractionStatus === "PENDING" ? (
+                  <ProcessingStatusBadge status={session.extractionStatus} />
+                ) : (
+                  session.totalClaims
+                )
             },
             {
               key: "reliability",
@@ -218,6 +240,11 @@ function ExpandedQueryView({ query }: { query: QueryDetails }) {
               </dd>
             </div>
           </dl>
+          <ProcessingMetricsPanel
+            session={session}
+            extractorModel={claims[0]?.extractorModel}
+            traceEvents={traceEvents}
+          />
           <ButtonLink
             className={styles.openSessionLink}
             href={`/sessions/${encodeURIComponent(session.promptId)}`}
@@ -231,7 +258,13 @@ function ExpandedQueryView({ query }: { query: QueryDetails }) {
         <div className={styles.expandedSection}>
           <h4>Claims ({claims.length})</h4>
           {claims.length === 0 ? (
-            <p className={styles.noClaimsMessage}>No claims were extracted from this query.</p>
+            <p className={styles.noClaimsMessage}>
+              {session.extractionStatus === "SUCCEEDED"
+                ? "No claims were extracted from this query."
+                : session.extractionStatus === "FAILED"
+                  ? "Extraction failed; claims are unavailable."
+                  : "Claims will appear after the final response has been extracted."}
+            </p>
           ) : (
             <div className={styles.claimList}>
               {claims.map((claim) => {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { LoadingState } from "@/components/ui/states";
 import {
   SessionsContent,
   SessionsError,
@@ -24,6 +25,8 @@ export function SessionsClientWrapper({ searchParams }: SessionsClientWrapperPro
 
   useEffect(() => {
     let cancelled = false;
+    let timer: number;
+    const controller = new AbortController();
 
     const loadData = async () => {
       const parsed = parseSessionListQuery(await searchParams);
@@ -41,11 +44,15 @@ export function SessionsClientWrapper({ searchParams }: SessionsClientWrapperPro
       if (parsed.query.startedBefore) queryParams.set("startedBefore", parsed.query.startedBefore);
 
       try {
-        const response = await fetch(`/api/sessions?${queryParams.toString()}`);
+        const response = await fetch(`/api/sessions?${queryParams.toString()}`, {
+          cache: "no-store",
+          signal: controller.signal
+        });
         if (!response.ok) throw new Error("Failed to fetch sessions");
         const data = (await response.json()) as VerificationSessionDaysResponse;
         if (!cancelled) {
           setState({ sessionDays: data, values: parsed.values, page: parsed.page });
+          timer = window.setTimeout(() => void loadData(), 5000);
         }
       } catch {
         if (!cancelled) {
@@ -62,6 +69,8 @@ export function SessionsClientWrapper({ searchParams }: SessionsClientWrapperPro
 
     return () => {
       cancelled = true;
+      controller.abort();
+      window.clearTimeout(timer);
     };
   }, [searchParams]);
 
@@ -82,9 +91,7 @@ export function SessionsClientWrapper({ searchParams }: SessionsClientWrapperPro
           sessionListHref={sessionListHref}
         />
       ) : (
-        <div className="flex justify-center items-center min-h-[20rem]">
-          <span>Loading...</span>
-        </div>
+        <LoadingState label="Loading sessions" />
       )}
     </SessionsFrame>
   );

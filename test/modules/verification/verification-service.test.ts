@@ -7,6 +7,49 @@ import {
 } from "../../../src/modules/verification/index.js";
 
 describe("verification application service", () => {
+  it("publishes execution completion while extraction is waiting and records the actual extractor", async () => {
+    let release!: () => void;
+    const waiting = new Promise<void>(resolve => { release = resolve; });
+    const repository = {
+      loadVerificationEvidence: vi.fn(async () => []),
+      saveExtractedClaim: vi.fn(async () => undefined),
+      saveClaimVerification: vi.fn(async () => undefined),
+      updateSessionSummary: vi.fn(async () => undefined),
+    } as unknown as VerificationRepository;
+    const service = new VerificationApplicationService(repository, {
+      modelName: "local-extractor",
+      extract: async () => { await waiting; return []; },
+    });
+    const result = service.verifyPrompt({ promptId: "p", externalSessionId: "s", runId: "r",
+      finalResponse: "Done", extractorModel: "coding-agent-model", executionStatus: "COMPLETED",
+      completedAt: new Date().toISOString() });
+    await Promise.resolve();
+    expect(repository.updateSessionSummary).toHaveBeenLastCalledWith(expect.objectContaining({
+      executionStatus: "COMPLETED", extractionStatus: "PENDING", verificationStatus: "NOT_STARTED",
+      processingMetrics: expect.objectContaining({ extractorModel: "local-extractor", extractionDurationMs: null }),
+    }));
+    release();
+    await result;
+    expect(repository.updateSessionSummary).toHaveBeenLastCalledWith(expect.objectContaining({
+      extractionStatus: "SUCCEEDED", verificationStatus: "SUCCEEDED",
+      processingMetrics: expect.objectContaining({ extractionDurationMs: expect.any(Number), verificationDurationMs: expect.any(Number) }),
+    }));
+  });
+
+  it("preserves extraction timing on a model failure", async () => {
+    const repository = { updateSessionSummary: vi.fn(async () => undefined) } as unknown as VerificationRepository;
+    const service = new VerificationApplicationService(repository, {
+      modelName: "failed-model", extract: async () => { throw new Error("timeout"); },
+    });
+    await expect(service.verifyPrompt({ promptId: "p", externalSessionId: "s", runId: "r",
+      finalResponse: "Done", extractorModel: "agent", executionStatus: "COMPLETED", completedAt: new Date().toISOString(),
+    })).rejects.toThrow("timeout");
+    expect(repository.updateSessionSummary).toHaveBeenLastCalledWith(expect.objectContaining({
+      extractionStatus: "FAILED", verificationStatus: "NOT_STARTED",
+      processingMetrics: expect.objectContaining({ extractorModel: "failed-model", extractionDurationMs: expect.any(Number), verificationDurationMs: null }),
+    }));
+  });
+
   it("persists extracted claims, deterministic verdicts, and reliability", async () => {
     const extractor: ClaimExtractor = {
       extract: vi.fn(async () => [

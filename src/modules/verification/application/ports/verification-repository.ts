@@ -5,6 +5,7 @@ import type {
   VerificationSessionIdentity
 } from "../../domain/contracts.js";
 import type { ReliabilitySummary } from "../../domain/reliability.js";
+import type { ProcessingMetrics } from "../../domain/processing-metrics.js";
 import type { ExecutionStatus, ProcessingStatus } from "../../domain/statuses.js";
 import type { TraceEventOutcome, TraceEventType } from "../../domain/trace-event-types.js";
 import type { VerificationVerdict, VerdictReasonCode } from "../../domain/verdicts.js";
@@ -66,6 +67,7 @@ export interface SaveClaimVerificationInput extends ClaimVerificationResult {
 }
 
 export interface UpdateVerificationSessionSummaryInput {
+  readonly processingMetrics?: ProcessingMetrics;
   readonly promptId: string;
   readonly executionStatus: ExecutionStatus;
   readonly extractionStatus: ProcessingStatus;
@@ -83,6 +85,7 @@ export interface ListVerificationSessionsInput {
 
 /** Read model used by the Phase 5 overview endpoint. */
 export interface VerificationSessionSummaryRecord extends VerificationSessionIdentity {
+  readonly processingMetrics?: ProcessingMetrics | null;
   readonly promptQuery: string | null;
   readonly projectName: string | null;
   readonly projectPath: string | null;

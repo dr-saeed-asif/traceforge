@@ -92,7 +92,19 @@ export interface VerificationOverview {
   readonly coveragePercent: number | null;
 }
 
+export interface ProcessingMetrics {
+  readonly extractorModel: string;
+  readonly extractionStartedAt: string;
+  readonly extractionCompletedAt: string | null;
+  readonly extractionDurationMs: number | null;
+  readonly extractorDurationMs?: number | null;
+  readonly verificationStartedAt: string | null;
+  readonly verificationCompletedAt: string | null;
+  readonly verificationDurationMs: number | null;
+}
+
 export interface VerificationSession {
+  readonly processingMetrics?: ProcessingMetrics | null;
   readonly promptId: string;
   readonly promptQuery: string | null;
   readonly externalSessionId: string;

@@ -6,6 +6,8 @@ import {
 import { SUI_CLAIM_ANCHOR_MODULE, SUI_TESTNET_NETWORK } from "@traceforge/sui-claim-anchoring";
 import { isValidSuiObjectId, normalizeSuiObjectId } from "@mysten/sui/utils";
 import { Transaction } from "@mysten/sui/transactions";
+import { bcs } from "@mysten/sui/bcs";
+import { ObjectError, type SuiClientTypes } from "@mysten/sui/client";
 import type {
   VerificationClaim,
   VerificationSession,
@@ -21,8 +23,69 @@ export interface SuiAnchorDeployment {
 export interface SuiAnchorResult {
   readonly digest: string;
   readonly explorerUrl: string;
-  /** Includes wallet approval time and Sui execution time. */
+  /** Submission through successful execution, excluding wallet signing. */
   readonly elapsedMs: number;
+}
+
+export const SuiAnchorKey = bcs.struct("AnchorKey", {
+  session_hash: bcs.vector(bcs.u8()),
+  claim_index: bcs.u32()
+});
+
+export const SuiAnchorRecord = bcs.struct("AnchorRecord", {
+  session_hash: bcs.vector(bcs.u8()),
+  claim_index: bcs.u32(),
+  manifest_hash: bcs.vector(bcs.u8()),
+  evidence_root: bcs.vector(bcs.u8()),
+  schema_version: bcs.u32(),
+  anchored_at_ms: bcs.u64(),
+  anchored_by: bcs.Address,
+  verified: bcs.bool()
+});
+
+export interface SuiAnchorReader {
+  getDynamicField(
+    input: SuiClientTypes.GetDynamicFieldOptions
+  ): Promise<SuiClientTypes.GetDynamicFieldResponse>;
+}
+
+/** Reads the immutable commitment before requesting another wallet transaction. */
+export async function findSuiClaimAnchor(
+  client: SuiAnchorReader,
+  payload: BlockchainClaimAnchorPayload,
+  deployment: SuiAnchorDeployment
+): Promise<{ matches: boolean; digest: string | null; objectUrl: string } | null> {
+  try {
+    const { dynamicField } = await client.getDynamicField({
+      parentId: deployment.registryId,
+      signal: AbortSignal.timeout(10000),
+      name: {
+        type: `${deployment.packageId}::${SUI_CLAIM_ANCHOR_MODULE}::AnchorKey`,
+        bcs: SuiAnchorKey.serialize({
+          session_hash: hexToBytes32(payload.sessionHash),
+          claim_index: payload.claimIndex
+        }).toBytes()
+      }
+    });
+    const record = SuiAnchorRecord.parse(dynamicField.value.bcs);
+    const equal = (bytes: number[], hex: string) =>
+      bytes.length === 32 && bytes.every((byte, index) => byte === hexToBytes32(hex)[index]);
+    return {
+      matches:
+        record.verified &&
+        record.claim_index === payload.claimIndex &&
+        record.schema_version === payload.schemaVersion &&
+        equal(record.session_hash, payload.sessionHash) &&
+        equal(record.manifest_hash, payload.manifestHash) &&
+        equal(record.evidence_root, payload.evidenceRoot),
+      digest: dynamicField.previousTransaction,
+      objectUrl: `https://suiexplorer.com/object/${encodeURIComponent(dynamicField.fieldId)}?network=testnet`
+    };
+  } catch (error) {
+    // A failed/unavailable RPC must never be mistaken for a missing anchor.
+    if (error instanceof ObjectError && error.reason === "notFound") return null;
+    throw error;
+  }
 }
 
 export function getSuiAnchorDeployment(): SuiAnchorDeployment {
