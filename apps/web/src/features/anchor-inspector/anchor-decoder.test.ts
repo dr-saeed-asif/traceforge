@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { encodeFunctionData, type Abi } from "viem";
 import abi from "@traceforge/claim-anchoring/abi";
+import { AUTHORIZED_ANCHOR_ABI } from "@/features/claim-anchoring/blockchain-anchor-client";
 import { buildSuiAnchorTransaction } from "@/features/sui-claim-anchoring/sui-anchor-client";
 import { compareAnchorPayloads, decodeAnchorInput } from "./anchor-decoder";
 
@@ -17,6 +18,34 @@ const expected = {
 };
 
 describe("anchor input decoding", () => {
+  it("decodes the signed-authorization Sepolia and Sui calls used by current clients", () => {
+    const input = encodeFunctionData({
+      abi: AUTHORIZED_ANCHOR_ABI,
+      functionName: "anchorVerifiedClaimWithAuthorization",
+      args: [
+        expected.sessionHash,
+        2,
+        expected.manifestHash,
+        expected.evidenceRoot,
+        1,
+        7n,
+        999n,
+        `0x${"ab".repeat(65)}`
+      ]
+    });
+    expect(decodeAnchorInput("sepolia", input)).toEqual(expected);
+    const tx = buildSuiAnchorTransaction(
+      expected,
+      { packageId: "0x1", registryId: "0x2", adminCapId: "0x3" },
+      {
+        nonce: `0x${"01".repeat(32)}`,
+        deadlineMs: 1000,
+        signature: `0x${"ab".repeat(64)}`,
+        signerPublicKey: `0x02${"01".repeat(32)}`
+      }
+    );
+    expect(decodeAnchorInput("sui", JSON.stringify(tx.getData()))).toEqual(expected);
+  });
   function explorerFixture() {
     const hashInput = (hex: string) => ({
       type: "pure",

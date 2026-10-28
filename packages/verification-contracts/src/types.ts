@@ -93,6 +93,7 @@ export interface VerificationOverview {
 }
 
 export interface ProcessingMetrics {
+  readonly extractionMetadata?: JsonObject;
   readonly extractorModel: string;
   readonly extractionStartedAt: string;
   readonly extractionCompletedAt: string | null;

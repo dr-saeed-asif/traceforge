@@ -327,7 +327,20 @@ describe("deterministic claim verifier", () => {
       },
     ];
 
-    const result = verifyClaim(claim, events, [], { promptId: "prompt-1" });
+    // Policy 2.1.0 judges claims at claim time: an edit after the final
+    // response does not falsify a report that was true when written.
+    const atClaimTime = verifyClaim(claim, events, [], { promptId: "prompt-1" });
+    expect(atClaimTime).toMatchObject({ verdict: "VERIFIED" });
+
+    // The same edit before the claim makes the passing run stale.
+    const reordered = events.map((event) =>
+      event.eventId === "claim"
+        ? { ...event, sequenceNumber: 3 }
+        : event.eventId === "later-edit"
+          ? { ...event, sequenceNumber: 2 }
+          : event,
+    );
+    const result = verifyClaim(claim, reordered, [], { promptId: "prompt-1" });
     expect(result).toMatchObject({
       verdict: "UNSUPPORTED",
       reasonCode: "EVIDENCE_IS_STALE",
@@ -336,7 +349,7 @@ describe("deterministic claim verifier", () => {
       "tests-pass",
       "later-edit",
     ]);
-    expect(result.explanation).toContain("after the claim was captured");
+    expect(result.explanation).toContain("before the claim");
   });
 
   it("prefers direct negative evidence and marks a missing rule unverifiable", () => {

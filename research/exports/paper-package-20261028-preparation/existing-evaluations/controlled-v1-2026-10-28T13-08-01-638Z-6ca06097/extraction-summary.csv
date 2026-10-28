@@ -1,0 +1,3 @@
+"eval_name","extractor","sessions","gold_claims","predicted_claims","matched_claims","type_correct","failed","successful_empty"
+"01-oracle-heuristic-deterministic-accept-regex","oracle","200","216","216","216","216","0","0"
+"01-oracle-heuristic-deterministic-accept-regex","heuristic","200","216","216","216","216","0","0"

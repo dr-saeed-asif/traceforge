@@ -1,0 +1,4 @@
+"eval_name","extractor","inference_sessions","cached_sessions","fallback_sessions","failed_sessions","model_attempts","repair_attempts","input_tokens","output_tokens"
+"01-oracle-heuristic","oracle","200","0","0","0","0","0","0","0"
+"01-oracle-heuristic","heuristic","200","0","0","0","0","0","0","0"
+"02-ollama-context4096","ollama","56","144","8","0","64","8","10593","2635"

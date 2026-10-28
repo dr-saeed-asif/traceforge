@@ -1,0 +1,8 @@
+"measure","value","unit","provenance","limitation"
+"agent_execution","44.2","s","Attached manuscript Table 11","Single dashboard observation; not independently reconstructed"
+"time_to_first_tool","6.2","s","Attached manuscript Table 11","Single dashboard observation"
+"extraction","330","s","Attached manuscript Table 11","May include loading/retries/save; not a population estimate"
+"verification","8","ms","Attached manuscript Table 11","Includes access and persistence"
+"extraction_model","qwen3:4b","model","Attached manuscript Table 11","Machine configuration unavailable"
+"tests_passed","6","tests","Attached manuscript Table 11","Dashboard observation"
+"tests_failed","0","tests","Attached manuscript Table 11","Dashboard observation"

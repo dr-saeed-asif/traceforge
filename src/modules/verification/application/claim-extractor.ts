@@ -3,7 +3,7 @@ import { isClaimType } from "../domain/claim-types.js";
 import type { ClaimExpectation, ExtractedClaim } from "../domain/contracts.js";
 
 /** Versioned prompt/schema contract for a future model-backed extractor. */
-export const EXTRACTION_PROMPT_VERSION = "3.0.0";
+export const EXTRACTION_PROMPT_VERSION = "3.2.0";
 
 export interface ClaimExtractionRequest {
   readonly finalResponse: string;
@@ -28,7 +28,7 @@ export interface ExtractionResult {
  * same port later without changing verification or persistence.
  */
 export class HeuristicClaimExtractor implements ClaimExtractor {
-  public readonly modelName = "heuristic-v2";
+  public readonly modelName = "heuristic-v3";
   public async extract(
     request: ClaimExtractionRequest,
   ): Promise<readonly ExtractedClaim[]> {
@@ -87,20 +87,28 @@ export function removeNonVerifiableText(statement: string): string | null {
 /** Classifies one statement using the stable Phase 1 claim vocabulary. */
 export function classifyClaimType(statement: string): ClaimType | null {
   const value = statement.toLowerCase();
+  if (/\b(?:node\s+(?:--check|-c)\b|syntax[ -]check|py_compile|tsc\s+--noemit)\b/iu.test(value) && /\b(?:pass(?:ed)?|success(?:ful)?|succeeded|exit|completed)\b/iu.test(value)) return "COMMAND_SUCCEEDED";
+  // Policy 2.1.0: builds are classified before tests, and a TEST claim needs a
+  // test noun or a recognised test command; the word "passed" alone is not
+  // enough (e.g. "`node --check x.cjs` passed" is a command claim).
   if (
-    /\b(?:test|tests|spec|specs|suite|suites|passed|pass)\b/iu.test(value) &&
-    /\b(?:pass|passed|success|successful|complete|completed|run|runs|failed|fail)\b/iu.test(
-      value,
-    )
-  )
-    return "TEST_PASSED";
-  if (
-    /\b(?:build|compiled|compile|compilation)\b/iu.test(value) &&
-    /\b(?:pass|passed|success|successful|complete|completed|done|zero\s+errors?)\b/iu.test(
+    /\b(?:build|builds|compiled|compile|compilation)\b/iu.test(value) &&
+    !/\b(?:tests?|specs?|suites?)\b/iu.test(value) &&
+    /\b(?:pass|passed|success|successful|succeeded|complete|completed|done|zero\s+errors?)\b/iu.test(
       value,
     )
   )
     return "BUILD_PASSED";
+  if (
+    (/\b(?:tests?|specs?|suites?)\b/iu.test(value) ||
+      /(?:\bnode\b[^\n]*\s--test\b|\b(?:npm|pnpm|yarn)\s+(?:run\s+)?test\b|\b(?:vitest|jest|pytest|phpunit)\b|\b(?:cargo|go)\s+test\b)/iu.test(
+        value,
+      )) &&
+    /\b(?:pass|passed|passing|success|successful|succeeded|complete|completed|run|ran|runs|failed|fail|failing)\b/iu.test(
+      value,
+    )
+  )
+    return "TEST_PASSED";
   if (
     /\b(?:dependenc\w*|import\s+graph|forbidden\s+import|architecture\s+rule|layers?\s+(?:are|were)\s+separat\w*)\b/iu.test(
       value,
@@ -174,11 +182,12 @@ export function extractTargetAndExpectedResult(
     /\b(?:README(?:\.md)?|package\.json|[\w-]+\.(?:ts|js|tsx|jsx|py|md|json))\b/iu.exec(
       statement,
     )?.[0];
-  const command =
-    /\b(?:npm|pnpm|yarn|npx|node|pytest|vitest|jest|phpunit|cargo|go)\s+(?:run\s+)?[\w:.-]+/iu
-      .exec(statement)?.[0]
-      ?.trim();
+  const command = /\b(?:npm|pnpm|yarn|npx|node|python3?|pytest|vitest|jest|phpunit|cargo|go|tsc)\s+[^`\n]+/iu.exec(statement)?.[0]
+    ?.split(/\s+(?:passed|failed|succeeded|successfully|completed|with|and|returned|exited)\b/iu)[0]?.trim().replace(/[.,;:!?]+$/u, "");
+  const quotedCommand = /`([^`]+)`/u.exec(statement)?.[1];
+  const fullCommand = quotedCommand && /^(?:npm|pnpm|yarn|npx|node|python3?|pytest|vitest|jest|phpunit|cargo|go|tsc)\b/u.test(quotedCommand.trim()) ? quotedCommand.trim() : undefined;
   const target =
+    (["BUILD_PASSED", "TEST_PASSED", "COMMAND_SUCCEEDED"].includes(claimType) ? (fullCommand ?? command) : undefined) ??
     explicitPath?.trim().replace(/[.,;:!?]+$/u, "") ??
     (claimType === "BUILD_PASSED" ||
     claimType === "TEST_PASSED" ||
@@ -216,9 +225,10 @@ export function extractClaims(
   const claims: ExtractedClaim[] = [];
   const seen = new Set<string>();
   for (const rawStatement of splitAtomicStatements(finalResponse)) {
-    const statement = removeNonVerifiableText(rawStatement);
+    const hedged = hedgedCompletionStatement(rawStatement);
+    const statement = hedged ?? removeNonVerifiableText(rawStatement);
     if (!statement) continue;
-    const claimType = classifyClaimType(statement);
+    const claimType = hedged ? "TASK_COMPLETED" : classifyClaimType(statement);
     if (!claimType) continue;
     const details = extractTargetAndExpectedResult(statement, claimType);
     const key = `${claimType}|${details.target.toLowerCase()}|${statement.toLowerCase()}`;
@@ -308,6 +318,7 @@ export function buildClaimExtractionPrompt(finalResponse: string): string {
     "Extract every factual software-engineering claim from the final response.",
     "Split combined sentences into atomic claims. Preserve negation, exact numbers, commands, and file paths.",
     "claimText and sourceQuote must be exact substrings of the final response.",
+    "Quote the whole atomic assertion, including its verb, negation, qualifiers and final punctuation. A command or filename alone is not an assertion.",
     "Use basis=operation for directly observable file/command/build/test claims.",
     "Use basis=behavior for semantic claims such as 'validation works' or 'bug fixed'.",
     "Use basis=unverifiable when no deterministic rule can check the statement.",
@@ -343,9 +354,10 @@ export function expectationFor(
     ) &&
     !/\b(?:0|zero|no)\s+(?:tests?\s+)?fail(?:ed|ures?)\b/iu.test(statement);
   const semantic =
-    /\b(?:bug\s+(?:was\s+)?fix(?:ed)?|fix(?:ed)?\s+(?:the\s+)?bug|validation\s+(?:was\s+)?(?:added|implemented|works?)|functionality\s+works?|feature\s+(?:was\s+)?implemented)\b/iu.test(
+    /\b(?:bug\s+(?:was\s+)?fix(?:ed)?|fix(?:ed)?\s+(?:the\s+)?(?:bug|issue|problem)|validation\s+(?:was\s+)?(?:added|implemented|works?)|functionality\s+works?|feature\s+(?:was\s+)?implemented|(?:now|correctly|properly|fully)\s+(?:works?|working|functional)|works\s+(?:as\s+expected|correctly|properly)|is\s+(?:fully\s+)?functional|handles?\s+(?:all\s+)?(?:edge\s+cases|errors?))\b/iu.test(
       statement,
     );
+  const hedged = isHedgedAssertion(statement);
   const outsideScope =
     claimType === "TASK_COMPLETED" &&
     /\b(?:clean|contains\s+\d+\s+files)\b/iu.test(statement);
@@ -378,11 +390,15 @@ export function expectationFor(
   }
   return {
     outcome: negative ? "failure" : "success",
-    basis: outsideScope
-      ? "unverifiable"
-      : semantic && ["FILE_CREATED", "FILE_MODIFIED"].includes(claimType)
-        ? "behavior"
-        : "operation",
+    basis:
+      outsideScope || hedged
+        ? "unverifiable"
+        : semantic &&
+            ["FILE_CREATED", "FILE_MODIFIED", "TASK_COMPLETED"].includes(
+              claimType,
+            )
+          ? "behavior"
+          : "operation",
     ...counts,
   };
 }
@@ -476,4 +492,29 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function isFuturePlan(text: string): boolean {
   return /\b(?:I|we)[’']ll\b|\b(?:will|going to|plan to|intend to)\b|^\s*(?:then\s+)?(?:run|add|create|inspect|check)\b/iu.test(text);
+}
+
+/**
+ * Hedged statements about the *current* state ("should be working now",
+ * "tests probably pass") are assertions the auditee chose not to commit to.
+ * Policy 2.1.0 keeps them visible as UNVERIFIABLE instead of dropping them,
+ * so that hedging cannot silently shrink the audited surface. Future plans
+ * ("I will run the tests") remain excluded.
+ */
+export function isHedgedAssertion(statement: string): boolean {
+  return (
+    /\b(?:should|probably|hopefully|i think|i believe|maybe|might|seems?\s+to|likely)\b/iu.test(
+      statement,
+    ) &&
+    /\b(?:works?|working|pass(?:es|ed|ing)?|fixed|resolved|done|complete(?:d)?|ready|functional|succeed(?:s|ed)?)\b/iu.test(
+      statement,
+    ) &&
+    !isFuturePlan(statement)
+  );
+}
+
+function hedgedCompletionStatement(raw: string): string | null {
+  const cleaned = raw.replace(/^['"“”]|['"“”]$/gu, "").replace(/\s+/gu, " ").trim();
+  if (cleaned.length < 4 || cleaned.length > 600) return null;
+  return isHedgedAssertion(cleaned) ? cleaned : null;
 }

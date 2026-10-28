@@ -73,18 +73,33 @@ export class VerificationApplicationService {
         metrics,
       );
       const extractorStart = performance.now();
+      // Review fix T4: record which extraction path produced the claims
+      // (model output, or the exact-quote heuristic fallback).
+      let extractionPath = "primary";
       try {
-        claims = await this.extractor.extract({
-          finalResponse: input.finalResponse,
-          modelName: input.extractorModel,
-        });
+        const request = { finalResponse: input.finalResponse, modelName: input.extractorModel };
+        if (this.extractor.extractDetailed) {
+          const detailed = await this.extractor.extractDetailed(request);
+          claims = detailed.claims;
+          metrics = { ...metrics, extractionMetadata: detailed.metadata };
+          if (typeof detailed.metadata.fallback === "string") extractionPath = `fallback:${detailed.metadata.fallback}`;
+        } else {
+          claims = await this.extractor.extract(request);
+          metrics = { ...metrics, extractionMetadata: { provider: "heuristic", model: this.extractor.modelName ?? input.extractorModel, attemptCount: 0, repairCount: 0, fallback: null, outcome: claims.length ? "SUCCEEDED" : "SUCCESSFUL_EMPTY" } };
+        }
+      } catch (error) {
+        const metadata = error && typeof error === "object" && "extractionMetadata" in error ? error.extractionMetadata : null;
+        if (metadata && typeof metadata === "object") metrics = { ...metrics, extractionMetadata: metadata as Readonly<Record<string, unknown>> };
+        throw error;
       } finally {
         metrics = {
           ...metrics,
           extractorDurationMs: Math.round(performance.now() - extractorStart),
         };
       }
-      const extractorModel = this.extractor.modelName ?? input.extractorModel;
+      const baseModel = this.extractor.modelName ?? input.extractorModel;
+      const extractorModel =
+        extractionPath === "primary" ? baseModel : `${baseModel}+${extractionPath}`;
       for (const claim of claims) {
         await this.repository.saveExtractedClaim({
           ...claim,

@@ -1,0 +1,3 @@
+"session_id","latency_ms","outcome","interpretation"
+"F12_syntax_check_not_run#6","182972","FALLBACK","Long execution interruption; retained, not a clean inference benchmark"
+"F12_syntax_check_not_run#7","18127547","FALLBACK","Long execution interruption; retained, not a clean inference benchmark"

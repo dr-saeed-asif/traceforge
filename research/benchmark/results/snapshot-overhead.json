@@ -1,0 +1,54 @@
+{
+  "node": "v22.23.4",
+  "cpu": "Intel(R) Xeon(R) Processor",
+  "cores": 2,
+  "memGiB": 7.8,
+  "kernel": "6.18.44-fc-v180",
+  "results": [
+    {
+      "workspace": ".",
+      "files": 239,
+      "complete": true,
+      "medianMsNoCache": 55.2,
+      "medianMsWarmCache": 14.9,
+      "digestIdentical": true,
+      "runs": 7
+    },
+    {
+      "workspace": "../repos/express",
+      "files": 216,
+      "complete": true,
+      "medianMsNoCache": 43.8,
+      "medianMsWarmCache": 12,
+      "digestIdentical": true,
+      "runs": 7
+    },
+    {
+      "workspace": "../repos/vite",
+      "files": 2874,
+      "complete": true,
+      "medianMsNoCache": 566.8,
+      "medianMsWarmCache": 156.5,
+      "digestIdentical": true,
+      "runs": 7
+    },
+    {
+      "workspace": "../repos/django",
+      "files": 7087,
+      "complete": true,
+      "medianMsNoCache": 1397.2,
+      "medianMsWarmCache": 423.8,
+      "digestIdentical": true,
+      "runs": 7
+    },
+    {
+      "workspace": "synthetic-10000",
+      "files": 10000,
+      "complete": true,
+      "medianMsNoCache": 1743.7,
+      "medianMsWarmCache": 392.2,
+      "digestIdentical": true,
+      "runs": 7
+    }
+  ]
+}

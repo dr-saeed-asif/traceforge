@@ -13,6 +13,12 @@ import { openSqliteDatabase } from "./infrastructure/sqlite/sqlite-database.js";
 import { applySqliteMigrations } from "./infrastructure/sqlite/sqlite-migrator.js";
 import { SqlitePromptResultRepository } from "./infrastructure/sqlite/sqlite-prompt-result-repository.js";
 import { AnchorLookup } from "./modules/verification/application/anchor-lookup.js";
+import { readFileSync } from "node:fs";
+import { createPublicKey } from "node:crypto";
+import {
+  buildClaimRecord,
+  signClaimRecord,
+} from "./modules/verification/application/claim-record.js";
 
 const config = loadConfig();
 const database = openSqliteDatabase(config.databasePath);
@@ -69,7 +75,7 @@ const server = createServer(async (request, response) => {
       return send(response, 401, { error: "unauthorized" });
 
     if (request.method === "GET")
-      return handleVerificationGet(requestUrl, response);
+      return await handleVerificationGet(requestUrl, response);
     if (request.method !== "POST")
       return send(response, 404, { error: "not_found" });
 
@@ -162,7 +168,34 @@ async function handleVerificationGet(
     });
     return send(response, 200, result);
   }
+  if (requestUrl.pathname === "/api/v1/verification/record-key") {
+    const key = recordSigningKey();
+    return key
+      ? send(response, 200, { publicKeyPem: createPublicKey(key).export({ type: "spki", format: "pem" }) })
+      : send(response, 404, { error: "record_signing_not_configured" });
+  }
   const prefix = "/api/v1/verification/sessions/";
+  const recordSuffix = "/claim-record";
+  if (requestUrl.pathname.startsWith(prefix) && requestUrl.pathname.endsWith(recordSuffix)) {
+    // Signed, artifact-bound claim record for downstream agents (in-toto/DSSE).
+    const key = recordSigningKey();
+    if (!key) return send(response, 404, { error: "record_signing_not_configured" });
+    let promptId: string;
+    try {
+      promptId = decodeURIComponent(requestUrl.pathname.slice(prefix.length, -recordSuffix.length));
+    } catch {
+      throw new HttpInputError("promptId is not valid URL encoding");
+    }
+    const details = await verificationQueries.getSessionDetails(promptId);
+    if (!details) return send(response, 404, { error: "not_found" });
+    try {
+      if (details.session.executionStatus !== "COMPLETED" || details.session.extractionStatus !== "SUCCEEDED" || details.session.verificationStatus !== "SUCCEEDED")
+        return send(response, 409, { error: "record_unavailable", message: "Session processing is incomplete" });
+      return send(response, 200, signClaimRecord(buildClaimRecord(details), key));
+    } catch (error) {
+      return send(response, 409, { error: "record_unavailable", message: (error as Error).message });
+    }
+  }
   if (requestUrl.pathname.startsWith(prefix)) {
     const encodedPromptId = requestUrl.pathname.slice(prefix.length);
     if (!encodedPromptId || encodedPromptId.includes("/"))
@@ -319,3 +352,9 @@ async function shutdown(): Promise<void> {
 }
 process.once("SIGINT", () => void shutdown());
 process.once("SIGTERM", () => void shutdown());
+
+/** Ed25519 PEM key used to sign claim records (TRACEFORGE_RECORD_SIGNING_KEY_FILE). */
+function recordSigningKey(): string | undefined {
+  const file = process.env.TRACEFORGE_RECORD_SIGNING_KEY_FILE?.trim();
+  return file ? readFileSync(file, "utf8") : undefined;
+}

@@ -1,0 +1,5 @@
+"eval_name","extractor","baseline","verdict","support","true_positive","false_positive","false_negative","precision","recall","f1"
+"02-ollama-deterministic","ollama","deterministic","VERIFIED","120","29","24","91","0.54717","0.241667","0.33526"
+"02-ollama-deterministic","ollama","deterministic","CONTRADICTED","24","8","0","16","1","0.333333","0.5"
+"02-ollama-deterministic","ollama","deterministic","UNSUPPORTED","56","0","24","56","0","0","0"
+"02-ollama-deterministic","ollama","deterministic","UNVERIFIABLE","16","16","115","0","0.122137","1","0.217687"

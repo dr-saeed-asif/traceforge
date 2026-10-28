@@ -94,10 +94,13 @@ export function AnchorInspector({
       const details = parseVerificationSessionDetailsResponse(await response.json());
       const claim = details.claims.find((candidate) => candidate.claimIndex === index);
       if (!claim) throw new Error("That claim index was not found in this session.");
+      // Recompute with the schema of the decoded transaction when it is a
+      // supported legacy version; new anchors use the current schema.
       const manifest = createBlockchainClaimAnchorManifest(
         details.session,
         claim,
-        details.traceEvents
+        details.traceEvents,
+        decoded?.schemaVersion === 1 ? 1 : undefined
       );
       const expected = await createBlockchainClaimAnchorPayload(manifest);
       setLoaded({ details, index, expected, manifest });

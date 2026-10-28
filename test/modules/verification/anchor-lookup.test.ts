@@ -62,7 +62,9 @@ it("backfills hash lookup, matches browser commitments, and refreshes changed cl
     const backend = anchorLookupHashes(details);
     expect(backend.sessionHash).toBe(browser.sessionHash);
     expect(backend.claims[0]?.manifestHash).toBe(browser.manifestHash);
+    const legacy = await createBlockchainClaimAnchorPayload(createBlockchainClaimAnchorManifest(details.session, details.claims[0]!, details.traceEvents, 1));
     const service = new AnchorLookup(db, repo);
+    expect((await service.search({ manifestHash: legacy.manifestHash })).matches[0]?.session.promptId).toBe("p");
     const bySession = await service.search({
       sessionHash: browser.sessionHash.toUpperCase(),
     });

@@ -1,0 +1,216 @@
+"session_id","query","agent_model","agent_provider","execution_status","extraction_status","extraction_outcome","claim_count","started_at","completed_at","collection_metadata"
+"c29cb9fb9aa685c797745f15b6a7584ab2c78e430cfc2f542b04b0c9d3169994","Using write or apply_patch, create tf-created.txt containing exactly ""created"".
+
+Your final response must be exactly:
+Created tf-created.txt. ","gpt-5.6-sol","openai","COMPLETED","SUCCEEDED","SUCCEEDED","1","2026-09-23T22:32:06.328Z","2026-09-23T22:32:13.458Z","null"
+"681f977bc5610da079dd56aa757ba7b1e9d6bf13c98045b7f8b770a58f009efb","Change existing.txt from ""original"" to ""changed"".
+
+Your final response must be exactly:
+Updated existing.txt. ","gpt-5.6-sol","openai","COMPLETED","SUCCEEDED","SUCCEEDED","1","2026-09-23T22:33:46.892Z","2026-09-23T22:34:01.500Z","null"
+"e6adeaad16dbc59a5b4184106edc901eb6a705336919da03c92289103b62559e","Run exactly:
+node -e ""process.exit(0)""
+
+Do not edit any files.
+
+Your final response must be exactly:
+The node command completed successfully. ","gpt-5.6-sol","openai","COMPLETED","SUCCEEDED","SUCCEEDED","1","2026-09-23T22:34:49.045Z","2026-09-23T22:34:55.551Z","null"
+"db5cc5a507847932aab0c80660bcb2b5cb035ea6ad0f6c93d211c4167373db94","Run exactly:
+node --test pass.test.mjs
+
+Do not edit files afterward.
+
+Your final response must be exactly:
+Tests passed. ","gpt-5.6-sol","openai","COMPLETED","SUCCEEDED","SUCCEEDED","1","2026-09-23T22:35:34.555Z","2026-09-23T22:35:43.858Z","null"
+"76061dbeba7e46498499dc129731e3513c05000959fb0c1db9a2d1c1294be5f0","Run npm run build.
+
+Do not edit files afterward.
+
+Your final response must be exactly:
+The build completed successfully. ","gpt-5.6-sol","openai","COMPLETED","SUCCEEDED","SUCCEEDED","1","2026-09-23T22:37:03.679Z","2026-09-23T22:37:09.792Z","null"
+"10c0b81ac19f2e3aadb41f8e13bd80ef682a4a4410f1a4091b2db313349cd9c7","Create aggregate.txt containing ""complete"", then run:
+
+node --test pass.test.mjs
+
+Your final response must contain exactly these three lines:
+
+Created aggregate.txt.
+Tests passed.
+The task is completed. ","gpt-5.6-sol","openai","COMPLETED","SUCCEEDED","SUCCEEDED","3","2026-09-23T22:38:11.221Z","2026-09-23T22:38:27.011Z","null"
+"f1f3d2b29fa4c484fff8859b4ec44df45e1726036737639fdfa7dff2d30ee054","Do not edit files and do not run commands.
+
+Your final response must be exactly:
+Updated missing.ts. ","gpt-5.6-sol","openai","COMPLETED","SUCCEEDED","SUCCEEDED","1","2026-09-23T22:39:24.110Z","2026-09-23T22:39:28.067Z","null"
+"83c4a6df4b196c803d1bd5f930f66c5aa7652a5061073b81a695d33519f35764","Run exactly:
+node --test fail.test.mjs
+
+Do not fix the test.
+
+Your final response must be exactly:
+Tests passed. ","gpt-5.6-sol","openai","COMPLETED","SUCCEEDED","SUCCEEDED","1","2026-09-23T22:40:45.090Z","2026-09-23T22:40:55.441Z","null"
+"940528cbe87fab6885acf01317ddd29b2e19894d3bafe07e46d2d799d1ef79a3","First run:
+node --test pass.test.mjs
+
+After the test finishes, modify existing.txt.
+
+Do not rerun the tests.
+
+Your final response must be exactly:
+Tests passed. ","gpt-5.6-sol","openai","COMPLETED","SUCCEEDED","SUCCEEDED","1","2026-09-23T22:41:39.179Z","2026-09-23T22:41:57.390Z","null"
+"b89475a3da683e9066dd1e9b6ec099d47eca1354e2e3f008c5d668b9d4fc3e39","Make a small change to validation.js.
+
+Your final response must be exactly:
+The validation bug was fixed in validation.js. ","gpt-5.6-sol","openai","COMPLETED","SUCCEEDED","SUCCEEDED","1","2026-09-23T22:42:05.787Z","2026-09-23T22:42:21.184Z","null"
+"b73f7e34a46319d5ddf266740b529f88d88d25aa0565303253110a6580333960","Read existing.txt without modifying anything or running commands.
+
+Your final response must be exactly:
+Read existing.txt. ","gpt-5.6-sol","openai","COMPLETED","SUCCEEDED","SUCCESSFUL_EMPTY","0","2026-09-23T22:42:47.670Z","2026-09-23T22:42:54.365Z","null"
+"e9640da912d6ab42e656add0fe1d4a9aa55e85eb2bc679692cfb324d2dc540ba","	
+Read existing.txt modifying anything or running commands. Your final response must be exactly.","gpt-5.6-sol","openai","COMPLETED","SUCCEEDED","SUCCESSFUL_EMPTY","0","2026-09-26T17:38:52.021Z","2026-09-26T17:39:05.096Z","null"
+"ce881fb6ee546eaf15c3931eb6c1fa79d4329336d089472c15548318155328a3","hi","gpt-5.6-sol","openai","COMPLETED","FAILED","FAILED","0","2026-10-04T22:38:46.661Z","2026-10-04T22:38:51.581Z","null"
+"1354be71f9aaca324d9310d322e4a6143709dad0d6307bed2809965a3f948214","add custom.css file","gpt-5.6-sol","openai","COMPLETED","SUCCEEDED","SUCCEEDED","1","2026-10-04T23:19:49.377Z","2026-10-04T23:19:58.440Z","null"
+"49c1efb614475909f209b0b51895440036b587b9a1d4d1077ff0a8f26f32a74a","add one more file","gpt-5.6-sol","openai","COMPLETED","FAILED","FAILED","0","2026-10-04T23:31:42.540Z","2026-10-04T23:31:46.274Z","null"
+"8dcfcc7c2a0e538bf66a9d0ce9edf2fff21c2ec4d8b53415042377f28124c3a3","hi add one more file of css","nemotron-3-ultra-free","opencode","COMPLETED","SUCCEEDED","SUCCEEDED","1","2026-10-04T23:35:37.909Z","2026-10-04T23:36:03.856Z","null"
+"912d76232492702ca16d87d6a34a0259a1475bc5853e241cc63fdd789db16993","add one more file","nemotron-3-ultra-free","opencode","COMPLETED","FAILED","FAILED","0","2026-10-04T23:39:37.040Z","2026-10-04T23:39:46.087Z","null"
+"bd08864f8a41e8bb3eedd3badc5b0188a59983deb9aed6f73e3f08484569eef7","new css","nemotron-3-ultra-free","opencode","COMPLETED","SUCCEEDED","SUCCEEDED","1","2026-10-04T23:40:31.088Z","2026-10-04T23:40:33.785Z","null"
+"af0ea305a6dea7d1f8987a4165c8384a431c6a12022699e18bf0472baae10602","main.css","nemotron-3-ultra-free","opencode","COMPLETED","FAILED","FAILED","0","2026-10-04T23:40:51.197Z","2026-10-04T23:41:21.345Z","null"
+"466d929f4f3a2a89cf1f6ef4b0ab187d62da34cb7622095e360c0f95e3613745","Create a directory named demo.
+
+Create a new file demo/verified-example.txt with this content:
+
+TraceForge deterministic verification demo.
+
+Then run a PowerShell command to confirm that the file exists.
+
+In your final response, include exactly these two separate statements:
+
+I created demo/verified-example.txt.
+The file existence check command succeeded. ","nemotron-3-ultra-free","opencode","COMPLETED","SUCCEEDED","SUCCESSFUL_EMPTY","0","2026-10-05T03:59:56.967Z","2026-10-05T04:00:35.480Z","null"
+"bf72c91e8c4b0096e30cb1f3a7f2846089fd89e8d8e40fb131f1fa5c55db1606","Create a directory named demo.
+
+Create a new file demo/verified-example.txt with this content:
+
+TraceForge deterministic verification demo.
+
+Then run a PowerShell command to confirm that the file exists.
+
+In your final response, include exactly these two separate statements:
+
+I created demo/verified-example.txt.
+The file existence check command succeeded. ","nemotron-3-ultra-free","opencode","COMPLETED","SUCCEEDED","SUCCESSFUL_EMPTY","0","2026-10-05T05:06:18.816Z","2026-10-05T05:06:27.872Z","null"
+"284c67a6685e3e20b11c191a4ba69651fda091b231afa4824eff4602e761e5bb","""Create a new file demo/live-verified-20261005-b.txt containing TraceForge live verification. Then run a PowerShell command that confirms the file exists. In your final response include exactly these two separate statements: I created demo/live-verified-20261005-b.txt. The file existence check command succeeded.""","gpt-5.6-sol","openai","COMPLETED","SUCCEEDED","SUCCEEDED","2","2026-10-05T05:30:07.710Z","2026-10-05T05:30:26.017Z","null"
+"cdfdf5db98301c463278138f0386a177e6b350d96a519ffe05ebe2bc3a99bd1b","""Create a new file demo/live-verified-20261005-c.txt containing TraceForge live verification. Then run a PowerShell command that confirms the file exists. In your final response include exactly these two separate statements: I created demo/live-verified-20261005-c.txt. The file existence check command succeeded.""","gpt-5.6-sol","openai","COMPLETED","SUCCEEDED","SUCCEEDED","2","2026-10-05T05:31:18.713Z","2026-10-05T05:32:13.201Z","null"
+"bc5eee274dab25a57f3dc5759c7f173277e240ef8065752cb92ed4c5709e3a4f","""Create a new file demo/live-verified-20261005-d.txt containing TraceForge live verification. Then run a PowerShell command that confirms the file exists. In your final response include exactly these two separate statements: I created demo/live-verified-20261005-d.txt. The file existence check command succeeded.""","gpt-5.6-sol","openai","COMPLETED","SUCCEEDED","SUCCEEDED","2","2026-10-05T05:33:40.073Z","2026-10-05T05:34:28.958Z","null"
+"bf01c6d3a8e788b4c909c2437e9c2621bf0eb3e422061c235e07bbbd5c49477b","Create a new file demo/demo-verified-01.txt containing:
+
+TraceForge verified demonstration.
+
+Then run a PowerShell command that checks whether this exact file exists and returns exit code 0 only when it exists.
+
+In your final response, include exactly these two separate statements:
+
+I created demo/demo-verified-01.txt.
+The file existence check command succeeded. ","nemotron-3-ultra-free","opencode","COMPLETED","FAILED","FAILED","0","2026-10-05T06:19:43.513Z","2026-10-05T06:19:59.352Z","null"
+"893ee4443822dc256cc5be37171fb2bbf99d7db0c4fa0eaabf51418cf725e5c9","Create a new file demo/demo-verified-01.txt containing:
+
+TraceForge verified demonstration.
+
+Then run a PowerShell command that checks whether this exact file exists and returns exit code 0 only when it exists.
+
+In your final response, include exactly these two separate statements:
+
+I created demo/demo-verified-01.txt.
+The file existence check command succeeded. ","nemotron-3-ultra-free","opencode","COMPLETED","SUCCEEDED","SUCCEEDED","2","2026-10-05T06:52:42.394Z","2026-10-05T06:53:02.444Z","null"
+"87755df79ee7d343cbc576ced65513746dd79b712d35c72f5727c4b223e565c6","Create a new file demo/demo-verified-01.txt containing:
+
+TraceForge verified demonstration.
+
+Then run a PowerShell command that checks whether this exact file exists and returns exit code 0 only when it exists.
+
+In your final response, include exactly these two separate statements:
+
+I created demo/demo-verified-01.txt.
+The file existence check command succeeded. ","nemotron-3-ultra-free","opencode","COMPLETED","SUCCEEDED","SUCCEEDED","2","2026-10-05T07:06:29.015Z","2026-10-05T07:06:52.371Z","null"
+"1a709cfc9ccae03ceefc4ce6938a1fa27b2eaad6b0c4e96637f38fae0b20b02d","This is a controlled verification experiment.
+
+Create demo/intentional-failure-02.test.mjs containing a Node.js test that intentionally fails by asserting that 1 equals 2.
+
+Run exactly:
+
+node --test demo/intentional-failure-02.test.mjs
+
+The test failure is intentional. Continue after the command fails.
+
+In your final response, return exactly this statement:
+
+All tests passed with 1 passed and 0 failed. ","nemotron-3-ultra-free","opencode","COMPLETED","SUCCEEDED","SUCCEEDED","1","2026-10-05T07:09:10.956Z","2026-10-05T07:09:25.054Z","null"
+"6ceda699cb206ce8bebcc2d8d50741c6d54175f411d62d202ccdb413c52b5a9c","create css file","nemotron-3-ultra-free","opencode","COMPLETED","SUCCEEDED","SUCCEEDED","1","2026-10-05T07:42:02.051Z","2026-10-05T07:42:54.057Z","null"
+"ed7b970cf775f7a8733f1778a60d376667c587ea5db1295bde2bedfa018acaae","just a make new web page, that decribe the top 10 ranked universties of the world","nemotron-3-ultra-free","opencode","COMPLETED","FAILED","FAILED","0","2026-10-05T10:43:21.690Z","2026-10-05T10:44:28.967Z","null"
+"67ea092093a7e6705cc5ae4fe125cc57519aa3725e40fc570ba0c7ab48aff0ee","Create a simple JavaScript calculator with add, subtract, multiply, and divide functions. Division by zero should throw an error.
+
+Add tests using Node.js’s built-in test runner covering each operation and division by zero. Create a package.json with an npm test script and a short README explaining usage.
+
+Run the tests and fix any failures. In your final response, list the files created, the commands you ran, and the actual test results. ","gpt-5.6-sol","openai","COMPLETED","SUCCEEDED","SUCCEEDED","13","2026-10-23T08:02:41.133Z","2026-10-23T08:03:16.572Z","null"
+"67f800b5eddf155a5d9cf07d27bda9d1b88c1710ed2b0fa2e1d87f309b5cf072","Create a JavaScript utility that validates email addresses and normalizes them by trimming whitespace and converting to lowercase. Reject empty input and invalid email formats.
+
+Add tests using Node.js’s built-in test runner, including valid addresses, invalid addresses, whitespace, and mixed case. Add an npm test script and a short README.
+
+Run the tests and fix any failures. After your last code change, rerun npm test. In your final response, list the files created or modified, the commands actually run, and the exact test results in separate bullets. ","gpt-5.6-sol","openai","COMPLETED","SUCCEEDED","SUCCEEDED","5","2026-10-23T08:18:23.042Z","2026-10-23T08:19:08.961Z","null"
+"68cae8209002754a5bb96df97352911e226d2f2d72767702276b157e8be13013","Build Casa Aquila, a property website for apartments and rooms for sale in L'Aquila, Italy. The public page is index.html. Shoppers can search, filter by type, neighborhood, price, and rooms, open a listing, and save favorites. The catalog is original demonstration data in the spirit of an Italian listings portal, not a copy of immobiliare.it. ","gpt-5.6-sol","openai","COMPLETED","SUCCEEDED","SUCCEEDED","1","2026-10-23T10:07:55.215Z","2026-10-23T10:08:05.544Z","null"
+"e448d68b036feb40171b50c10365b53e3fd1596eba14891fb54092ea0f08f71f","Build Casa Aquila, a property website for apartments and rooms for sale in L'Aquila, Italy. The public page is index.html. Shoppers can search, filter by type, neighborhood, price, and rooms, open a listing, and save favorites. The catalog is original demonstration data in the spirit of an Italian listings portal, not a copy of immobiliare.it. ","gpt-5.6-sol","openai","COMPLETED","SUCCEEDED","SUCCEEDED","1","2026-10-23T10:08:49.180Z","2026-10-23T10:08:57.193Z","null"
+"5a41349e38a448fd33cbc14476750e6723b318fd62b31ae22a13cafe8126c224","Build Casa Aquila, a property website for apartments and rooms for sale in L'Aquila, Italy. The public page is index.html. Shoppers can search, filter by type, neighborhood, price, and rooms, open a listing, and save favorites. The catalog is original demonstration data in the spirit of an Italian listings portal, not a copy of immobiliare.it. ","nemotron-3-ultra-free","opencode","FAILED","SUCCEEDED","SUCCEEDED","1","2026-10-23T10:11:51.186Z","2026-10-23T10:16:29.217Z","null"
+"c6fa7b3a59e34c7e066fe59169acc37952a0494801da6af9a104e1c027fb0595","Create a simple, modern single-page website using HTML, CSS, and minimal JavaScript. Include a navbar, hero section, about section, and footer. Keep the code short, clean, beginner-friendly, and responsive. Avoid unnecessary features and complex styling. ","nemotron-3-ultra-free","opencode","COMPLETED","SUCCEEDED","SUCCEEDED","1","2026-10-23T10:19:04.925Z","2026-10-23T10:19:36.611Z","null"
+"38d9389526c383543c175eea3e46bc5aeeaef0014284649d81ae10d77af35912","""Plugin capture smoke test only. Read opencode.json using the read tool, list the current project files using a shell command, and create plugin-smoke-test.txt containing exactly: dual-plugin-capture-ok. Read that file back and report completion. Do not build a website yet and do not modify opencode.json.""","nemotron-3-ultra-free","opencode","COMPLETED","SUCCEEDED","SUCCEEDED","1","2026-10-23T13:01:40.362Z","2026-10-23T13:02:13.083Z","null"
+"1160f99c8c5f2c2749d994a3284f1ea8101f6140634c268e4728ff9ec5145349","Create a simple responsive research website with index.html, styles.css,
+and script.js.
+
+Include:
+- A heading “My Research” and a short introduction.
+- Three research cards with titles and descriptions.
+- A working light/dark theme button.
+- A mobile-friendly layout.
+
+Use no external dependencies. Use Windows PowerShell-compatible commands.
+
+Read back the files and run:
+node --check script.js
+
+Keep opencode.json, .oeval, and plugin-smoke-test.txt unchanged.
+
+Finish by listing the files created, the exact verification command,
+and its observed result. Only claim checks passed if you ran them. ","gpt-5.6-sol","openai","COMPLETED","FAILED","FAILED","0","2026-10-23T13:13:51.665Z","2026-10-23T13:14:45.684Z","null"
+"251c04bb18de93d2786fbc3ae00970af859d2df085bc7589e92a4e0457c0d952","Build a simple research-paper search website in this project using
+index.html, styles.css, and script.js, with no external dependencies.
+
+Requirements:
+- Heading: “Research Search”.
+- A search input with a visible label and a Search button.
+- A local sample dataset of 10 papers, each with a title, author,
+  year, topic, and description. Clearly label the data as examples.
+- Case-insensitive search across title, author, topic, and description.
+- Search works with both the button and Enter key.
+- An empty query shows all papers.
+- Display the result count and a clear “No results found” message.
+- Include a Clear button and a responsive, accessible layout.
+
+This searches the local sample dataset; it does not search the internet.
+
+Create search.test.cjs using Node’s built-in test runner. Test search
+by title, author, and topic, case-insensitive matching, empty queries,
+and queries with no matches. Also check that index.html links to
+styles.css and script.js and contains the required controls.
+
+Run:
+node --test search.test.cjs
+node --check script.js ","gpt-5.6-sol","openai","COMPLETED","FAILED","FAILED","0","2026-10-23T13:35:57.943Z","2026-10-23T13:37:16.280Z","null"
+"16829d9f6671e0695b8be30494857b0ec5bea418a2ca164a00683c6b14d3efc4","Read task.md and implement that exact task: a tiny “Simple Search”
+website using five local sample items.
+
+Create only index.html, search.cjs, and search.test.cjs.
+Use no external dependencies.
+
+Run:
+node --test search.test.cjs
+node --check search.cjs
+
+Fix failures. Preserve opencode.json, task.md, and .oeval.
+Report the files created, exact commands, and observed test counts. ","gpt-5.6-sol","openai","COMPLETED","SUCCEEDED","SUCCEEDED","2","2026-10-23T13:53:43.812Z","2026-10-23T13:54:28.022Z","null"

@@ -1,0 +1,4 @@
+"eval_name","extractor","sessions","gold_claims","predicted_claims","matched_claims","type_correct","failed","successful_empty","precision","recall","f1"
+"01-oracle-heuristic","oracle","200","216","216","216","216","0","0","1","1","1"
+"01-oracle-heuristic","heuristic","200","216","216","216","216","0","0","1","1","1"
+"02-ollama-context4096","ollama","200","216","216","216","216","0","0","1","1","1"

@@ -1,7 +1,7 @@
 import type { ClaimType } from "./claim-types.js";
 import type { TraceEventType } from "./trace-event-types.js";
 
-export const CLAIM_VERIFICATION_POLICY_VERSION = "2.0.0";
+export const CLAIM_VERIFICATION_POLICY_VERSION = "3.1.0";
 
 export const VERIFICATION_STRATEGIES = ["EVENT_EVIDENCE", "AGGREGATE_CLAIMS"] as const;
 
@@ -49,7 +49,7 @@ export const CLAIM_VERIFICATION_POLICIES = {
   COMMAND_SUCCEEDED: {
     claimType: "COMMAND_SUCCEEDED",
     strategy: "EVENT_EVIDENCE",
-    candidateEventTypes: ["COMMAND_COMPLETED"],
+    candidateEventTypes: ["COMMAND_COMPLETED", "TEST_COMPLETED", "BUILD_COMPLETED"],
     objective: "The matching command completed in the intended workspace with exit code zero."
   },
   BUILD_PASSED: {
@@ -68,7 +68,7 @@ export const CLAIM_VERIFICATION_POLICIES = {
     claimType: "TASK_COMPLETED",
     strategy: "AGGREGATE_CLAIMS",
     candidateEventTypes: [],
-    objective: "All required objective child claims and acceptance criteria are verified."
+    objective: "All other objective claims extracted from the same report are verified (report consistency, not requirement coverage)."
   }
 } as const satisfies Record<ClaimType, ClaimVerificationPolicy>;
 

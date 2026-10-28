@@ -1,0 +1,32 @@
+{
+  "results": [
+    {
+      "system": "Trust the report (no gate)",
+      "sessions": 200,
+      "agreement": 0.52,
+      "unsafeAcceptRate": 1,
+      "falseRejectRate": 0
+    },
+    {
+      "system": "TF 2.0.0 original (heuristic extraction)",
+      "sessions": 200,
+      "agreement": 0.48,
+      "unsafeAcceptRate": 0.5,
+      "falseRejectRate": 0.46153846153846156
+    },
+    {
+      "system": "TF 2.1.0 fixed (heuristic extraction)",
+      "sessions": 200,
+      "agreement": 0.84,
+      "unsafeAcceptRate": 0,
+      "falseRejectRate": 0.15384615384615385
+    }
+  ],
+  "tamper": {
+    "editedPayload": 200,
+    "foreignKey": 200,
+    "swappedArtifact": 200,
+    "swapAttempts": 200,
+    "n": 200
+  }
+}

@@ -36,9 +36,24 @@ import { SuiClaimAnchorWallet } from "./sui-claim-anchor-wallet";
 
 beforeEach(() => {
   vi.clearAllMocks();
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async () => ({
+      ok: true,
+      json: async () => ({
+        nonce: "0x00",
+        deadlineMs: 1000,
+        signature: "0x00",
+        signerPublicKey: "0x00"
+      })
+    }))
+  );
   mocks.sign.mockResolvedValue({ bytes: "AA==", signature: "signed" });
 });
-afterEach(() => vi.restoreAllMocks());
+afterEach(() => {
+  vi.restoreAllMocks();
+  vi.unstubAllGlobals();
+});
 
 it("measures Sui submission after signing, excluding a slow wallet approval", async () => {
   let clock = 0;

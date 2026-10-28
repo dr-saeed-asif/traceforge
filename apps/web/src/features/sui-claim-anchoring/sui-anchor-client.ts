@@ -60,7 +60,8 @@ export interface SuiAnchorReader {
 export async function findSuiClaimAnchor(
   client: SuiAnchorReader,
   payload: BlockchainClaimAnchorPayload,
-  deployment: SuiAnchorDeployment
+  deployment: SuiAnchorDeployment,
+  legacyPayload?: () => Promise<BlockchainClaimAnchorPayload>
 ): Promise<{ matches: boolean; digest: string | null; objectUrl: string } | null> {
   try {
     const { dynamicField } = await client.getDynamicField({
@@ -75,16 +76,20 @@ export async function findSuiClaimAnchor(
       }
     });
     const record = SuiAnchorRecord.parse(dynamicField.value.bcs);
+    const expected =
+      record.schema_version === 1 && payload.schemaVersion !== 1 && legacyPayload
+        ? await legacyPayload()
+        : payload;
     const equal = (bytes: number[], hex: string) =>
       bytes.length === 32 && bytes.every((byte, index) => byte === hexToBytes32(hex)[index]);
     return {
       matches:
         record.verified &&
-        record.claim_index === payload.claimIndex &&
-        record.schema_version === payload.schemaVersion &&
-        equal(record.session_hash, payload.sessionHash) &&
-        equal(record.manifest_hash, payload.manifestHash) &&
-        equal(record.evidence_root, payload.evidenceRoot),
+        record.claim_index === expected.claimIndex &&
+        record.schema_version === expected.schemaVersion &&
+        equal(record.session_hash, expected.sessionHash) &&
+        equal(record.manifest_hash, expected.manifestHash) &&
+        equal(record.evidence_root, expected.evidenceRoot),
       digest: dynamicField.previousTransaction,
       objectUrl: `https://suiexplorer.com/object/${encodeURIComponent(dynamicField.fieldId)}?network=testnet`
     };
@@ -132,17 +137,29 @@ export function buildSuiAnchorTransaction(
   const transaction = new Transaction();
   transaction.moveCall({
     target: `${deployment.packageId}::${SUI_CLAIM_ANCHOR_MODULE}::${authorization ? "anchor_verified_claim_with_authorization" : "anchor_verified_claim"}`,
-    arguments: authorization ? [
-      transaction.object(deployment.registryId), transaction.object("0x6"),
-      transaction.pure.vector("u8", hexToBytes32(payload.sessionHash)), transaction.pure.u32(payload.claimIndex),
-      transaction.pure.vector("u8", hexToBytes32(payload.manifestHash)), transaction.pure.vector("u8", hexToBytes32(payload.evidenceRoot)),
-      transaction.pure.u32(payload.schemaVersion), transaction.pure.vector("u8", hexToBytes(authorization.nonce)),
-      transaction.pure.u64(authorization.deadlineMs), transaction.pure.vector("u8", hexToBytes(authorization.signature))
-    ] : [
-      transaction.object(deployment.registryId), transaction.object(deployment.adminCapId), transaction.object("0x6"),
-      transaction.pure.vector("u8", hexToBytes32(payload.sessionHash)), transaction.pure.u32(payload.claimIndex),
-      transaction.pure.vector("u8", hexToBytes32(payload.manifestHash)), transaction.pure.vector("u8", hexToBytes32(payload.evidenceRoot)), transaction.pure.u32(payload.schemaVersion)
-    ]
+    arguments: authorization
+      ? [
+          transaction.object(deployment.registryId),
+          transaction.object("0x6"),
+          transaction.pure.vector("u8", hexToBytes32(payload.sessionHash)),
+          transaction.pure.u32(payload.claimIndex),
+          transaction.pure.vector("u8", hexToBytes32(payload.manifestHash)),
+          transaction.pure.vector("u8", hexToBytes32(payload.evidenceRoot)),
+          transaction.pure.u32(payload.schemaVersion),
+          transaction.pure.vector("u8", hexToBytes(authorization.nonce)),
+          transaction.pure.u64(authorization.deadlineMs),
+          transaction.pure.vector("u8", hexToBytes(authorization.signature))
+        ]
+      : [
+          transaction.object(deployment.registryId),
+          transaction.object(deployment.adminCapId),
+          transaction.object("0x6"),
+          transaction.pure.vector("u8", hexToBytes32(payload.sessionHash)),
+          transaction.pure.u32(payload.claimIndex),
+          transaction.pure.vector("u8", hexToBytes32(payload.manifestHash)),
+          transaction.pure.vector("u8", hexToBytes32(payload.evidenceRoot)),
+          transaction.pure.u32(payload.schemaVersion)
+        ]
   });
   return transaction;
 }
@@ -155,7 +172,11 @@ export function buildSuiSignerSetupTransaction(
   const transaction = new Transaction();
   transaction.moveCall({
     target: `${deployment.packageId}::${SUI_CLAIM_ANCHOR_MODULE}::set_signer_public_key`,
-    arguments: [transaction.object(deployment.registryId), transaction.object(deployment.adminCapId), transaction.pure.vector("u8", hexToBytes(signerPublicKey))]
+    arguments: [
+      transaction.object(deployment.registryId),
+      transaction.object(deployment.adminCapId),
+      transaction.pure.vector("u8", hexToBytes(signerPublicKey))
+    ]
   });
   return transaction;
 }
@@ -181,8 +202,11 @@ function hexToBytes32(value: string): number[] {
 }
 
 function hexToBytes(value: string): number[] {
-  if (!/^0x[0-9a-f]*$/i.test(value) || value.length % 2 !== 0) throw new TypeError("Sui authorization bytes are invalid.");
-  return Array.from({ length: (value.length - 2) / 2 }, (_, index) => Number.parseInt(value.slice(2 + index * 2, 4 + index * 2), 16));
+  if (!/^0x[0-9a-f]*$/i.test(value) || value.length % 2 !== 0)
+    throw new TypeError("Sui authorization bytes are invalid.");
+  return Array.from({ length: (value.length - 2) / 2 }, (_, index) =>
+    Number.parseInt(value.slice(2 + index * 2, 4 + index * 2), 16)
+  );
 }
 
 export const SUI_ANCHOR_TESTNET = SUI_TESTNET_NETWORK;

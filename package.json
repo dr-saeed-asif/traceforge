@@ -38,13 +38,17 @@
     "key:generate": "npm run build && node dist/generate-encryption-key.js",
     "code:decrypt": "node --env-file-if-exists=.env dist/decrypt-generated-code.js",
     "research:export": "npm run build && node --env-file-if-exists=.env dist/export-research-dataset.js",
-    "research:evaluate": "npm run build && node --env-file-if-exists=.env dist/evaluate.js"
+    "research:evaluate": "npm run build && node --env-file-if-exists=.env dist/evaluate.js",
+    "mcp:gate": "npm run build && node --env-file-if-exists=.env dist/mcp-claim-gate.js",
+    "research:benchmark": "npm run build && node research/benchmark/run-benchmark.mjs"
   },
   "engines": {
     "node": ">=22.5"
   },
   "dependencies": {
-    "mysql2": "^3.14.4"
+    "@modelcontextprotocol/sdk": "^1.32.2",
+    "mysql2": "^3.14.4",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@opencode-ai/plugin": "1.18.21",

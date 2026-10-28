@@ -23,6 +23,7 @@ interface RuleDecision {
 }
 
 export interface VerificationRuleContext {
+  readonly freshness?: boolean;
   readonly claim: ExtractedClaim;
   readonly allEvidence: readonly VerificationEvidence[];
   readonly candidates: readonly VerificationEvidence[];
@@ -39,6 +40,9 @@ export type ClaimVerificationRuleRegistry = Readonly<
 >;
 
 export interface VerifyClaimsOptions {
+  readonly targetMatching?: "strict" | "legacy-token";
+  /** Research ablation only; production defaults to freshness checks. */
+  readonly freshness?: boolean;
   /** Required by production callers; optional for single-prompt unit inputs. */
   readonly promptId?: string;
   readonly ruleVersion?: string;
@@ -77,6 +81,7 @@ export function verifyClaims(
   const normalizedOptions: VerifyClaimsOptions = promptId
     ? { ...options, promptId }
     : options;
+  const claimTimeEvidence = evidenceAtClaimTime(promptEvidence);
   const results = new Map<number, ClaimVerificationResult>();
 
   for (const claim of claims.filter(
@@ -84,7 +89,7 @@ export function verifyClaims(
   )) {
     results.set(
       claim.claimIndex,
-      verifyClaim(claim, promptEvidence, [], normalizedOptions),
+      verifyPreparedClaim(claim, claimTimeEvidence, [], normalizedOptions),
     );
   }
   for (const claim of claims.filter(
@@ -95,7 +100,7 @@ export function verifyClaims(
     );
     results.set(
       claim.claimIndex,
-      verifyClaim(claim, promptEvidence, children, normalizedOptions),
+      verifyPreparedClaim(claim, claimTimeEvidence, children, normalizedOptions),
     );
   }
   return claims.map((claim) => results.get(claim.claimIndex)!);
@@ -112,8 +117,22 @@ export function verifyClaim(
     typeof optionsOrRuleVersion === "string"
       ? { ruleVersion: optionsOrRuleVersion }
       : optionsOrRuleVersion;
+  // Claims are judged at claim time: only evidence observed up to the final
+  // response that contains the claim is admissible (Eq. freshness, t_c).
+  const promptEvidence = evidenceAtClaimTime(
+    evidenceForOnePrompt(evidence, options.promptId),
+  );
+  return verifyPreparedClaim(claim, promptEvidence, childResults, options);
+}
+
+/** Batch callers prepare the identical sorted claim-time trace only once. */
+function verifyPreparedClaim(
+  claim: ExtractedClaim,
+  promptEvidence: readonly VerificationEvidence[],
+  childResults: readonly ClaimVerificationResult[],
+  options: VerifyClaimsOptions,
+): ClaimVerificationResult {
   const ruleVersion = options.ruleVersion ?? CLAIM_VERIFICATION_POLICY_VERSION;
-  const promptEvidence = evidenceForOnePrompt(evidence, options.promptId);
   const expectation =
     claim.expectation ?? expectationFor(claim.claimText, claim.claimType);
   if (
@@ -157,9 +176,8 @@ export function verifyClaim(
             policy.candidateEventTypes.includes(event.eventType),
           )
           .filter((event) =>
-            targetMatches(event, claim.target, claim.claimType),
-          )
-          .sort(bySequence);
+            targetMatches(event, claim.target, claim.claimType, options.targetMatching),
+          );
 
   if (policy.strategy === "EVENT_EVIDENCE" && candidates.length === 0) {
     return result(
@@ -174,7 +192,13 @@ export function verifyClaim(
     );
   }
 
+  if (options.targetMatching !== "legacy-token" && ["COMMAND_SUCCEEDED", "TEST_PASSED", "BUILD_PASSED"].includes(claim.claimType) &&
+      ["command", "command execution", "test execution", "build"].includes(normalize(claim.target)) &&
+      new Set(candidates.map(event => commandIdentity(eventTarget(event)))).size > 1) {
+    return result(claim, { verdict: "UNSUPPORTED", reasonCode: "MATCHING_EVIDENCE_NOT_FOUND", explanation: "The claim does not identify which of several different commands it refers to.", evidence: [] }, ruleVersion);
+  }
   const decision = rule({
+    ...(options.freshness === undefined ? {} : { freshness: options.freshness }),
     claim,
     allEvidence: promptEvidence,
     candidates,
@@ -280,25 +304,36 @@ function verifyFileModified(context: VerificationRuleContext): RuleDecision {
 function verifyStructureCreated(
   context: VerificationRuleContext,
 ): RuleDecision {
-  const required = structureTokens(context.claim.expectedResult);
+  const declaredPaths = (expected(context).paths ?? [])
+    .map((path) => stripDotSlash(normalize(path).trim()))
+    .filter(Boolean);
+  const required = [
+    ...new Set([
+      ...declaredPaths,
+      ...structureTokens(context.claim.expectedResult),
+    ]),
+  ];
   if (required.length === 0) {
-    const latest = last(context.candidates)!;
-    return isNegative(latest)
-      ? contradicted(
-          "The latest structure evidence directly failed or removed the target.",
-          [latest],
-        )
-      : verified("The latest structure event completed successfully.", [
-          latest,
-        ]);
+    // Policy 2.1.0: a structure claim that names no checkable path cannot be
+    // supported by "some file was created" alone.
+    return invalid(
+      "The structure claim declares no checkable directory or file path.",
+      context.candidates.slice(-1),
+    );
   }
 
   const selected: VerificationEvidence[] = [];
   for (const token of required) {
     const latest = last(
-      context.candidates.filter((event) =>
-        normalize(eventTarget(event)).includes(token),
-      ),
+      context.candidates.filter((event) => {
+        const observed = stripDotSlash(normalize(eventTarget(event)).trim());
+        return declaredPaths.includes(token)
+          ? observed === token ||
+              observed.endsWith(`/${token}`) ||
+              observed.startsWith(`${token}/`) ||
+              observed.includes(`/${token}/`)
+          : observed.includes(token);
+      }),
     );
     if (!latest)
       return unsupported(
@@ -483,6 +518,22 @@ function verifyFreshCommandResult(
     }
   }
 
+  const label = isTest ? "test" : "build";
+  if (context.freshness !== false && context.allEvidence.some(event => event.sequenceNumber >= latest.sequenceNumber && stringValue(event.metadata.workspaceObservation) === "incomplete")) {
+    return invalid(
+      `The workspace could not be fully observed around the ${label} run, so freshness cannot be established.`,
+      [latest],
+    );
+  }
+  const sameInvocationChanges = stringArray(latest.metadata.changedPaths);
+  if (sameInvocationChanges.length > 0 && context.freshness !== false) {
+    return {
+      verdict: "UNSUPPORTED",
+      reasonCode: "EVIDENCE_IS_STALE",
+      explanation: `${sameInvocationChanges.length} workspace file(s) changed during the same ${label} invocation (e.g. ${sameInvocationChanges[0]}), so the result may not reflect the final state.`,
+      evidence: references([latest]),
+    };
+  }
   const invalidator = last(
     context.allEvidence.filter(
       (event) =>
@@ -490,23 +541,44 @@ function verifyFreshCommandResult(
         changesExecutableState(event),
     ),
   );
-  if (invalidator) {
-    const relative =
-      context.claimSequenceNumber !== null &&
-      invalidator.sequenceNumber > context.claimSequenceNumber
-        ? "after the claim was captured"
-        : "before the claim was captured";
+  if (invalidator && context.freshness !== false) {
     return {
       verdict: "UNSUPPORTED",
       reasonCode: "EVIDENCE_IS_STALE",
-      explanation: `A file-system change ${relative} occurred after the successful ${isTest ? "test" : "build"} result.`,
+      explanation: `A file-system change (${eventTarget(invalidator) || invalidator.eventType}) occurred after the successful ${label} result and before the claim.`,
       evidence: references([latest, invalidator]),
     };
   }
+  const testEdits = isTest
+    ? context.allEvidence.filter(
+        (event) =>
+          event.sequenceNumber < latest.sequenceNumber &&
+          ["FILE_MODIFIED", "FILE_DELETED"].includes(event.eventType) &&
+          isTestPath(eventTarget(event)),
+      )
+    : [];
+  if (testEdits.length > 0) {
+    return verified(
+      `The latest relevant test completed successfully after the final file change. Advisory: ${testEdits.length} existing test file(s) were modified or deleted in this prompt before the passing run (e.g. ${eventTarget(testEdits[0]!)}); review them for weakened assertions.`,
+      [latest, ...testEdits],
+    );
+  }
   return verified(
-    `The latest relevant ${isTest ? "test" : "build"} completed successfully after the final file change.`,
+    `The latest relevant ${label} completed successfully after the final file change.`,
     [latest],
   );
+}
+
+function isTestPath(path: string): boolean {
+  return /(?:^|\/)(?:__tests__|tests?|spec)\/|\.(?:test|spec)\.[a-z0-9]+$|(?:^|\/)test_[^/]+\.py$|_test\.(?:go|py)$/iu.test(
+    path.replace(/\\/gu, "/"),
+  );
+}
+
+function stringArray(value: unknown): readonly string[] {
+  return Array.isArray(value)
+    ? value.filter((item): item is string => typeof item === "string")
+    : [];
 }
 
 function verifyAggregateClaim(context: VerificationRuleContext): RuleDecision {
@@ -551,7 +623,8 @@ function verifyAggregateClaim(context: VerificationRuleContext): RuleDecision {
   return {
     verdict: "VERIFIED",
     reasonCode: "REQUIRED_EVIDENCE_CONFIRMED",
-    explanation: "All objective child claims were verified.",
+    explanation:
+      "Every other objective claim extracted from this report was verified. This establishes consistency of the report with the trace, not that the task's requirements were met.",
     evidence,
   };
 }
@@ -601,18 +674,104 @@ function isNegative(event: VerificationEvidence): boolean {
   return event.outcome === "FAILED" || event.eventType === "FILE_DELETED";
 }
 
+/**
+ * Generic targets denote "the latest run of this kind" rather than a specific
+ * command. They are accepted only for command-like claims, and the rule then
+ * judges the latest matching run.
+ */
+const GENERIC_COMMAND_TARGETS = new Set([
+  "command",
+  "command execution",
+  "test",
+  "tests",
+  "test execution",
+  "test suite",
+  "the tests",
+  "all tests",
+  "build",
+  "the build",
+  "project build",
+]);
+
+/**
+ * Strict target correspondence (policy 2.1.0). File claims require the same
+ * normalised path, or a claimed relative path that is a whole-segment suffix
+ * of the observed path. Command claims require the same normalised command, a
+ * whole-word prefix of it, or equality with one `&&`-chained segment; a claimed
+ * path is accepted when it appears as a whole argument of the command.
+ * Structure claims keep the descriptive matcher because their rule re-checks
+ * every declared path.
+ */
 function targetMatches(
   event: VerificationEvidence,
   target: string,
   claimType: ClaimType,
+  mode: "strict" | "legacy-token" = "strict",
 ): boolean {
-  if (!target || claimType === "DEPENDENCY_RULE") return true;
+  if (claimType === "DEPENDENCY_RULE") return true;
+  if (claimType === "STRUCTURE_CREATED" && structureTokens(target).length > 0) {
+    const segments = eventTarget(event).replace(/\\/gu, "/").split("/");
+    return structureTokens(target).some(token => segments.includes(token));
+  }
+  const label = normalize(target);
+  if (!label) return false;
+  if (mode === "legacy-token") {
+    const actual = normalize(eventTarget(event));
+    if (!actual) return false;
+    if (actual === label || actual.includes(label) || label.includes(actual)) return true;
+    const expectedTokens = tokens(label), actualTokens = tokens(actual);
+    return expectedTokens.filter(token => actualTokens.some(candidate => candidate.includes(token) || token.includes(candidate))).length >= Math.max(1,Math.ceil(expectedTokens.length/2));
+  }
+  if (claimType === "STRUCTURE_CREATED") {
+    const path = eventTarget(event).replace(/\\/gu,"/");
+    if (path.startsWith(target.replace(/\\/gu,"/").replace(/\/$/u,"") + "/")) return true;
+  }
+  if (["COMMAND_SUCCEEDED", "TEST_PASSED", "BUILD_PASSED"].includes(claimType)) {
+    if (GENERIC_COMMAND_TARGETS.has(label)) return true;
+    const expected = commandIdentity(target);
+    const segments = eventTarget(event).split(/\s*&&\s*/u).map(commandIdentity);
+    if (segments.some(actual => actual === expected || actual.startsWith(`${expected}\u0000`))) return true;
+    if (/[/.]/u.test(target) && !/\s/u.test(target)) {
+      return segments.some(segment => segment.split("\u0000").some(arg => pathMatches(target, arg.replace(/^["']|["']$/gu, ""))));
+    }
+    return false;
+  }
+  const path = (value: string) => value.trim().replace(/\\/gu, "/").replace(/^\.\//u, "");
+  return pathMatches(path(target), path(eventTarget(event)));
+
+}
+
+/** Flags, operands, case, and quoted whitespace remain significant. */
+function commandIdentity(value: string): string {
+  return (value.trim().match(/"(?:\\.|[^"\\])*"|'[^']*'|[^\s]+/gu) ?? []).join("\u0000");
+}
+
+function stripDotSlash(value: string): string {
+  return value.replace(/^(?:\.\/)+/u, "").replace(/\/+$/u, "");
+}
+
+function pathMatches(expected: string, actual: string): boolean {
+  const claimed = stripDotSlash(expected);
+  const observed = stripDotSlash(actual);
+  if (!claimed || claimed.includes(" ")) return false;
+  return observed === claimed || observed.endsWith(`/${claimed}`);
+}
+
+function evidenceAtClaimTime(
+  evidence: readonly VerificationEvidence[],
+): readonly VerificationEvidence[] {
+  const claimTime = lastSequence(evidence, "FINAL_RESPONSE_CAPTURED");
+  return claimTime === null
+    ? evidence
+    : evidence.filter((event) => event.sequenceNumber <= claimTime);
+}
+
+function descriptiveTargetMatches(
+  event: VerificationEvidence,
+  target: string,
+): boolean {
+  if (!target) return true;
   const expected = normalize(target);
-  if (
-    claimType === "COMMAND_SUCCEEDED" &&
-    ["command", "command execution", "test execution", "build"].includes(expected)
-  )
-    return true;
   const actual = normalize(eventTarget(event));
   if (!actual) return false;
   if (

@@ -1,4 +1,5 @@
 import { decodeFunctionData, encodeFunctionData, type Abi } from "viem";
+import { AUTHORIZED_ANCHOR_ABI } from "@/features/claim-anchoring/blockchain-anchor-client";
 import abi from "@traceforge/claim-anchoring/abi";
 import type { BlockchainClaimAnchorPayload } from "@traceforge/claim-anchoring";
 import { Transaction } from "@mysten/sui/transactions";
@@ -23,12 +24,19 @@ export function decodeAnchorInput(chain: AnchorChain, input: string): DecodedAnc
   if (!text || text.length > 200000)
     throw new Error("Paste a transaction input of up to 200,000 characters.");
   if (chain === "sepolia") {
-    if (!/^0x[0-9a-fA-F]{328}$/.test(text))
+    if (!/^0x(?:[0-9a-fA-F]{2}){164,}$/.test(text))
       throw new Error(
-        "Expected 164 bytes: a 4-byte function selector followed by five 32-byte ABI arguments."
+        "Expected 164 bytes for a legacy anchor call, or complete signed-authorization calldata."
       );
-    const decoded = decodeFunctionData({ abi: abi as Abi, data: text as `0x${string}` });
-    if (decoded.functionName !== "anchorVerifiedClaim" || decoded.args?.length !== 5)
+    const decoded = decodeFunctionData({
+      abi: [...abi, ...AUTHORIZED_ANCHOR_ABI] as Abi,
+      data: text as `0x${string}`
+    });
+    if (!(
+      (decoded.functionName === "anchorVerifiedClaim" && decoded.args?.length === 5) ||
+      (decoded.functionName === "anchorVerifiedClaimWithAuthorization" &&
+        decoded.args?.length === 8)
+    ))
       throw new Error("This is not a TraceForge anchorVerifiedClaim call.");
     const [sessionHash, claimIndex, manifestHash, evidenceRoot, schemaVersion] = decoded.args;
     const result = {
@@ -42,15 +50,9 @@ export function decodeAnchorInput(chain: AnchorChain, input: string): DecodedAnc
     // Reject trailing bytes and noncanonical integer padding rather than silently ignoring them.
     if (
       encodeFunctionData({
-        abi: abi as Abi,
-        functionName: "anchorVerifiedClaim",
-        args: [
-          result.sessionHash,
-          result.claimIndex,
-          result.manifestHash,
-          result.evidenceRoot,
-          result.schemaVersion
-        ]
+        abi: [...abi, ...AUTHORIZED_ANCHOR_ABI] as Abi,
+        functionName: decoded.functionName,
+        args: decoded.args
       }).toLowerCase() !== text.toLowerCase()
     )
       throw new Error("The calldata is not a canonical TraceForge anchor call.");
@@ -67,14 +69,18 @@ export function decodeAnchorInput(chain: AnchorChain, input: string): DecodedAnc
   const calls = data.commands.filter(
     (command) =>
       command.MoveCall?.module === "verified_claim_registry" &&
-      command.MoveCall.function === "anchor_verified_claim"
+      ["anchor_verified_claim", "anchor_verified_claim_with_authorization"].includes(
+        command.MoveCall.function
+      )
   );
   if (calls.length !== 1)
     throw new Error(
       "Expected exactly one verified_claim_registry::anchor_verified_claim Move call."
     );
   const args = calls[0]!.MoveCall!.arguments;
-  if (args.length !== 8) throw new Error("The Sui anchor call must have eight arguments.");
+  const authorized = calls[0]!.MoveCall!.function === "anchor_verified_claim_with_authorization";
+  if (args.length !== (authorized ? 10 : 8)) throw new Error("Invalid Sui anchor argument count.");
+  const offset = authorized ? -1 : 0;
   const pure = (position: number) => {
     const arg = args[position];
     if (arg?.$kind !== "Input")
@@ -89,11 +95,11 @@ export function decodeAnchorInput(chain: AnchorChain, input: string): DecodedAnc
     return `0x${toHex(new Uint8Array(bytes))}`;
   };
   return {
-    sessionHash: hash(3),
-    claimIndex: bcs.u32().parse(pure(4)),
-    manifestHash: hash(5),
-    evidenceRoot: hash(6),
-    schemaVersion: bcs.u32().parse(pure(7)),
+    sessionHash: hash(3 + offset),
+    claimIndex: bcs.u32().parse(pure(4 + offset)),
+    manifestHash: hash(5 + offset),
+    evidenceRoot: hash(6 + offset),
+    schemaVersion: bcs.u32().parse(pure(7 + offset)),
     verdict: "VERIFIED"
   };
 }
@@ -124,15 +130,20 @@ function decodeSuiExplorerJson(value: unknown): DecodedAnchorPayload | null {
     .map((command) => record(record(command)?.MoveCall))
     .filter(
       (call) =>
-        call?.module === "verified_claim_registry" && call.function === "anchor_verified_claim"
+        call?.module === "verified_claim_registry" &&
+        ["anchor_verified_claim", "anchor_verified_claim_with_authorization"].includes(
+          String(call.function)
+        )
     );
   if (calls.length !== 1)
     throw new Error(
       "Expected exactly one verified_claim_registry::anchor_verified_claim Move call."
     );
   const args = calls[0]!.arguments;
-  if (!Array.isArray(args) || args.length !== 8)
-    throw new Error("The Sui anchor call must have eight arguments.");
+  const authorized = calls[0]!.function === "anchor_verified_claim_with_authorization";
+  if (!Array.isArray(args) || args.length !== (authorized ? 10 : 8))
+    throw new Error("Invalid Sui anchor argument count.");
+  const offset = authorized ? -1 : 0;
   const inputs: unknown[] = data.inputs;
   const pure = (position: number, type: string) => {
     const index = record(args[position])?.Input;
@@ -162,11 +173,11 @@ function decodeSuiExplorerJson(value: unknown): DecodedAnchorPayload | null {
     return value;
   };
   return {
-    sessionHash: hash(3),
-    claimIndex: u32(4),
-    manifestHash: hash(5),
-    evidenceRoot: hash(6),
-    schemaVersion: u32(7),
+    sessionHash: hash(3 + offset),
+    claimIndex: u32(4 + offset),
+    manifestHash: hash(5 + offset),
+    evidenceRoot: hash(6 + offset),
+    schemaVersion: u32(7 + offset),
     verdict: "VERIFIED"
   };
 }

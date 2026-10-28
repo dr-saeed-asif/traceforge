@@ -1,0 +1,174 @@
+Build: "C:\\Program Files\\nodejs\\node.exe" "E:\\PhD Data\\latest_plugin\\traceforge\\node_modules\\typescript\\bin\\tsc" "-p" "E:\\PhD Data\\latest_plugin\\traceforge\\tsconfig.json"
+Run directory: E:\PhD Data\latest_plugin\traceforge\research\runs\natural-v1-adjudicated-2026-10-28T14-22-11-895Z-f7d805bd
+
+[01-oracle-heuristic-deterministic-accept-regex] C:\Program Files\nodejs\node.exe "E:\\PhD Data\\latest_plugin\\traceforge\\dist\\evaluate.js" "--dataset" "E:\\PhD Data\\latest_plugin\\traceforge\\research\\datasets\\natural-v1-adjudicated.jsonl" "--extractors" "oracle,heuristic" "--baselines" "deterministic,accept,regex" "--matching" "exact" "--cluster" "session" "--bootstrap" "1000" "--seed" "42" "--output" "E:\\PhD Data\\latest_plugin\\traceforge\\research\\runs\\natural-v1-adjudicated-2026-10-28T14-22-11-895Z-f7d805bd\\01-oracle-heuristic-deterministic-accept-regex"
+
+[02-ollama-deterministic] C:\Program Files\nodejs\node.exe "E:\\PhD Data\\latest_plugin\\traceforge\\dist\\evaluate.js" "--dataset" "E:\\PhD Data\\latest_plugin\\traceforge\\research\\datasets\\natural-v1-adjudicated.jsonl" "--extractors" "ollama" "--baselines" "deterministic" "--matching" "exact" "--cluster" "session" "--bootstrap" "1000" "--seed" "42" "--output" "E:\\PhD Data\\latest_plugin\\traceforge\\research\\runs\\natural-v1-adjudicated-2026-10-28T14-22-11-895Z-f7d805bd\\02-ollama-deterministic"
+
+[03-llm-judge] C:\Program Files\nodejs\node.exe "E:\\PhD Data\\latest_plugin\\traceforge\\dist\\evaluate.js" "--dataset" "E:\\PhD Data\\latest_plugin\\traceforge\\research\\datasets\\natural-v1-adjudicated.jsonl" "--extractors" "oracle" "--baselines" "llm" "--matching" "exact" "--cluster" "session" "--bootstrap" "1000" "--seed" "42" "--output" "E:\\PhD Data\\latest_plugin\\traceforge\\research\\runs\\natural-v1-adjudicated-2026-10-28T14-22-11-895Z-f7d805bd\\03-llm-judge" "--judge-model" "qwen3:4b"
+
+[04-agent-judge] C:\Program Files\nodejs\node.exe "E:\\PhD Data\\latest_plugin\\traceforge\\dist\\evaluate.js" "--dataset" "E:\\PhD Data\\latest_plugin\\traceforge\\research\\datasets\\natural-v1-adjudicated.jsonl" "--extractors" "oracle" "--baselines" "agent" "--matching" "exact" "--cluster" "session" "--bootstrap" "1000" "--seed" "42" "--output" "E:\\PhD Data\\latest_plugin\\traceforge\\research\\runs\\natural-v1-adjudicated-2026-10-28T14-22-11-895Z-f7d805bd\\04-agent-judge" "--judge-model" "qwen3:4b"
+
+[05-ollama-deterministic-accept-regex] C:\Program Files\nodejs\node.exe "E:\\PhD Data\\latest_plugin\\traceforge\\dist\\evaluate.js" "--dataset" "E:\\PhD Data\\latest_plugin\\traceforge\\research\\datasets\\natural-v1-adjudicated.jsonl" "--extractors" "ollama" "--baselines" "deterministic,accept,regex" "--matching" "exact" "--cluster" "session" "--bootstrap" "1000" "--seed" "42" "--output" "E:\\PhD Data\\latest_plugin\\traceforge\\research\\runs\\natural-v1-adjudicated-2026-10-28T14-22-11-895Z-f7d805bd\\05-ollama-deterministic-accept-regex"
+{
+  "schemaVersion": 1,
+  "runId": "2026-10-28T14-22-11-895Z-f7d805bd",
+  "createdAt": "2026-10-28T14:22:11.910Z",
+  "dataset": "E:\\PhD Data\\latest_plugin\\traceforge\\research\\datasets\\natural-v1-adjudicated.jsonl",
+  "datasetSha256": null,
+  "sessions": 0,
+  "claims": 0,
+  "model": "qwen3:4b",
+  "matching": "exact",
+  "bootstrap": 1000,
+  "seed": 42,
+  "allowUnadjudicated": false,
+  "dryRun": true,
+  "outputDirectory": null,
+  "evaluations": [
+    {
+      "name": "01-oracle-heuristic-deterministic-accept-regex",
+      "extractors": "oracle,heuristic",
+      "baselines": "deterministic,accept,regex",
+      "judge": false,
+      "output": "E:\\PhD Data\\latest_plugin\\traceforge\\research\\runs\\natural-v1-adjudicated-2026-10-28T14-22-11-895Z-f7d805bd\\01-oracle-heuristic-deterministic-accept-regex",
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "E:\\PhD Data\\latest_plugin\\traceforge\\dist\\evaluate.js",
+        "--dataset",
+        "E:\\PhD Data\\latest_plugin\\traceforge\\research\\datasets\\natural-v1-adjudicated.jsonl",
+        "--extractors",
+        "oracle,heuristic",
+        "--baselines",
+        "deterministic,accept,regex",
+        "--matching",
+        "exact",
+        "--cluster",
+        "session",
+        "--bootstrap",
+        "1000",
+        "--seed",
+        "42",
+        "--output",
+        "E:\\PhD Data\\latest_plugin\\traceforge\\research\\runs\\natural-v1-adjudicated-2026-10-28T14-22-11-895Z-f7d805bd\\01-oracle-heuristic-deterministic-accept-regex"
+      ],
+      "dryRun": true
+    },
+    {
+      "name": "02-ollama-deterministic",
+      "extractors": "ollama",
+      "baselines": "deterministic",
+      "judge": false,
+      "output": "E:\\PhD Data\\latest_plugin\\traceforge\\research\\runs\\natural-v1-adjudicated-2026-10-28T14-22-11-895Z-f7d805bd\\02-ollama-deterministic",
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "E:\\PhD Data\\latest_plugin\\traceforge\\dist\\evaluate.js",
+        "--dataset",
+        "E:\\PhD Data\\latest_plugin\\traceforge\\research\\datasets\\natural-v1-adjudicated.jsonl",
+        "--extractors",
+        "ollama",
+        "--baselines",
+        "deterministic",
+        "--matching",
+        "exact",
+        "--cluster",
+        "session",
+        "--bootstrap",
+        "1000",
+        "--seed",
+        "42",
+        "--output",
+        "E:\\PhD Data\\latest_plugin\\traceforge\\research\\runs\\natural-v1-adjudicated-2026-10-28T14-22-11-895Z-f7d805bd\\02-ollama-deterministic"
+      ],
+      "dryRun": true
+    },
+    {
+      "name": "03-llm-judge",
+      "extractors": "oracle",
+      "baselines": "llm",
+      "judge": true,
+      "output": "E:\\PhD Data\\latest_plugin\\traceforge\\research\\runs\\natural-v1-adjudicated-2026-10-28T14-22-11-895Z-f7d805bd\\03-llm-judge",
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "E:\\PhD Data\\latest_plugin\\traceforge\\dist\\evaluate.js",
+        "--dataset",
+        "E:\\PhD Data\\latest_plugin\\traceforge\\research\\datasets\\natural-v1-adjudicated.jsonl",
+        "--extractors",
+        "oracle",
+        "--baselines",
+        "llm",
+        "--matching",
+        "exact",
+        "--cluster",
+        "session",
+        "--bootstrap",
+        "1000",
+        "--seed",
+        "42",
+        "--output",
+        "E:\\PhD Data\\latest_plugin\\traceforge\\research\\runs\\natural-v1-adjudicated-2026-10-28T14-22-11-895Z-f7d805bd\\03-llm-judge",
+        "--judge-model",
+        "qwen3:4b"
+      ],
+      "dryRun": true
+    },
+    {
+      "name": "04-agent-judge",
+      "extractors": "oracle",
+      "baselines": "agent",
+      "judge": true,
+      "output": "E:\\PhD Data\\latest_plugin\\traceforge\\research\\runs\\natural-v1-adjudicated-2026-10-28T14-22-11-895Z-f7d805bd\\04-agent-judge",
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "E:\\PhD Data\\latest_plugin\\traceforge\\dist\\evaluate.js",
+        "--dataset",
+        "E:\\PhD Data\\latest_plugin\\traceforge\\research\\datasets\\natural-v1-adjudicated.jsonl",
+        "--extractors",
+        "oracle",
+        "--baselines",
+        "agent",
+        "--matching",
+        "exact",
+        "--cluster",
+        "session",
+        "--bootstrap",
+        "1000",
+        "--seed",
+        "42",
+        "--output",
+        "E:\\PhD Data\\latest_plugin\\traceforge\\research\\runs\\natural-v1-adjudicated-2026-10-28T14-22-11-895Z-f7d805bd\\04-agent-judge",
+        "--judge-model",
+        "qwen3:4b"
+      ],
+      "dryRun": true
+    },
+    {
+      "name": "05-ollama-deterministic-accept-regex",
+      "extractors": "ollama",
+      "baselines": "deterministic,accept,regex",
+      "judge": false,
+      "output": "E:\\PhD Data\\latest_plugin\\traceforge\\research\\runs\\natural-v1-adjudicated-2026-10-28T14-22-11-895Z-f7d805bd\\05-ollama-deterministic-accept-regex",
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "E:\\PhD Data\\latest_plugin\\traceforge\\dist\\evaluate.js",
+        "--dataset",
+        "E:\\PhD Data\\latest_plugin\\traceforge\\research\\datasets\\natural-v1-adjudicated.jsonl",
+        "--extractors",
+        "ollama",
+        "--baselines",
+        "deterministic,accept,regex",
+        "--matching",
+        "exact",
+        "--cluster",
+        "session",
+        "--bootstrap",
+        "1000",
+        "--seed",
+        "42",
+        "--output",
+        "E:\\PhD Data\\latest_plugin\\traceforge\\research\\runs\\natural-v1-adjudicated-2026-10-28T14-22-11-895Z-f7d805bd\\05-ollama-deterministic-accept-regex"
+      ],
+      "dryRun": true
+    }
+  ]
+}

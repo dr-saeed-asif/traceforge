@@ -1,0 +1,12 @@
+[
+  {
+    "Name": "NVIDIA GeForce RTX 3050 4GB Laptop GPU",
+    "DriverVersion": "32.0.15.9227",
+    "AdapterRAM": 4293918720
+  },
+  {
+    "Name": "Intel(R) Graphics",
+    "DriverVersion": "32.0.101.6556",
+    "AdapterRAM": 2147479552
+  }
+]

@@ -1,0 +1,4 @@
+Trust the report (no gate): agreement 44.0% | unsafe accepts 100.0% | false rejects 0.0%
+TF 2.0.0 original (heuristic extraction): agreement 40.0% | unsafe accepts 57.1% | false rejects 54.5%
+TF 3.1.0 fixed (heuristic extraction): agreement 92.0% | unsafe accepts 0.0% | false rejects 18.2%
+tamper detection over 200 sessions: edited payload 200, foreign key 200, swapped artifact 200/200

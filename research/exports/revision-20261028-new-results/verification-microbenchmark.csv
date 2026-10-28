@@ -1,0 +1,4 @@
+"workload","claims","evidence_events","repetitions","individual_median_ms","batch_median_ms","speedup","identical_decisions","node","platform","cpu"
+"synthetic_sorted_trace_reuse","1","1000","50","0.1640999999999906","0.16910000000000025","0.9704316972205225","true","v22.14.0","win32","Intel(R) Core(TM) Ultra 7 155U"
+"synthetic_sorted_trace_reuse","10","1000","50","2.1300999999999988","0.8757999999999981","2.432176295957985","true","v22.14.0","win32","Intel(R) Core(TM) Ultra 7 155U"
+"synthetic_sorted_trace_reuse","100","1000","50","24.125299999999925","16.480099999999993","1.463904952033054","true","v22.14.0","win32","Intel(R) Core(TM) Ultra 7 155U"

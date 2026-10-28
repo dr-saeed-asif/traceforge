@@ -2,10 +2,19 @@ import { execSync } from "node:child_process";
 import { createHash, randomUUID } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import { readFile } from "node:fs/promises";
+import { homedir } from "node:os";
 import { basename, dirname, isAbsolute, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { Plugin } from "@opencode-ai/plugin";
 import { DurableOutbox } from "./durable-outbox.js";
+import {
+  diffWorkspace,
+  parseTestCounts as parseRunnerTestCounts,
+  createHashCache,
+  snapshotWorkspace,
+  workspaceDigest,
+  type WorkspaceManifest,
+} from "./workspace-observer.js";
 
 interface Context {
   readonly taskId: string;
@@ -82,15 +91,24 @@ export const TraceForgePlugin: Plugin = async (input) => {
   const prompts = new Map<string, string>();
   const messages = new Map<string, { role: string; parentID?: string }>();
   const fileSnapshots = new Map<string, readonly FileSnapshot[]>();
+  const workspaceSnapshots = new Map<string, WorkspaceManifest>();
+  // Review item 27 (snapshot overhead): one hash cache per plugin instance;
+  // files whose stat signature is unchanged are not re-read.
+  const observerOptions = {
+    cache: createHashCache(),
+    extraExcludes: (settings.TRACEFORGE_WORKSPACE_EXCLUDES ?? "")
+      .split(",")
+      .map((value) => value.trim())
+      .filter(Boolean),
+  };
   const promptIdFor = (sessionId: string, messageId: string) =>
     digest(`${projectPath}:${sessionId}:${messageId}`);
+  // Review fix (R4 Major 3): keep pending evidence outside the audited
+  // workspace by default. The agent still runs as the same OS user, so this
+  // narrows rather than removes the tampering window (see threat model).
   const outboxPath =
     settings.TRACEFORGE_OUTBOX_DIR ??
-    resolve(
-      dirname(fileURLToPath(import.meta.url)),
-      "../../../.traceforge/outbox",
-      digest(`${apiUrl}:${projectPath}`),
-    );
+    resolve(homedir(), ".traceforge", "outbox", digest(`${apiUrl}:${projectPath}`));
   const outbox = new DurableOutbox<PendingEvent>(outboxPath, async (entry) => {
     let promptId = entry.promptId;
     let payload = entry.payload;
@@ -184,7 +202,11 @@ export const TraceForgePlugin: Plugin = async (input) => {
         await capture(
           chat.sessionID,
           "PROMPT_SUBMITTED",
-          { content, agent, model: model.modelID, gitUser, messageId },
+          { content, agent, model: model.modelID, gitUser, messageId,
+            study: { taskId: settings.TRACEFORGE_STUDY_TASK_ID ?? null, split: settings.TRACEFORGE_STUDY_SPLIT ?? null,
+              language: settings.TRACEFORGE_STUDY_LANGUAGE ?? null, testRunner: settings.TRACEFORGE_STUDY_TEST_RUNNER ?? null,
+              agentVersion: settings.TRACEFORGE_STUDY_AGENT_VERSION ?? null, revision: settings.TRACEFORGE_STUDY_REVISION ?? null,
+              decodingSettings: settings.TRACEFORGE_STUDY_DECODING_SETTINGS ?? null } },
           undefined,
           promptId,
         );
@@ -220,10 +242,16 @@ export const TraceForgePlugin: Plugin = async (input) => {
       }
       return serial(sessionId, async () => {
         if (event.type === "session.idle") {
+          // Bind the prompt's final observed workspace state (artifact digest).
+          const finalState = await snapshotWorkspace(workspace, observerOptions);
           await capture(
             sessionId,
             "AGENT_COMPLETED",
-            { status: "COMPLETED" },
+            {
+              status: "COMPLETED",
+              workspaceDigest: workspaceDigest(finalState),
+              workspaceObservation: finalState.complete ? "complete" : "incomplete",
+            },
             undefined,
             prompts.get(sessionId),
           );
@@ -280,6 +308,10 @@ export const TraceForgePlugin: Plugin = async (input) => {
           fileSnapshots.set(`${input.sessionID}:${input.callID}`, snapshots);
         const command = commandForTool(input.tool, output.args, workspace);
         if (command) {
+          workspaceSnapshots.set(
+            `${input.sessionID}:${input.callID}`,
+            await snapshotWorkspace(workspace, observerOptions),
+          );
           await capture(
             input.sessionID,
             "COMMAND_STARTED",
@@ -299,10 +331,55 @@ export const TraceForgePlugin: Plugin = async (input) => {
         const command = commandForTool(input.tool, input.args, workspace);
         if (command) {
           const completion = commandCompletion(command, output);
+          // Review fix T1: shell side effects are observed by diffing the
+          // workspace around the invocation. File events are emitted before
+          // the completion event, and the completion records which paths the
+          // same invocation changed.
+          const before = workspaceSnapshots.get(invocationKey);
+          workspaceSnapshots.delete(invocationKey);
+          const after = await snapshotWorkspace(workspace, observerOptions);
+          const changes = before ? diffWorkspace(before, after) : [];
+          for (const change of changes) {
+            await capture(
+              input.sessionID,
+              change.kind === "DIRECTORY_CREATED"
+                ? "DIRECTORY_CREATED"
+                : "WORKSPACE_FILE_CHANGED",
+              {
+                path: change.path,
+                operation: "shell",
+                toolName: input.tool,
+                observedVia: "workspace-diff",
+                ...(change.kind === "DIRECTORY_CREATED"
+                  ? { status: "SUCCEEDED" }
+                  : {
+                      fileExistedBefore: change.kind !== "FILE_CREATED",
+                      fileExistsAfter: change.kind !== "FILE_DELETED",
+                      fileHashBefore: change.hashBefore,
+                      fileHashAfter: change.hashAfter,
+                    }),
+              },
+              undefined,
+              `${input.callID}:shell-diff:${change.path}`,
+            );
+          }
+          const changedPaths = changes
+            .filter((change) => change.kind !== "DIRECTORY_CREATED")
+            .map((change) => change.path);
           await capture(
             input.sessionID,
             completion.eventType,
-            { ...completion.payload, toolName: input.tool },
+            {
+              ...completion.payload,
+              toolName: input.tool,
+              changedPaths: changedPaths.slice(0, 50),
+              changedPathCount: changedPaths.length,
+              workspaceObservation:
+                before && before.complete && after.complete
+                  ? "complete"
+                  : "incomplete",
+              workspaceDigestAfter: workspaceDigest(after),
+            },
             undefined,
             `${input.callID}:command-complete`,
           );
@@ -673,21 +750,7 @@ function commandEventType(
 }
 
 function parseTestCounts(output: string | undefined): Record<string, number> {
-  if (!output) return {};
-  const values: Record<string, number> = {};
-  const passed =
-    /(?:^|[,\s])(\d+)\s+passed\b/imu.exec(output)?.[1] ??
-    /^#?\s*pass\s+(\d+)\s*$/imu.exec(output)?.[1];
-  const failed =
-    /(?:^|[,\s])(\d+)\s+failed\b/imu.exec(output)?.[1] ??
-    /^#?\s*fail\s+(\d+)\s*$/imu.exec(output)?.[1];
-  const skipped =
-    /(?:^|[,\s])(\d+)\s+(?:skipped|pending)\b/imu.exec(output)?.[1] ??
-    /^#?\s*skipped\s+(\d+)\s*$/imu.exec(output)?.[1];
-  if (passed !== undefined) values.passed = Number(passed);
-  if (failed !== undefined) values.failed = Number(failed);
-  if (skipped !== undefined) values.skipped = Number(skipped);
-  return values;
+  return parseRunnerTestCounts(output);
 }
 
 function firstNumber(

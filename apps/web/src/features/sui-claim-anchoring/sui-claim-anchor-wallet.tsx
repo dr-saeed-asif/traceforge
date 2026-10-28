@@ -81,7 +81,15 @@ export function SuiClaimAnchorWallet({
       payload = await createBlockchainClaimAnchorPayload(
         createBlockchainClaimAnchorManifest(session, claim, traceEvents)
       );
-      const existing = await findSuiClaimAnchor(dAppKit.getClient("testnet"), payload, deployment);
+      const existing = await findSuiClaimAnchor(
+        dAppKit.getClient("testnet"),
+        payload,
+        deployment,
+        () =>
+          createBlockchainClaimAnchorPayload(
+            createBlockchainClaimAnchorManifest(session, claim, traceEvents, 1)
+          )
+      );
       if (existing) {
         showExisting(existing);
         return;
@@ -105,11 +113,19 @@ export function SuiClaimAnchorWallet({
 
       setMessage("Review and approve the Sui Testnet transaction in your wallet.");
       const authorizationResponse = await fetch("/api/sui-claim-anchor-authorization", {
-        method: "POST", headers: { "content-type": "application/json" },
+        method: "POST",
+        headers: { "content-type": "application/json" },
         body: JSON.stringify({ promptId: session.promptId, claimIndex: claim.claimIndex })
       });
-      const authorization = await authorizationResponse.json() as { error?: string; nonce: string; deadlineMs: number; signature: string; signerPublicKey: string };
-      if (!authorizationResponse.ok) throw new Error(authorization.error ?? "The Sui claim could not be authorized.");
+      const authorization = (await authorizationResponse.json()) as {
+        error?: string;
+        nonce: string;
+        deadlineMs: number;
+        signature: string;
+        signerPublicKey: string;
+      };
+      if (!authorizationResponse.ok)
+        throw new Error(authorization.error ?? "The Sui claim could not be authorized.");
       const transaction = buildSuiAnchorTransaction(payload, deployment, authorization);
       const signed = await dAppKit.signTransaction({ transaction, account, network: "testnet" });
       const bytes = fromBase64(signed.bytes);
@@ -152,7 +168,11 @@ export function SuiClaimAnchorWallet({
           const existing = await findSuiClaimAnchor(
             dAppKit.getClient("testnet"),
             payload,
-            deployment
+            deployment,
+            () =>
+              createBlockchainClaimAnchorPayload(
+                createBlockchainClaimAnchorManifest(session, claim, traceEvents, 1)
+              )
           );
           if (existing) {
             showExisting(existing);

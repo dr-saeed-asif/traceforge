@@ -64,6 +64,7 @@ function canonicalEventType(
     case "FINAL_RESPONSE_CAPTURED":
       return "FINAL_RESPONSE_CAPTURED";
     case "GENERATED_CODE_CAPTURED":
+    case "WORKSPACE_FILE_CHANGED":
       return fileEventType(payload);
     case "COMMAND_COMPLETED":
       return commandEventType(payload) ?? "COMMAND_COMPLETED";

@@ -85,7 +85,7 @@ describe("SqliteVerificationRepository", () => {
         expectedResult: "exitCode equals 0 and failed equals 0",
         extractorModel: "test-model",
         extractionPromptVersion: "1.0.0",
-        verificationRuleVersion: "2.0.0"
+        verificationRuleVersion: "2.1.0"
       });
       await verification.saveClaimVerification({
         promptId: "prompt-sqlite",
@@ -94,7 +94,7 @@ describe("SqliteVerificationRepository", () => {
         reasonCode: "REQUIRED_EVIDENCE_CONFIRMED",
         explanation: "The latest test completed successfully.",
         evidence: [{ eventId: "event-test", sequenceNumber: 1, eventType: "TEST_COMPLETED" }],
-        ruleVersion: "2.0.0",
+        ruleVersion: "2.1.0",
         verifiedAt: "2026-09-22T10:00:02.000Z"
       });
       await verification.updateSessionSummary({

@@ -1,0 +1,10 @@
+{
+  "dataset": "E:\\PhD Data\\latest_plugin\\traceforge\\research\\runs\\revision-20261028-reproduced\\controlled-reproduced.jsonl",
+  "exportDirectory": "E:\\PhD Data\\latest_plugin\\traceforge\\research\\runs\\revision-20261028-reproduced\\controlled-csv",
+  "sessions": 200,
+  "claims": 216,
+  "evidence": 536,
+  "benchmarkRows": 1728,
+  "reviewDataMultiple": 5,
+  "note": "Controlled labels are known by construction, not human-adjudicated natural labels."
+}

@@ -1,0 +1,2 @@
+"workspace","files","runs","median_no_cache_ms","median_warm_cache_ms","speedup","digest_identical","complete","node","cpu","cores","kernel"
+"synthetic-1000","1000","3","3253.1","254.1","12.802439984258166","true","true","v22.14.0","Intel(R) Core(TM) Ultra 7 155U","14","10.0.26300"

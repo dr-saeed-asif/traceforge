@@ -10,7 +10,8 @@ import abi from "@traceforge/claim-anchoring/abi";
 import { AnchorInspector } from "./anchor-inspector";
 
 const mocks = vi.hoisted(() => ({ verify: vi.fn() }));
-vi.mock("@/features/claim-anchoring/blockchain-anchor-client", () => ({
+vi.mock("@/features/claim-anchoring/blockchain-anchor-client", async (importOriginal) => ({
+  ...(await importOriginal<object>()),
   verifyVerifiedClaimAnchor: mocks.verify
 }));
 afterEach(() => {
@@ -64,7 +65,7 @@ const details: VerificationSessionDetailsResponse = {
 
 it("keeps decoded-field matching separate from reading the actual stored anchor", async () => {
   const expected = await createBlockchainClaimAnchorPayload(
-    createBlockchainClaimAnchorManifest(details.session, details.claims[0]!, details.traceEvents)
+    createBlockchainClaimAnchorManifest(details.session, details.claims[0]!, details.traceEvents, 1)
   );
   const input = encodeFunctionData({
     abi: abi as Abi,

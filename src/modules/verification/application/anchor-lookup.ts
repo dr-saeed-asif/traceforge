@@ -18,7 +18,7 @@ function canonical(value: unknown): string {
 const hash = (value: unknown) =>
   `0x${createHash("sha256").update(canonical(value)).digest("hex")}`;
 
-/** Same schema-v1 commitments used by the browser; parity is covered by tests. */
+/** Same schema-2 commitments used by the browser; parity is covered by tests. */
 export function anchorLookupHashes(details: VerificationSessionDetails) {
   const sessionHash = hash([
     "traceforge-session-v1",
@@ -35,8 +35,45 @@ export function anchorLookupHashes(details: VerificationSessionDetails) {
       claim.evidenceEventIds.some((id) => !events.has(id))
     )
       return [];
+    const ordered = [...details.traceEvents].sort(
+      (left, right) => left.sequenceNumber - right.sequenceNumber,
+    );
+    if (ordered.length && (ordered[0]!.sequenceNumber !== 1 || ordered[0]!.previousEventHash !== null ||
+        new Set(ordered.map(e => e.eventId)).size !== ordered.length ||
+        ordered.some((e, i) => e.sequenceNumber !== i + 1)))
+      throw new Error("Trace hash chain is broken or incomplete");
+    for (let i = 1; i < ordered.length; i += 1)
+      if (ordered[i]!.previousEventHash !== ordered[i - 1]!.eventHash) throw new Error("Trace hash chain is broken");
+    const head = ordered[ordered.length - 1];
+    const digestEvent = [...ordered]
+      .reverse()
+      .find((event) => typeof event.metadata.workspaceDigest === "string");
+    // Schema 2 (review round 1); must stay byte-identical to the shared
+    // @traceforge/claim-anchoring manifest. Parity is covered by tests.
     const manifest = {
-      schemaVersion: 1,
+      schemaVersion: 2,
+      traceHead: head
+        ? {
+            eventId: head.eventId,
+            sequenceNumber: head.sequenceNumber,
+            eventHash: head.eventHash,
+            eventCount: ordered.length,
+          }
+        : null,
+      sessionVerdicts: {
+        total: details.session.totalClaims,
+        verified: details.session.verifiedClaims,
+        contradicted: details.session.contradictedClaims,
+        unsupported: details.session.unsupportedClaims,
+        unverifiable: details.session.unverifiableClaims,
+      },
+      workspaceDigest: digestEvent
+        ? (digestEvent.metadata.workspaceDigest as string)
+        : null,
+      agent: {
+        agentName: details.session.agentName,
+        modelName: details.session.modelName,
+      },
       sessionId: details.session.promptId,
       runId: details.session.runId,
       claimIndex: claim.claimIndex,
@@ -52,7 +89,8 @@ export function anchorLookupHashes(details: VerificationSessionDetails) {
       verificationRuleVersion: claim.verificationRuleVersion,
       verifiedAt: claim.verifiedAt,
     };
-    return [{ claimIndex: claim.claimIndex, manifestHash: hash(manifest) }];
+    const { traceHead: _head, sessionVerdicts: _counts, workspaceDigest: _digest, agent: _agent, ...legacy } = manifest;
+    return [{ claimIndex: claim.claimIndex, manifestHash: hash(manifest), legacyManifestHash: hash({ ...legacy, schemaVersion: 1 }) }];
   });
   return { sessionHash, claims };
 }
@@ -122,8 +160,8 @@ export class AnchorLookup {
           .run(row.id);
         for (const claim of hashes.claims)
           this.database
-            .prepare("INSERT INTO anchor_claim_lookup VALUES (?, ?, ?)")
-            .run(row.id, claim.claimIndex, claim.manifestHash);
+            .prepare("INSERT INTO anchor_claim_lookup (session_id, claim_index, manifest_hash, legacy_manifest_hash) VALUES (?, ?, ?, ?)")
+            .run(row.id, claim.claimIndex, claim.manifestHash, claim.legacyManifestHash);
         this.database
           .prepare("DELETE FROM anchor_lookup_dirty WHERE session_id = ?")
           .run(row.id);
@@ -140,8 +178,8 @@ export class AnchorLookup {
       parameters.push(query.sessionHash);
     }
     if (query.manifestHash) {
-      conditions.push("c.manifest_hash = ?");
-      parameters.push(query.manifestHash);
+      conditions.push("(c.manifest_hash = ? OR c.legacy_manifest_hash = ?)");
+      parameters.push(query.manifestHash, query.manifestHash);
     }
     const rows = this.database
       .prepare(
@@ -158,7 +196,7 @@ export class AnchorLookup {
       if (!details) continue;
       const indices = query.manifestHash
         ? anchorLookupHashes(details)
-            .claims.filter((claim) => claim.manifestHash === query.manifestHash)
+            .claims.filter((claim) => claim.manifestHash === query.manifestHash || claim.legacyManifestHash === query.manifestHash)
             .map((claim) => claim.claimIndex)
         : null;
       const claims = details.claims.filter(

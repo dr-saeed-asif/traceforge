@@ -395,11 +395,14 @@ The contract records a session/run hash, claim index, claim/audit manifest hash,
 4. **Wait for confirmation.** The claim should show its anchored status and a **View transaction** link. Open the link to inspect the transaction on Sepolia Etherscan.
 5. **Check integrity.** Click **Verify on Sepolia**. TraceForge recomputes the expected hashes from its local audit data and compares them with the record returned by the contract.
 
-The current Sepolia deployment is configured in `apps/web/src/features/claim-anchoring/blockchain-anchor-client.ts`:
+The Sepolia deployment is configured in `apps/web/src/features/claim-anchoring/blockchain-anchor-client.ts` (`VERIFIED_CLAIM_REGISTRY_ADDRESS`); that constant is the single source of truth:
 
 - Network: Sepolia (chain ID `11155111`)
-- Registry: `0x9f616593277FF560Af07B2cae6AdEfB49844B8E9`
-- Deployment transaction: `0x02924effcdb84ee68ffabd272b430ee4b2b7e526e16bbc484321dd4916bb57f7`
+- Registry: `0xbeADd119bef9F7F8A0844A505627eA91cF06F8b6` (matches the code constant)
+
+> **Security notice (review round 1).** An earlier `.env.example` contained a concrete signer private key. Treat that key as compromised: generate a new signer, redeploy the registry with the new owner, update the constant above and the Sui registry public key, and record the new deployment transaction here. Records authorised by the old key cannot be distinguished from forgeries.
+
+**Commitment schema 2.** New anchors use manifest schema 2, which adds the per-prompt hash-chain head, the session's full verdict counts, the final workspace digest and the agent/model identity. Deleting any trace event, or publishing only the favourable claims of a session, therefore changes the expected manifest digest. Schema-1 records remain verifiable. The on-chain contracts are unchanged (they accept any non-zero schema version).
 
 ### Sui Testnet workflow
 
@@ -584,3 +587,28 @@ Report includes: extraction precision/recall/F1, verdict accuracy, confusion mat
 ## License & Citation
 
 Add chosen open-source license before public release. Add paper citation and archival dataset DOI after acceptance or preprint publication.
+
+## Claim records for other agents (MCP claim gate)
+
+TraceForge can hand a verified completion report to a *different* agent or CI
+job as a signed, artifact-bound record:
+
+- `GET /api/v1/verification/sessions/:promptId/claim-record` returns an in-toto
+  Statement v1 in a DSSE envelope (Ed25519). Its subject is the digest of the
+  agent's final workspace; its predicate lists every claim with verdict,
+  reason code, evidence hashes and the prompt's hash-chain head.
+- `GET /api/v1/verification/record-key` returns the verifier's public key.
+- Set `TRACEFORGE_RECORD_SIGNING_KEY_FILE` to an Ed25519 PKCS#8 PEM file
+  (`openssl genpkey -algorithm ed25519 -out record-key.pem`). Never commit it.
+
+`npm run mcp:gate` starts an MCP server (stdio) with three tools:
+`traceforge_get_claim_record`, `traceforge_workspace_digest` (recompute the
+digest of the artifact you received) and `traceforge_check_claim_record`
+(ACCEPT / REVIEW / REJECT with reasons). Register it in any MCP-capable agent
+(OpenCode, Claude, others) so a reviewing agent checks the record before
+merging or deploying.
+
+## Research benchmark
+
+`npm run research:benchmark` runs the controlled misreport benchmark and the
+consumer-gate evaluation; see `research/benchmark/README.md`.

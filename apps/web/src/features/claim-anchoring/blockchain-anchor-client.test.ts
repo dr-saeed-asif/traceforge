@@ -114,11 +114,20 @@ describe("verifyVerifiedClaimAnchor", () => {
     let clock = 0;
     vi.spyOn(performance, "now").mockImplementation(() => clock);
     const account = "0x1111111111111111111111111111111111111111";
-    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({
-      nonce: `0x${"01".repeat(32)}`,
-      deadline: Math.floor(Date.now() / 1000) + 600,
-      signature: `0x${"11".repeat(65)}`
-    }), { status: 200, headers: { "content-type": "application/json" } })));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(
+        async () =>
+          new Response(
+            JSON.stringify({
+              nonce: `0x${"01".repeat(32)}`,
+              deadline: Math.floor(Date.now() / 1000) + 600,
+              signature: `0x${"11".repeat(65)}`
+            }),
+            { status: 200, headers: { "content-type": "application/json" } }
+          )
+      )
+    );
     const provider = {
       request: vi.fn(
         async ({ method, params }: { method: string; params?: readonly unknown[] }) => {
@@ -174,7 +183,7 @@ describe("verifyVerifiedClaimAnchor", () => {
       claimIndex: 1,
       manifestHash: `0x${"0".repeat(64)}`,
       evidenceRoot: `0x${"0".repeat(64)}`,
-      schemaVersion: 1,
+      schemaVersion: 2,
       anchoredAt: 1n,
       anchoredBy: "0x1111111111111111111111111111111111111111",
       verified: true
@@ -227,7 +236,7 @@ describe("verifyVerifiedClaimAnchor", () => {
       claimIndex: 1,
       manifestHash: `0x${"0".repeat(64)}`,
       evidenceRoot: `0x${"0".repeat(64)}`,
-      schemaVersion: 1,
+      schemaVersion: 2,
       anchoredAt: 1n,
       anchoredBy: "0x1111111111111111111111111111111111111111",
       verified: true

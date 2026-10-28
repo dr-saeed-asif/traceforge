@@ -1,0 +1,4 @@
+date,queries,claims,verified,contradicted,unsupported,unverifiable,policy_version,source
+2026-10-04,7,3,1,0,2,0,2.0.0,dashboard screenshot
+2026-10-05,11,12,3,1,8,0,2.0.0,dashboard screenshot
+2026-10-23,10,25,15,0,10,0,2.0.0,dashboard screenshot

@@ -1,0 +1,2 @@
+"eval_name","extractor","baseline","sessions","gold_claims","missed_claims","spurious_claims","accuracy","clusters","ci_lower","ci_upper","ci_valid_replicates","macro_f1_defined_verdicts","matched_verdict_accuracy","false_verified_gold_claims","non_verified_gold_claims","false_verified_rate","spurious_verified_claims"
+"02-ollama-deterministic","ollama","deterministic","200","216","56","56","0.24537","200","0.189815","0.305825","1000","0.263237","0.33125","0","96","0","24"

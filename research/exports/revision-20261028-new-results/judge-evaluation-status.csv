@@ -1,0 +1,5 @@
+"dataset","baseline","model","status","reason"
+"natural-v1","llm","qwen3:4b","NOT_RUN","Genuine independent adjudications are missing; original human-annotation prerequisite remains unmet"
+"natural-v1","agent","qwen3:4b","NOT_RUN","Genuine independent adjudications are missing; original human-annotation prerequisite remains unmet"
+"controlled-reproduced","llm","qwen3:4b","NOT_RUN","Excluded from this run with --skip-judges; no controlled judge accuracy is claimed"
+"controlled-reproduced","agent","qwen3:4b","NOT_RUN","Excluded from this run with --skip-judges; no controlled judge accuracy is claimed"

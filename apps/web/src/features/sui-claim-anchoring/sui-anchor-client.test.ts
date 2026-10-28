@@ -18,7 +18,7 @@ const deployment = {
 };
 
 const payload: BlockchainClaimAnchorPayload = {
-  schemaVersion: 1,
+  schemaVersion: 2,
   sessionHash: `0x${"11".repeat(32)}`,
   claimIndex: 4,
   manifestHash: `0x${"22".repeat(32)}`,
@@ -29,7 +29,7 @@ const payload: BlockchainClaimAnchorPayload = {
 describe("Sui claim anchoring client", () => {
   afterEach(() => vi.unstubAllEnvs());
 
-  function reader(manifestByte = 34) {
+  function reader(manifestByte = 34, schemaVersion = 2) {
     return {
       getDynamicField: vi.fn(async () => ({
         dynamicField: {
@@ -41,7 +41,7 @@ describe("Sui claim anchoring client", () => {
               claim_index: 4,
               manifest_hash: Array(32).fill(manifestByte),
               evidence_root: Array(32).fill(51),
-              schema_version: 1,
+              schema_version: schemaVersion,
               anchored_at_ms: "1000",
               anchored_by: deployment.adminCapId,
               verified: true
@@ -71,6 +71,26 @@ describe("Sui claim anchoring client", () => {
       session_hash: Array(32).fill(17),
       claim_index: 4
     });
+  });
+
+  it("compares legacy records with their original manifest schema", async () => {
+    const legacy = { ...payload, schemaVersion: 1 as const };
+    expect(
+      await findSuiClaimAnchor(
+        reader(34, 1) as unknown as SuiAnchorReader,
+        payload,
+        deployment,
+        async () => legacy
+      )
+    ).toMatchObject({ matches: true });
+    expect(
+      await findSuiClaimAnchor(
+        reader(99, 1) as unknown as SuiAnchorReader,
+        payload,
+        deployment,
+        async () => legacy
+      )
+    ).toMatchObject({ matches: false });
   });
 
   it("reports an existing record with different evidence as a mismatch", async () => {

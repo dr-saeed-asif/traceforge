@@ -301,6 +301,7 @@ function parseSession(value: unknown, path: string): VerificationSession {
 function parseProcessingMetrics(value: unknown, path: string) {
   const input = record(value, path);
   return {
+    ...(input.extractionMetadata === undefined ? {} : { extractionMetadata: jsonObject(input.extractionMetadata, `${path}.extractionMetadata`) }),
     ...(input.extractorDurationMs === undefined
       ? {}
       : {
