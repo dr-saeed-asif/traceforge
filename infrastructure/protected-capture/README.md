@@ -24,6 +24,14 @@ node research/security/analyze-capture.mjs --run-dir <raw-run> --out-dir <fresh-
 
 Private keys and ledger are outside the checkout, under `/var/lib/traceforge-secure/`. Keep private keys there; only public PEM and signed experiment snapshots belong in archives. For local shutdown, inspect the deployment JSON, confirm the matching command lines, then stop those collector/dispatcher PIDs. PID values can change after WSL restarts.
 
+`packages/adapter-opencode/src/protected-bash-plugin.ts` adds an opt-in Linux
+OpenCode tool adapter. Its host must run as UID 61001, with a session registered
+and finalized independently by the trusted supervisor. Other tools are rejected.
+Native-runtime replacement of builtin bash and 20 paired live-agent tasks still
+require deployment verification; this adapter alone is not evidence of those
+guarantees. The oracle can enable loopback inside its private network namespace
+for test-runner IPC; ordinary capture tools retain the default disabled network.
+
 ## Evidence and limits
 
 The eight-condition experiment replays frozen controlled traces through real OS isolation; it is not 1,600 newly performed coding tasks. The two live controls are separate. E6 matching and E7 extraction are unchanged. See the accompanying per-claim CSVs, session/family bootstrap intervals, supplementary exact binomial bounds, OS probes and latency measurements. Original vulnerable results must remain in the manuscript.

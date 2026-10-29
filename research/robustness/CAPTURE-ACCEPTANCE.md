@@ -1,8 +1,10 @@
-# E4 protected capture: proposed design and acceptance contract
+# E4 protected capture: design and acceptance contract
 
-Status: **design specified; not implemented or deployed**. The current same-user
-outbox does not provide the guarantees below. This document does not upgrade
-the security claim of policy 3.1.0.
+Status: **experimental Linux profile 3.2.0-capture.1 implemented and locally deployed**.
+Implementation and assumptions: `infrastructure/protected-capture/README.md`.
+Signed replay and OS-probe results are under `research/exports/protected-capture-20261029/`.
+The legacy Windows/OpenCode same-user outbox remains unprotected. These results
+do not upgrade policy 3.1.0 or establish protection for live OpenCode agents.
 
 ## Security boundary
 
@@ -17,8 +19,9 @@ restrictions are required. A socket accepting the same agent UID, an environment
 variable, or a MAC key in an agent-readable file is **not** sufficient.
 
 Only the trusted host can connect to an authenticated, ACL-restricted local IPC
-endpoint. A protected per-session channel credential binds the approved plugin
-instance to that host and session. The agent has no generic "sign this event"
+endpoint. Kernel SO_PEERCRED authenticates the protected host UID; trusted
+registration binds the session and prompt. No bearer key is inherited by tools.
+The agent has no generic "sign this event"
 or "submit plugin event" capability. A compromised host/plugin, administrator,
 kernel, collector or signing authority is outside this threat model. Unsupported
 platforms must advertise *unprotected capture*, not silently claim isolation.
@@ -31,7 +34,7 @@ invocation, including a before/after receipt requirement; this cannot depend on
 the plugin hooks whose disabling is under test. Hook-only instrumentation cannot
 satisfy the hook-disable acceptance criterion.
 
-Each message binds session ID, plugin instance, invocation ID, authenticated
+Each message binds session ID, capture profile, invocation ID, authenticated
 monotonic sender sequence, event ID and payload digest. The collector checks
 origin, sequence, uniqueness and payload authentication, appends to protected
 storage, and returns a durable authenticated acknowledgement. Replayed IDs may
@@ -53,7 +56,7 @@ Under these assumptions, the agent cannot delete/reorder acknowledged events
 (authenticated protected origin). Availability is not guaranteed: the agent can
 cause a run to abort, but it cannot turn that abort into a verified claim.
 
-## Machine-checkable acceptance criteria for the later implementation
+## Machine-checkable acceptance criteria
 
 | Attack or fault | Required result |
 |---|---|

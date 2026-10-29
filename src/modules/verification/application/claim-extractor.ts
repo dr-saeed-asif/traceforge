@@ -3,7 +3,7 @@ import { isClaimType } from "../domain/claim-types.js";
 import type { ClaimExpectation, ExtractedClaim } from "../domain/contracts.js";
 
 /** Versioned prompt/schema contract for a future model-backed extractor. */
-export const EXTRACTION_PROMPT_VERSION = "3.2.0";
+export const EXTRACTION_PROMPT_VERSION = "3.3.0";
 
 export interface ClaimExtractionRequest {
   readonly finalResponse: string;
@@ -87,6 +87,8 @@ export function removeNonVerifiableText(statement: string): string | null {
 /** Classifies one statement using the stable Phase 1 claim vocabulary. */
 export function classifyClaimType(statement: string): ClaimType | null {
   const value = statement.toLowerCase();
+  const passive=/[`"']?((?:[\w.-]+[\\/])*[\w.-]+\.[\w-]+)[`"']?\s+(?:(?:has|have)\s+been|was|were|is)\s+(created|generated|added|modified|updated|changed|edited)\b/iu.exec(value);
+  if(passive)return /^(?:created|generated|added)$/iu.test(passive[2]!)?"FILE_CREATED":"FILE_MODIFIED";
   if (/\b(?:node\s+(?:--check|-c)\b|syntax[ -]check|py_compile|tsc\s+--noemit)\b/iu.test(value) && /\b(?:pass(?:ed)?|success(?:ful)?|succeeded|exit|completed)\b/iu.test(value)) return "COMMAND_SUCCEEDED";
   // Policy 2.1.0: builds are classified before tests, and a TEST claim needs a
   // test noun or a recognised test command; the word "passed" alone is not
@@ -166,7 +168,7 @@ export function classifyClaimType(statement: string): ClaimType | null {
     )
   )
     return "TASK_COMPLETED";
-  return null;
+  return isBehaviorAssertion(value)?"TASK_COMPLETED":null;
 }
 
 /** Extracts target and objective expectation for a classified statement. */
@@ -176,6 +178,7 @@ export function extractTargetAndExpectedResult(
 ): { readonly target: string; readonly expectedResult: string } {
   const explicitPath =
     /`([^`]+)`/u.exec(statement)?.[1] ??
+    /[`"']?((?:[\w.-]+[\\/])*[\w.-]+\.[\w-]+)[`"']?\s+(?:(?:has|have)\s+been|was|were|is)\s+(?:created|generated|added|modified|updated|changed|edited)\b/iu.exec(statement)?.[1] ??
     /\b(?:src|app|packages|tests?|test|lib|infrastructure|docs)(?:[\\/][\w.*-]+)+(?:\.[\w-]+)?/iu.exec(
       statement,
     )?.[0] ??
@@ -183,11 +186,11 @@ export function extractTargetAndExpectedResult(
       statement,
     )?.[0];
   const command = /\b(?:npm|pnpm|yarn|npx|node|python3?|pytest|vitest|jest|phpunit|cargo|go|tsc)\s+[^`\n]+/iu.exec(statement)?.[0]
-    ?.split(/\s+(?:passed|failed|succeeded|successfully|completed|with|and|returned|exited)\b/iu)[0]?.trim().replace(/[.,;:!?]+$/u, "");
+    ?.split(/\s+(?:passed|failed|succeeded|successfully|completed|with|and|returned|exited)\b/iu)[0]?.trim();
   const quotedCommand = /`([^`]+)`/u.exec(statement)?.[1];
   const fullCommand = quotedCommand && /^(?:npm|pnpm|yarn|npx|node|python3?|pytest|vitest|jest|phpunit|cargo|go|tsc)\b/u.test(quotedCommand.trim()) ? quotedCommand.trim() : undefined;
   const target =
-    (["BUILD_PASSED", "TEST_PASSED", "COMMAND_SUCCEEDED"].includes(claimType) ? (fullCommand ?? command) : undefined) ??
+    (["BUILD_PASSED", "TEST_PASSED", "COMMAND_SUCCEEDED"].includes(claimType) ? (fullCommand ?? (command?cleanCommandTarget(command):undefined)) : undefined) ??
     explicitPath?.trim().replace(/[.,;:!?]+$/u, "") ??
     (claimType === "BUILD_PASSED" ||
     claimType === "TEST_PASSED" ||
@@ -216,6 +219,12 @@ export function extractTargetAndExpectedResult(
     TASK_COMPLETED: "all required objective claims are verified",
   } satisfies Record<ClaimType, string>;
   return { target, expectedResult: expectedResult[claimType] };
+}
+
+function cleanCommandTarget(value:string):string {
+  let result=value.replace(/[.,;:!?]+$/u,"");
+  while(result.endsWith(")")&&(result.match(/\)/gu)?.length??0)>(result.match(/\(/gu)?.length??0))result=result.slice(0,-1).trimEnd();
+  return result;
 }
 
 /** Extracts and validates the stable claim records persisted in AgentClaim. */
@@ -353,10 +362,7 @@ export function expectationFor(
       statement,
     ) &&
     !/\b(?:0|zero|no)\s+(?:tests?\s+)?fail(?:ed|ures?)\b/iu.test(statement);
-  const semantic =
-    /\b(?:bug\s+(?:was\s+)?fix(?:ed)?|fix(?:ed)?\s+(?:the\s+)?(?:bug|issue|problem)|validation\s+(?:was\s+)?(?:added|implemented|works?)|functionality\s+works?|feature\s+(?:was\s+)?implemented|(?:now|correctly|properly|fully)\s+(?:works?|working|functional)|works\s+(?:as\s+expected|correctly|properly)|is\s+(?:fully\s+)?functional|handles?\s+(?:all\s+)?(?:edge\s+cases|errors?))\b/iu.test(
-      statement,
-    );
+  const semantic = isBehaviorAssertion(statement);
   const hedged = isHedgedAssertion(statement);
   const outsideScope =
     claimType === "TASK_COMPLETED" &&
@@ -442,6 +448,7 @@ export function parseExpectation(value: unknown): ClaimExpectation {
 
 function objectiveKeyword(value: string): boolean {
   return (
+    isBehaviorAssertion(value) ||
     /\b(?:created?|add(?:ed)?|generated|implemented|modified|updated|changed|edited|fixed|validated|verified|pass(?:ed)?|success(?:ful)?|succeed(?:ed)?|built|compiled|ran|executed|completed|done|finished|install|test|build|command|file|code|validation|architecture|layer|directory|folder|structure|dependenc|import|task)\w*\b/iu.test(
       value,
     ) ||
@@ -457,6 +464,22 @@ function firstStructureTarget(statement: string): string {
       statement,
     )?.[0];
   return path ?? "project structure";
+}
+
+/** State-of-behaviour predicates require acceptance evidence, not file deltas.
+ * Quoted paths are operands; negated and future predicates are not successes. */
+export function isBehaviorAssertion(value:string):boolean {
+  const prose=value.replace(/`[^`]*`/gu,"TARGET");
+  if(/\b(?:not|never|will|might|may|could)\s+(?:(?:be|been|now)\s+){0,2}(?:fixed|resolved|working|works)\b/iu.test(prose))return false;
+  const state=/\b(?:(?:is|are|was|were|(?:has|have)\s+been)\s+(?:(?:now|fully|finally|successfully)\s+)*(?:fixed|resolved|functional|working)|works?\s+(?:now|correctly|properly|as\s+expected)|(?:now|correctly|properly|fully)\s+(?:works?|working|functional))\b/iu.test(prose);
+  // Semantic entities paired with accomplishment predicates assert behavior,
+  // unlike literal file-creation/update operations. Recognize grammatical
+  // roles in either order instead of enumerating complete surface phrases.
+  const entity='(?:bugs?|issues?|problems?|validation|functionality|features?)';
+  const accomplishment='(?:fix(?:ed)?|resolv(?:ed|es?)?|implemented|added|works?)';
+  const relation=new RegExp(`\\b${entity}\\b[^.!?]{0,60}\\b${accomplishment}\\b|\\b${accomplishment}\\b[^.!?]{0,60}\\b${entity}\\b`,'iu').test(prose);
+  const acceptance=/\bhandles?\s+(?:all\s+)?(?:edge\s+cases|errors?)\b/iu.test(prose);
+  return state||relation||acceptance;
 }
 
 function structureExpectation(statement: string): string {

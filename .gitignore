@@ -12,6 +12,8 @@ coverage/
 playwright-report/
 test-results/
 *.tsbuildinfo
+__pycache__/
+*.pyc
 data/*.sqlite
 data/*.sqlite-shm
 data/*.sqlite-wal

@@ -1,0 +1,2 @@
+"measure","events","p50_ms","p95_ms","min_ms","max_ms","scope"
+"synchronous authenticated durable acknowledgement","3016","5.224533","13.334966","1.932403","161.808138","Includes local socket, UID-authentication, SQLite FULL commit; controlled replay, not end-to-end OpenCode slowdown"

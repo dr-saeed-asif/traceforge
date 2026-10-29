@@ -1,0 +1,10 @@
+import {spawnSync} from 'node:child_process';
+import {resolve} from 'node:path';
+import {parseArgs} from '../annotation/lib.mjs';
+const a=parseArgs(process.argv.slice(2));for(const k of ['a','b','adjudication','out-dir'])if(!a[k])throw Error('--'+k+' required');
+const out=resolve(String(a['out-dir'])),dataset=String(a.dataset??'research/datasets/natural-v1.jsonl');
+const run=argv=>{const r=spawnSync(process.execPath,argv,{stdio:'inherit'});if(r.status!==0)throw Error('Stage failed; no labels fabricated: '+argv[0]);};
+run(['research/revision-r1/annotation-agreement.mjs','--dataset',dataset,'--a',String(a.a),'--b',String(a.b),'--out-dir',out+'/agreement']);
+const conversion=['research/annotation/build-adjudicated-dataset.mjs','--dataset',dataset,'--annotations',String(a.adjudication),'--output',out+'/natural-v1-adjudicated.jsonl'];
+run([...conversion,'--dry-run']);run(conversion);
+run(['dist/evaluate.js','--dataset',out+'/natural-v1-adjudicated.jsonl','--extractors','heuristic,ollama','--baselines','deterministic,accept,regex,llm,agent','--judge-model',String(a.model??'qwen3:4b'),'--bootstrap','2000','--seed','7','--output',out+'/evaluation']);

@@ -21,7 +21,7 @@
  */
 import { execSync, spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { delimiter, join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -141,6 +141,12 @@ async function execute(scenario) {
       }
     }
     capture.finalDigest = observer.workspaceDigest(await observer.snapshotWorkspace(ws));
+    if(args["workspace-out"]){
+      const kept=join(resolve(args["workspace-out"]),encodeURIComponent(scenario.id));
+      if(existsSync(kept))throw new Error(`Refusing to overwrite final workspace ${kept}`);
+      mkdirSync(resolve(args["workspace-out"]),{recursive:true});cpSync(ws,kept,{recursive:true});
+      capture.workspacePath=kept;
+    }
     return capture;
   } finally {
     rmSync(ws, { recursive: true, force: true });
@@ -439,7 +445,7 @@ for (const [family, make] of Object.entries(ALL_FAMILIES)) {
     const capture = await execute(scenario);
     const evidence = { old: toEvidence(sys.old.map, capture.old, scenario.response), new: toEvidence(sys.new.map, capture.new, scenario.response) };
     // Evidence ids differ by capture model; gold evidence is identified by command/path.
-    sessions.push({ id: scenario.id, family, finalDigest: capture.finalDigest, response: scenario.response, gold: scenario.gold.map(({ quote, claimType, target, verdict, evidence: ev, advisory }) => ({ quote, claimType, target, verdict, evidence: ev ?? null, advisory: Boolean(advisory) })), evidence: evidence.new });
+    sessions.push({ id: scenario.id, family, finalDigest: capture.finalDigest, ...(capture.workspacePath?{workspacePath:capture.workspacePath}:{}), response: scenario.response, gold: scenario.gold.map(({ quote, claimType, target, verdict, evidence: ev, advisory }) => ({ quote, claimType, target, verdict, evidence: ev ?? null, advisory: Boolean(advisory) })), evidence: evidence.new });
     for (const system of SYSTEMS) {
       const trace = evidence[system.capture];
       let claims;

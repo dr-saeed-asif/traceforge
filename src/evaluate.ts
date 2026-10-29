@@ -20,6 +20,8 @@ if(extractorNames.some(x=>!["oracle","heuristic","ollama"].includes(x))||baselin
 const targetMatching=option("--target-matching","strict");if(!["strict","legacy-token"].includes(targetMatching))throw new Error("--target-matching must be strict or legacy-token.");
 const clusterUnit=option("--cluster","session");if(!["session","task"].includes(clusterUnit))throw new Error("--cluster must be session or task.");
 const repetitions=Number(option("--bootstrap","1000")),seed=Number(option("--seed","42"));
+const modelSeed=Number(option("--model-seed",String(seed)));
+if(!Number.isSafeInteger(modelSeed))throw new Error("--model-seed must be an integer");
 if(!Number.isSafeInteger(repetitions)||repetitions<100||repetitions>10000||!Number.isSafeInteger(seed))throw new Error("Use 100–10000 bootstrap replicates and an integer seed.");
 const raw=await readFile(dataset,"utf8");
 const cases=raw.replace(/^\uFEFF/u,"").split(/\r?\n/u).filter(line=>line.trim()&&!line.trimStart().startsWith("#")).map(line=>JSON.parse(line) as Case);
@@ -50,7 +52,7 @@ for(const item of cases){
    else {
     const cached = cacheExtractions && extractorName === "ollama" ? extractionCache.get(item.finalResponse) : undefined;
     if (cached) { predicted = cached.claims; extractionMetadata = { cacheHit: true, cacheSourceSessionId: cached.sessionId, outcome: "CACHED", attemptCount: 0, usage: { input_tokens: 0, output_tokens: 0 } }; }
-    else {const extractor:ClaimExtractor=extractorName==="heuristic"?new HeuristicClaimExtractor():new OllamaClaimExtractor({endpoint:process.env.TRACEFORGE_LLM_ENDPOINT??"http://127.0.0.1:11434/api/chat",model:process.env.TRACEFORGE_LLM_MODEL??"qwen3.5:4b",contextTokens:Number(process.env.TRACEFORGE_LLM_CONTEXT_TOKENS??8192),timeoutMs:Number(process.env.TRACEFORGE_LLM_TIMEOUT_MS??180000)});
+    else {const extractor:ClaimExtractor=extractorName==="heuristic"?new HeuristicClaimExtractor():new OllamaClaimExtractor({endpoint:process.env.TRACEFORGE_LLM_ENDPOINT??"http://127.0.0.1:11434/api/chat",model:process.env.TRACEFORGE_LLM_MODEL??"qwen3.5:4b",contextTokens:Number(process.env.TRACEFORGE_LLM_CONTEXT_TOKENS??8192),timeoutMs:Number(process.env.TRACEFORGE_LLM_TIMEOUT_MS??180000),seed:modelSeed});
     if(extractor.extractDetailed){const result=await extractor.extractDetailed({finalResponse:item.finalResponse,modelName:"evaluation"});predicted=result.claims;extractionMetadata={...result.metadata, cacheHit:false};}else predicted=await extractor.extract({finalResponse:item.finalResponse,modelName:"evaluation"});
     if(cacheExtractions && extractorName === "ollama") extractionCache.set(item.finalResponse, { claims: predicted, sessionId: item.id });
     }
@@ -69,7 +71,7 @@ for(const item of cases){
    }else for(const claim of predicted){
     try{if(baseline==="accept")decisions.push({verdict:"VERIFIED",reason:"B0 accepts every reported claim"});
     else if(baseline==="regex")decisions.push({verdict:regexBaseline(claim,item.evidence),reason:"B3 independent target substring / completion marker matcher"});
-    else {const result=await modelJudge(claim,item.evidence,{model:option("--judge-model",process.env.TRACEFORGE_JUDGE_MODEL??process.env.TRACEFORGE_LLM_MODEL??"qwen3.5:4b"),endpoint:process.env.TRACEFORGE_LLM_ENDPOINT??"http://127.0.0.1:11434/api/chat",agent:baseline==="agent",seed,promptQuery:item.promptQuery??"",finalResponse:item.finalResponse});decisions.push({verdict:result.verdict,reason:result});}}
+    else {const result=await modelJudge(claim,item.evidence,{model:option("--judge-model",process.env.TRACEFORGE_JUDGE_MODEL??process.env.TRACEFORGE_LLM_MODEL??"qwen3.5:4b"),endpoint:process.env.TRACEFORGE_LLM_ENDPOINT??"http://127.0.0.1:11434/api/chat",agent:baseline==="agent",seed:modelSeed,promptQuery:item.promptQuery??"",finalResponse:item.finalResponse});decisions.push({verdict:result.verdict,reason:result});}}
     catch(error){decisions.push({verdict:null,reason:error instanceof Error?error.message:"Judge failure"});failures.push({id:item.id,extractor:extractorName,baseline,claimIndex:claim.claimIndex,error:decisions.at(-1)!.reason});}
    }
    latencies.push({id:item.id,stage:"verification",extractor:extractorName,baseline,latencyMs:Math.round(performance.now()-judgeStart)});
@@ -87,7 +89,7 @@ for(const item of cases){
  if(completedSessions%10===0) console.error(`Evaluated ${completedSessions}/${cases.length} sessions; failures=${failures.length}`);
 }
 const reports=Object.fromEntries([...grouped].map(([key,groups])=>{const clusters:ScoredCluster[]=[...groups].map(([id,pairs])=>({id,pairs}));return[key,{...scorePairs(clusters.flatMap(c=>c.pairs)),clusters:clusters.length,confidenceIntervals:clusteredBootstrap(clusters,repetitions,seed)}];}));
-const manifest={...runManifest(),cacheExtractions,requestedContextTokens:Number(process.env.TRACEFORGE_LLM_CONTEXT_TOKENS??8192),extractionCacheEntries:extractionCache.size,dataset:resolve(dataset),datasetHash:sha256(raw),datasetSessions:cases.length,extractors:extractorNames,baselines,matching,relaxedThreshold:matching==="relaxed"?0.8:null,clusterUnit,seed,bootstrap:repetitions,targetMatching,freshness:!args.includes("--no-freshness"),allowUnadjudicated:args.includes("--allow-unadjudicated"),judgePrompt:JUDGE_SYSTEM,judgeModel:option("--judge-model",process.env.TRACEFORGE_JUDGE_MODEL??process.env.TRACEFORGE_LLM_MODEL??"not-used"),agentBaseline:"bounded read-only trace-retrieval adaptation; not a reproduction of Agent-as-a-Judge",failures:failures.length};
+const manifest={...runManifest(),cacheExtractions,requestedContextTokens:Number(process.env.TRACEFORGE_LLM_CONTEXT_TOKENS??8192),extractionCacheEntries:extractionCache.size,dataset:resolve(dataset),datasetHash:sha256(raw),datasetSessions:cases.length,extractors:extractorNames,baselines,matching,relaxedThreshold:matching==="relaxed"?0.8:null,clusterUnit,seed,modelSeed,bootstrap:repetitions,targetMatching,freshness:!args.includes("--no-freshness"),allowUnadjudicated:args.includes("--allow-unadjudicated"),judgePrompt:JUDGE_SYSTEM,judgeModel:option("--judge-model",process.env.TRACEFORGE_JUDGE_MODEL??process.env.TRACEFORGE_LLM_MODEL??"not-used"),agentBaseline:"bounded read-only trace-retrieval adaptation; not a reproduction of Agent-as-a-Judge",failures:failures.length};
 await writeFile(join(out,"run-manifest.json"),JSON.stringify(manifest,null,2));
 await writeFile(join(out,"metrics.json"),JSON.stringify(reports,null,2));
 for(const [name,rows] of Object.entries({predictions,latencies,extraction,failures}))await writeFile(join(out,name+".jsonl"),rows.map(row=>JSON.stringify(row)).join("\n")+"\n");

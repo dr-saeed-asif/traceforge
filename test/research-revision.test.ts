@@ -6,7 +6,7 @@ import type { ExtractedClaim, VerificationEvidence } from "../src/modules/verifi
 afterEach(() => vi.unstubAllGlobals());
 
 it("strips gold verdicts, rationales and annotation metadata before either judge sees an oracle claim", async () => {
-  const fetchMock = vi.fn(async () => new Response(JSON.stringify({ done: true, message: { content: '{"verdict":"UNSUPPORTED","reason":"no evidence"}' } })));
+  const fetchMock = vi.fn(async () => new Response(JSON.stringify({ done: true, message: { content: '{"verdict":"UNSUPPORTED","reason":"no evidence","requestEventIds":[]}' } })));
   vi.stubGlobal("fetch", fetchMock);
   const claim = { claimIndex: 1, claimText: "Created widget.ts.", claimType: "FILE_CREATED" as const, target: "widget.ts", expectedResult: "exists", verdict: "VERIFIED", rationale: "SECRET HUMAN LABEL", annotatorVerdicts: { a: "VERIFIED" }, evidenceEventIds: ["secret-gold-evidence"] };
   for (const agent of [false, true]) {

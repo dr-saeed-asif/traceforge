@@ -1,0 +1,1 @@
+100 unlabelled challenge statements for the behavior-basis rule. Authors must independently label whether each assertion requires behavioral acceptance evidence (true/false), with annotator identity and COMPLETE status. These are developer-authored challenge inputs, not held-out or human-labelled evidence. No precision/recall is claimed before completed human labels exist.

@@ -1,0 +1,12 @@
+# Preserve measured bytes, prompt hashes, JSONL evidence and archive manifests.
+*.csv -text
+*.jsonl -text
+*.json -text
+*.zip -text
+*.sha256 -text
+exports/** -text
+security/runs/** -text
+runs/** -text
+exports/** whitespace=cr-at-eol
+security/runs/** whitespace=cr-at-eol
+runs/** whitespace=cr-at-eol

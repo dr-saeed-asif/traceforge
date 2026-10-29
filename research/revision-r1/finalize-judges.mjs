@@ -1,0 +1,12 @@
+import {readFileSync,writeFileSync,mkdirSync,existsSync} from 'node:fs';
+import {resolve,join} from 'node:path';
+import {readJsonl,parseArgs,csvRecords,parseCsv,sha256} from '../annotation/lib.mjs';
+import {metric,saveReport} from './report.mjs';
+const a=parseArgs(process.argv.slice(2)),run=resolve(String(a['run-dir'])),out=resolve(String(a['out-dir'])),dataset=String(a.dataset??'research/robustness/phrasing/phrasing-P0.jsonl');if(existsSync(out))throw Error('Fresh output required');
+const expected=new Map(readJsonl(dataset).flatMap(s=>s.goldClaims.map(g=>[s.id+'::'+g.claimIndex,g]))),meta=JSON.parse(readFileSync(join(run,'model.json'))),source=readJsonl(join(run,'raw.jsonl'));
+if(meta.datasetSha256!==sha256(readFileSync(dataset))||source.length!==expected.size||new Set(source.map(r=>r.id+'::'+r.claimIndex)).size!==expected.size)throw Error('Incomplete/mismatched judge run; do not label it complete');
+const rows=source.map(r=>{const g=expected.get(r.id+'::'+r.claimIndex);if(!g||r.gold!==g.verdict)throw Error('Gold mismatch');return {...r,goldAdvisory:!!g.testTampering};}),failures=[];
+for(const r of rows){for(const attempt of r.attempts??[])if(attempt.error)failures.push({condition:r.condition,id:r.id,claimIndex:r.claimIndex,error:'Attempt: '+attempt.error,countedAsError:false});if(!r.valid)failures.push({condition:r.condition,id:r.id,claimIndex:r.claimIndex,error:r.reason,countedAsError:true});}
+mkdirSync(out,{recursive:true});const p=csvRecords(parseCsv(readFileSync(join(run,'run-provenance.csv'),'utf8'))).records,model=meta.tag.name,seed=Number(p[0].seed),m=metric(rows[0].condition,rows,{model,seed});
+saveReport(out,[m],rows,failures,p,`# R1 judge analysis\n\nTable 6 additional row. Complete ${rows.length}-claim measured run; gold labels only used here for scoring. Prompt/model metadata and raw outputs remain in ${run}. All invalid attempts retained. Gold gate incorporates the annotation's test-tampering advisory, while judge gates use their returned verdicts. Remaining failures are incorrect outcomes, never dropped. Bootstrap 2000 seed 7 by session/family; exact FVR bounds supplementary. Local monetary cost unavailable, not zero. Shared workstation latency is descriptive, not a clean cold/warm hardware study.\n`);
+writeFileSync(join(out,'judge-metrics.csv'),readFileSync(join(out,'metrics.csv')));writeFileSync(join(out,'source-run.json'),JSON.stringify({rawRun:run,datasetSha256:meta.datasetSha256,promptHash:meta.promptHash,rawSha256:sha256(readFileSync(join(run,'raw.jsonl')))},null,2));console.log(JSON.stringify(m));

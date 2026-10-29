@@ -41,7 +41,7 @@ describe("PromptStore verification persistence", () => {
     await store.ingest({ runId: "run-1", promptId: "prompt-1", sessionId: "session-1", eventId: "event-test", occurredAt: "2026-01-01T00:00:02.000Z", eventType: "COMMAND_COMPLETED", payload: { command: "npm test", exitCode: 0, passed: 12, failed: 0 } });
     await store.ingest({ runId: "run-1", promptId: "prompt-1", sessionId: "session-1", eventId: "event-complete", occurredAt: "2026-01-01T00:00:03.000Z", eventType: "AGENT_COMPLETED", payload: { status: "COMPLETED" } });
 
-    expect(repository.createSession).toHaveBeenCalledWith(expect.objectContaining({ promptId: "prompt-1", externalSessionId: "session-1", runId: "run-1", policyVersion: "3.1.0" }));
+    expect(repository.createSession).toHaveBeenCalledWith(expect.objectContaining({ promptId: "prompt-1", externalSessionId: "session-1", runId: "run-1", policyVersion: "3.2.0" }));
     expect(repository.appendTraceEvent).toHaveBeenCalledTimes(4);
     expect((repository.appendTraceEvent as ReturnType<typeof vi.fn>).mock.calls.map((call) => call[0].eventType)).toEqual([
       "PROMPT_SUBMITTED", "FINAL_RESPONSE_CAPTURED", "TEST_COMPLETED", "AGENT_COMPLETED"

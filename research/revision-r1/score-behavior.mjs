@@ -1,0 +1,11 @@
+import {readFileSync,writeFileSync,mkdirSync,existsSync} from 'node:fs';
+import {resolve,join} from 'node:path';
+import {csvRecords,parseCsv,parseArgs,toCsv} from '../annotation/lib.mjs';
+import {isBehaviorAssertion} from '../../dist/modules/verification/application/claim-extractor.js';
+import {saveReport,provenance} from './report.mjs';
+const a=parseArgs(process.argv.slice(2)),rows=csvRecords(parseCsv(readFileSync(String(a.annotations),'utf8'))).records;
+if(rows.length<100||rows.some(r=>!r.annotator_id?.trim()||r.annotation_status!=='COMPLETE'||!['true','false'].includes(r.human_behavior_label)))throw Error('At least 100 genuinely completed human-labelled statements required');
+const out=resolve(String(a['out-dir']));if(existsSync(out))throw Error('Fresh output required');mkdirSync(out,{recursive:true});
+let tp=0,fp=0,fn=0;const decisions=rows.map(r=>{const gold=r.human_behavior_label==='true',prediction=isBehaviorAssertion(r.statement);tp+=Number(gold&&prediction);fp+=Number(!gold&&prediction);fn+=Number(gold&&!prediction);return {...r,prediction};});
+saveReport(out,[],[],[],[provenance({exit_code:0,start:new Date().toISOString(),end:new Date().toISOString()})],'# R5 behavior rule evaluation\n\nAuthor-completed challenge statements; annotation identities retained. Not an independently authored held-out benchmark. Undefined precision/recall remain unavailable.\n');
+writeFileSync(join(out,'metrics.csv'),toCsv([['statements','tp','fp','fn','precision','recall','f1'],[rows.length,tp,fp,fn,tp+fp?tp/(tp+fp):null,tp+fn?tp/(tp+fn):null,2*tp+fp+fn?2*tp/(2*tp+fp+fn):null]]));writeFileSync(join(out,'per-claim.csv'),toCsv([['statement_id','statement','human_label','predicted_label','annotator_id'],...decisions.map(r=>[r.statement_id,r.statement,r.human_behavior_label,r.prediction,r.annotator_id])]));

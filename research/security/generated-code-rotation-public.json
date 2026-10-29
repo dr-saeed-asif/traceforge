@@ -1,0 +1,6 @@
+{
+  "keyPath": "/var/lib/traceforge-keys/generated-code-c21c6abc48e148bcbef670eaa0c2ad13/key.base64",
+  "valueSha256": "b475ba10724bfdea53f9f439e7930f3e8ad51c862aacc81167c9d287e794a27a",
+  "status": "GENERATED_NOT_ACTIVATED; migrate encrypted data before changing configuration",
+  "permissions": "root-only 0700 directory / 0600 file"
+}

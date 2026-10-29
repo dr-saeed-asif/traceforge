@@ -1,7 +1,7 @@
 import type { ClaimType } from "./claim-types.js";
 import type { TraceEventType } from "./trace-event-types.js";
 
-export const CLAIM_VERIFICATION_POLICY_VERSION = "3.1.0";
+export const CLAIM_VERIFICATION_POLICY_VERSION = "3.2.0";
 
 export const VERIFICATION_STRATEGIES = ["EVENT_EVIDENCE", "AGGREGATE_CLAIMS"] as const;
 

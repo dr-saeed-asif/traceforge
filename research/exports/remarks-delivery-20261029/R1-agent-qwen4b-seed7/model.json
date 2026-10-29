@@ -1,0 +1,32 @@
+{
+  "tag": {
+    "name": "qwen3:4b",
+    "model": "qwen3:4b",
+    "modified_at": "2026-10-05T08:38:55.6015135+02:00",
+    "size": 2497293931,
+    "digest": "359d7dd4bcdab3d86b87d73ac27966f4dbb9f5efdfcc75d34a8764a09474fae7",
+    "details": {
+      "parent_model": "",
+      "format": "gguf",
+      "family": "qwen3",
+      "families": [
+        "qwen3"
+      ],
+      "parameter_size": "4.0B",
+      "quantization_level": "Q4_K_M",
+      "context_length": 262144,
+      "embedding_length": 2560,
+      "runner": "ggml"
+    },
+    "capabilities": [
+      "completion",
+      "tools",
+      "thinking"
+    ]
+  },
+  "version": {
+    "version": "0.40.5"
+  },
+  "promptHash": "037ba7852e26589ee26b3574cdb2b5e93a935c2c3f980b69cc3c747229ff2214",
+  "datasetSha256": "281bb4682b263e300f4fde1ceac25f8f65a8e9f91b9dee10638c66dc1c4e74d5"
+}

@@ -1,7 +1,7 @@
 """Protected Linux command dispatcher, independent of OpenCode plugin hooks.
 Only a trusted host principal may use its local socket; tools run in sandbox.py.
 """
-import argparse, hashlib, json, os, re, signal, socket, socketserver, stat, struct, subprocess, tempfile, threading, uuid
+import argparse, hashlib, json, os, re, shlex, signal, socket, socketserver, stat, struct, subprocess, tempfile, threading, uuid
 from pathlib import Path
 from sandbox import HOST_UID, AGENT_UID, host_call, sandbox_preexec
 
@@ -62,13 +62,16 @@ class Dispatcher:
                 if len(stdout)+len(stderr)>1024*1024:raise RuntimeError("Tool output exceeds capture budget")
                 after=snapshot(self.root/"workspace")
                 changes=[{"path":p,"before":before.get(p),"after":after.get(p)} for p in sorted(before.keys()|after.keys()) if before.get(p)!=after.get(p)]
-                is_test=argv[0]=="/usr/bin/node" and "--test" in argv
+                observed_argv=argv
+                if argv[:2]==['/bin/sh','-c'] and len(argv)==3 and not re.search(r'[;&|<>`$\n*?{}()]',argv[2]):
+                    observed_argv=shlex.split(argv[2])
+                is_test=bool(observed_argv) and observed_argv[0] in ('node','/usr/bin/node') and "--test" in observed_argv
                 counts={}
                 if is_test:
                     for key,word in [("passed","pass"),("failed","fail"),("skipped","skipped")]:
                         values=re.findall(r"^\s*#\s*"+word+r"\s+(\d+)\s*$",stdout.decode(errors="replace"),re.M)
                         if values:counts[key]=int(values[-1])
-                self.send([event("TEST_COMPLETED" if is_test else "COMMAND_COMPLETED",json.dumps(argv),{"argv":argv,"exitCode":process.returncode,**counts,"stdoutHash":hashlib.sha256(stdout).hexdigest(),"stderrHash":hashlib.sha256(stderr).hexdigest(),"changedPaths":[c["path"] for c in changes],"changes":changes,"workspaceObservation":"complete"},"SUCCEEDED" if process.returncode==0 else "FAILED"),{"op":"end","sessionId":sid,"invocationId":invocation}])
+                self.send([event("TEST_COMPLETED" if is_test else "COMMAND_COMPLETED",json.dumps(observed_argv),{"argv":observed_argv,"launcherArgv":argv,"exitCode":process.returncode,**counts,"stdoutHash":hashlib.sha256(stdout).hexdigest(),"stderrHash":hashlib.sha256(stderr).hexdigest(),"changedPaths":[c["path"] for c in changes],"changes":changes,"workspaceObservation":"complete"},"SUCCEEDED" if process.returncode==0 else "FAILED"),{"op":"end","sessionId":sid,"invocationId":invocation}])
                 return {"exitCode":process.returncode,"stdout":stdout.decode(errors="replace"),"stderr":stderr.decode(errors="replace"),"changedPaths":[c["path"] for c in changes]}
             if op=="finish":
                 response=request.get("finalResponse")

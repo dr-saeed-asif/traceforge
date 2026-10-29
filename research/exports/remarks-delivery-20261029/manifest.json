@@ -1,0 +1,406 @@
+{
+  "packagedAt": "2026-10-29T13:21:55.999Z",
+  "baseCommit": "065689b564bb55bd6ceaac28420d4aac831071f3",
+  "workingTreeDirty": true,
+  "published": false,
+  "completeMeasuredFolders": [
+    "R1-llm-qwen4b-seed7",
+    "R1-agent-qwen4b-seed7",
+    "R2-protected-capture",
+    "R2-registry-audit",
+    "R4-R5-versioned-policy",
+    "R5-natural-diagnostic",
+    "R6-network-mcp",
+    "R7-reexecution"
+  ],
+  "files": [
+    {
+      "path": "model-matrix-progress-at-packaging.json",
+      "sha256": "9e40e3d521c0520a3724885c506328d0d76b05510cff72a47f9faa5ff77b6752"
+    },
+    {
+      "path": "R1-agent-qwen4b-seed7/failures.csv",
+      "sha256": "367ec6ca76d09ee237ce12f2aa2897e6cb2491a4ac6999afb39a36fb05e3ead5"
+    },
+    {
+      "path": "R1-agent-qwen4b-seed7/frozen-prompt.json",
+      "sha256": "037ba7852e26589ee26b3574cdb2b5e93a935c2c3f980b69cc3c747229ff2214"
+    },
+    {
+      "path": "R1-agent-qwen4b-seed7/judge-metrics.csv",
+      "sha256": "4c66eb13de92cc84787f17702e72807c58f59f30031812c006de9322511e488f"
+    },
+    {
+      "path": "R1-agent-qwen4b-seed7/metrics.csv",
+      "sha256": "4c66eb13de92cc84787f17702e72807c58f59f30031812c006de9322511e488f"
+    },
+    {
+      "path": "R1-agent-qwen4b-seed7/model.json",
+      "sha256": "e6e2d6d395bd26f6d0631f1eb9648a280034bcd3b4cb1d7b0cd637afe3462952"
+    },
+    {
+      "path": "R1-agent-qwen4b-seed7/per-claim.csv",
+      "sha256": "5f78c96d3e7c0fff27250afddb8e2d9aaa361bc9cf98acd1866598994f5646c2"
+    },
+    {
+      "path": "R1-agent-qwen4b-seed7/raw.jsonl",
+      "sha256": "da76e873edc7ea9436d0a9aff91777f30caec6f06ee9c409e3cbe11e399b1667"
+    },
+    {
+      "path": "R1-agent-qwen4b-seed7/README.md",
+      "sha256": "a2f0ccef485b3d59997b518da62d167eef433fe2f1a159ae6a7b0e834fb23206"
+    },
+    {
+      "path": "R1-agent-qwen4b-seed7/run-provenance.csv",
+      "sha256": "ead98e0e29717d2fd877431720239baab7f96c17c33bf17b2f853f44891dab12"
+    },
+    {
+      "path": "R1-agent-qwen4b-seed7/source-run.json",
+      "sha256": "6259d528a8f26a9b63bfb854bc02a266e9e75f3060d56f187fbdb6aec16656dc"
+    },
+    {
+      "path": "R1-llm-qwen4b-seed7/failures.csv",
+      "sha256": "367ec6ca76d09ee237ce12f2aa2897e6cb2491a4ac6999afb39a36fb05e3ead5"
+    },
+    {
+      "path": "R1-llm-qwen4b-seed7/frozen-prompt.json",
+      "sha256": "bca252b1993a46b5c8d6c537c2e74200dabd5bd2b39131cc513f2557800e108d"
+    },
+    {
+      "path": "R1-llm-qwen4b-seed7/judge-metrics.csv",
+      "sha256": "142295e1499d41bbc43d728b776752c4554e9d9f72947f346897770ca0aa29ff"
+    },
+    {
+      "path": "R1-llm-qwen4b-seed7/metrics.csv",
+      "sha256": "142295e1499d41bbc43d728b776752c4554e9d9f72947f346897770ca0aa29ff"
+    },
+    {
+      "path": "R1-llm-qwen4b-seed7/model.json",
+      "sha256": "59e7b0a03bd82405ab107f87fd7cf561f68a830784af556340d1e579e7d7f714"
+    },
+    {
+      "path": "R1-llm-qwen4b-seed7/per-claim.csv",
+      "sha256": "3d2d62fec37a864eda764bc3bf3a6ed7e6680128cf395efb25e2cb7fd0c5ee00"
+    },
+    {
+      "path": "R1-llm-qwen4b-seed7/raw.jsonl",
+      "sha256": "7acb516c335af29ed17921120ccc5cca028675fc94e12542987a3a9838c7807e"
+    },
+    {
+      "path": "R1-llm-qwen4b-seed7/README.md",
+      "sha256": "00e37e0a2c661b01fdd1faa875d7cf25568f8e44183ba90b2ce7927111f769e4"
+    },
+    {
+      "path": "R1-llm-qwen4b-seed7/run-provenance.csv",
+      "sha256": "30ac48ed7a8bbb57c422f0deb8cd086374e06a61093c4dd571b7abcec331d280"
+    },
+    {
+      "path": "R1-llm-qwen4b-seed7/source-run.json",
+      "sha256": "cc898c765ef2928ea5e1d8b01e58ec42d829504e32e9d1856b34326856d0c90a"
+    },
+    {
+      "path": "R2-protected-capture/capture-security-metrics.csv",
+      "sha256": "d696490d854840e3955d096cd7b7f219cadeb9a9ee9a495914223dbe6ac84eb9"
+    },
+    {
+      "path": "R2-protected-capture/collector-latency.csv",
+      "sha256": "327c0ecf780d948f8b9ac6a62dc63212f9c6d4848f834bb3904a30ef752a075d"
+    },
+    {
+      "path": "R2-protected-capture/failures.csv",
+      "sha256": "367ec6ca76d09ee237ce12f2aa2897e6cb2491a4ac6999afb39a36fb05e3ead5"
+    },
+    {
+      "path": "R2-protected-capture/manifest.json",
+      "sha256": "0a29f4c77c230a2ccd19be8d626233ff525649edc5b33ef18dd1aad501088e0a"
+    },
+    {
+      "path": "R2-protected-capture/metrics.csv",
+      "sha256": "af8294014d0fab1e43dce05a9f358a6b5f5dd7cca7ce8e8e8c4299fba077fed9"
+    },
+    {
+      "path": "R2-protected-capture/os-boundary-probes.csv",
+      "sha256": "82340c0c01f59d3c223bd5145c3246ee637f94ee0e5948b6f52b9c827751d443"
+    },
+    {
+      "path": "R2-protected-capture/per-claim.csv",
+      "sha256": "05cac5a7d288bac3062b1f704130778712163483151783e5ad026f3f6f5cb0e3"
+    },
+    {
+      "path": "R2-protected-capture/README.md",
+      "sha256": "1f62ebd7e8c526ceb59e4f49f0c895cf4f91297a66d2e84bee93d0f56447b39c"
+    },
+    {
+      "path": "R2-protected-capture/run-provenance.csv",
+      "sha256": "694deb8049f8d875415dedce107052cbb19fcdbe5b9e0cbf53a7ef70a60a310e"
+    },
+    {
+      "path": "R2-protected-capture/session-gates.csv",
+      "sha256": "6d3d7002277046d18e9a709b4c7ad4e85ebb4118f701b12a79cbdd9320612aeb"
+    },
+    {
+      "path": "R2-registry-audit/failures.csv",
+      "sha256": "367ec6ca76d09ee237ce12f2aa2897e6cb2491a4ac6999afb39a36fb05e3ead5"
+    },
+    {
+      "path": "R2-registry-audit/metrics.csv",
+      "sha256": "7cd49e9f88a24111339532ce9021bed7840fa17912a29feecbc6f3062b392a22"
+    },
+    {
+      "path": "R2-registry-audit/per-claim.csv",
+      "sha256": "feb7e66c30a4f48b098c9c74e582affdd94fac5331fd1feb895fb1c4d9c3dd06"
+    },
+    {
+      "path": "R2-registry-audit/README.md",
+      "sha256": "8c18deb34111d7b5f8e53459cb70ba7f167da283ee8e2877fd7fa2b459c2bfe6"
+    },
+    {
+      "path": "R2-registry-audit/run-provenance.csv",
+      "sha256": "2bcfaa83c5b1520f08aeacb4ed3c86598489656d8bf860b6144fe9cdcf8d97c7"
+    },
+    {
+      "path": "R4-R5-versioned-policy/changed-verdicts.csv",
+      "sha256": "8b423285909cb3aa3007a9e7be80283db0c231e7310ae3097df44c9e474208f6"
+    },
+    {
+      "path": "R4-R5-versioned-policy/extraction-metrics.csv",
+      "sha256": "a644c831f77fb3dd827acd7c16777621fec7ca8c681ae65e4404aab3c159ce8d"
+    },
+    {
+      "path": "R4-R5-versioned-policy/failures.csv",
+      "sha256": "367ec6ca76d09ee237ce12f2aa2897e6cb2491a4ac6999afb39a36fb05e3ead5"
+    },
+    {
+      "path": "R4-R5-versioned-policy/metrics.csv",
+      "sha256": "070081a8ec25f36a2d5e024f0a657dabeb9e4258678a309f432a2ef85b339903"
+    },
+    {
+      "path": "R4-R5-versioned-policy/per-claim.csv",
+      "sha256": "0faee2fc318dfdaca7f6865d4365140aed8c7209d4b8324ccd9dfa55f678d081"
+    },
+    {
+      "path": "R4-R5-versioned-policy/predictions.jsonl",
+      "sha256": "c5d0093ca517af3e358ea6fffc36bf1145e07dafc434b5d581a3e08685d61223"
+    },
+    {
+      "path": "R4-R5-versioned-policy/README.md",
+      "sha256": "1afcc09fc6e8c09742df7974631e408b7e526ac6ee82e68c39b9259a1edcc558"
+    },
+    {
+      "path": "R4-R5-versioned-policy/run-provenance.csv",
+      "sha256": "162b7fd038f029716b162bace791effbce0437d9edae5078e614cd90ded2a30f"
+    },
+    {
+      "path": "R5-natural-diagnostic/diagnostic-details.jsonl",
+      "sha256": "bb0807f6516770e56163f5b64a3b7b57a4e6a99af084388eb2ad27be0e385490"
+    },
+    {
+      "path": "R5-natural-diagnostic/failures.csv",
+      "sha256": "367ec6ca76d09ee237ce12f2aa2897e6cb2491a4ac6999afb39a36fb05e3ead5"
+    },
+    {
+      "path": "R5-natural-diagnostic/metrics.csv",
+      "sha256": "8fd9c10aea7e0174fafc088e9633dcf73ed90709c855bfe72503e5d5019c2c24"
+    },
+    {
+      "path": "R5-natural-diagnostic/per-claim.csv",
+      "sha256": "f0e0dec85ce401ca5eb1a1b1613a12943079cd283e01f5c71e879ca08a1301fd"
+    },
+    {
+      "path": "R5-natural-diagnostic/README.md",
+      "sha256": "7f44f99b2f717c1f678f24b7d9d9bdaf797b0e70b013ae6a97ed95ef866580aa"
+    },
+    {
+      "path": "R5-natural-diagnostic/run-provenance.csv",
+      "sha256": "f7a483d4825918926fc0768d33867ffcca0601118cde1adc705c0b706be16368"
+    },
+    {
+      "path": "R6-network-mcp/artifacts/contradicted-0/output.txt",
+      "sha256": "e040c1c0f78ce5da6f69cf8c1e343655c065a3dc4aca349f9081f03cdaae3c12"
+    },
+    {
+      "path": "R6-network-mcp/artifacts/contradicted-1/output.txt",
+      "sha256": "9e4201a70b418cb7c50441b8c34d8348b241ab22d715544cf60a7e1c379f93c5"
+    },
+    {
+      "path": "R6-network-mcp/artifacts/contradicted-2/output.txt",
+      "sha256": "9fe2cbe87ab4df8b52d3c89a623ec276ab54f6fbdeb698f949b690c23946e6bc"
+    },
+    {
+      "path": "R6-network-mcp/artifacts/contradicted-3/output.txt",
+      "sha256": "b652910d4aa0126d120f62a7f6fc346381d2c72acd5726eefc5f9d77b570a6da"
+    },
+    {
+      "path": "R6-network-mcp/artifacts/edited-payload-0/output.txt",
+      "sha256": "5bfe5abf20ee9f1a0aac18e100e31f383b77ed401e27580dd68c49db62b95fbe"
+    },
+    {
+      "path": "R6-network-mcp/artifacts/edited-payload-1/output.txt",
+      "sha256": "7c6bc5623b9a3a7d8f932e0ab63970e93a1929ca608a5bcfa179e6fc25003a9e"
+    },
+    {
+      "path": "R6-network-mcp/artifacts/edited-payload-2/output.txt",
+      "sha256": "2846538814e19bb31a70119c5de9cce8d3bd7bd110236a67d76d5598c064e8bd"
+    },
+    {
+      "path": "R6-network-mcp/artifacts/edited-payload-3/output.txt",
+      "sha256": "f0d3ef2fe39aafb3c0356eeb3c17e0d6040beb3f1b1db04cfa3388f28892d5d8"
+    },
+    {
+      "path": "R6-network-mcp/artifacts/foreign-key-0/output.txt",
+      "sha256": "c16ae99bb7abead3660d3457bf53afe726dee3bd1e51ac55e4e1c3f28a51622e"
+    },
+    {
+      "path": "R6-network-mcp/artifacts/foreign-key-1/output.txt",
+      "sha256": "c06ae0bed885032caf1f855364e7fa61453e333ae94ca398ce9d75b516f55b9e"
+    },
+    {
+      "path": "R6-network-mcp/artifacts/foreign-key-2/output.txt",
+      "sha256": "ea0f8f255f40f8d11dae31dc34ee9a8853ac3505d01bb73165a0d755ab919d8f"
+    },
+    {
+      "path": "R6-network-mcp/artifacts/foreign-key-3/output.txt",
+      "sha256": "38e39f1d5c96d81661449ce73d932319eb55fac34db1d39a79a31ab237e7010c"
+    },
+    {
+      "path": "R6-network-mcp/artifacts/honest-0/output.txt",
+      "sha256": "7816e767d7ce44f9bd848deb645f420a79a53c00194ba315d7d2b2a8ad49de49"
+    },
+    {
+      "path": "R6-network-mcp/artifacts/honest-1/output.txt",
+      "sha256": "9f53269b9a1f88da4f27fbe4906a59632c50177b09c740ddfb976c3edb73ff97"
+    },
+    {
+      "path": "R6-network-mcp/artifacts/honest-2/output.txt",
+      "sha256": "76527aa7d76cbf54fdc197eb0b4a9a15286e5e67b9370de6635df8aa6e5ba10e"
+    },
+    {
+      "path": "R6-network-mcp/artifacts/honest-3/output.txt",
+      "sha256": "3dcb57b11dcc91a5c676c112d15ed553e380c6e1882b919c50157b092e2a8e90"
+    },
+    {
+      "path": "R6-network-mcp/artifacts/swapped-artifact-0/output.txt",
+      "sha256": "37e0d51511fee340586cfec5f4138944bc9c224bf2e678f2177c52c7bb0618e5"
+    },
+    {
+      "path": "R6-network-mcp/artifacts/swapped-artifact-1/output.txt",
+      "sha256": "37e0d51511fee340586cfec5f4138944bc9c224bf2e678f2177c52c7bb0618e5"
+    },
+    {
+      "path": "R6-network-mcp/artifacts/swapped-artifact-2/output.txt",
+      "sha256": "37e0d51511fee340586cfec5f4138944bc9c224bf2e678f2177c52c7bb0618e5"
+    },
+    {
+      "path": "R6-network-mcp/artifacts/swapped-artifact-3/output.txt",
+      "sha256": "37e0d51511fee340586cfec5f4138944bc9c224bf2e678f2177c52c7bb0618e5"
+    },
+    {
+      "path": "R6-network-mcp/client-results.json",
+      "sha256": "a4dae6d3164132d4c292ccd9f692df1c9d5f0a4ad9f8fccf4ca7dc0e4b1ad0ec"
+    },
+    {
+      "path": "R6-network-mcp/failures.csv",
+      "sha256": "367ec6ca76d09ee237ce12f2aa2897e6cb2491a4ac6999afb39a36fb05e3ead5"
+    },
+    {
+      "path": "R6-network-mcp/fixtures.json",
+      "sha256": "a6ef5abff1a183d3ad22b06524af0f7debdcb4a282c6f9962fe03a76ad58ef46"
+    },
+    {
+      "path": "R6-network-mcp/metrics.csv",
+      "sha256": "fdb7ebd402a0e2721ebeacfbedcb8548d769fc4150fc8f65a2a6ac38513ffd05"
+    },
+    {
+      "path": "R6-network-mcp/per-claim.csv",
+      "sha256": "92cdd7a0f15ca559b4251e42ea89ba4cc300325735f999e416a09adaacfc99a9"
+    },
+    {
+      "path": "R6-network-mcp/README.md",
+      "sha256": "bea299bdd61bf85f32df60c1be30be1f300f3374936db259c419953388201e69"
+    },
+    {
+      "path": "R6-network-mcp/record-public-key.pem",
+      "sha256": "8c7e5fef22ee89cdbf93e2a01be56efabeb72b7a052ec9b830472a70c3702d24"
+    },
+    {
+      "path": "R6-network-mcp/run-provenance.csv",
+      "sha256": "4a5fbf71f24487425b0e39604c4f0d0e4dbf708b691782b0cbec36ead43dfb93"
+    },
+    {
+      "path": "R6-network-mcp/transcripts.jsonl",
+      "sha256": "9166f2ea598dd90dd4b66f3465e451c4cbe77abc499a5ae340c61f815a58380e"
+    },
+    {
+      "path": "R7-reexecution/excluded-commands.csv",
+      "sha256": "2c35be6bcff463bec7bef885c5475678d1df8171ae262d937e393eee194fcddb"
+    },
+    {
+      "path": "R7-reexecution/failures.csv",
+      "sha256": "063fa16299e9c02995b9be3d26154a32ee8b2e3a6b080929475e499bd9f9ab01"
+    },
+    {
+      "path": "R7-reexecution/input-hashes.json",
+      "sha256": "9dcc8eab28107eee17a392abaafed534bd38f0b640908eb4f62bc7b5cb3d3016"
+    },
+    {
+      "path": "R7-reexecution/metrics.csv",
+      "sha256": "0ac03ef9a38670dcf99ec0905e430258a551414ed982d13e7b1c3001c9375002"
+    },
+    {
+      "path": "R7-reexecution/per-claim.csv",
+      "sha256": "6474d1c1d0906dfbe343bc6c3c07d007dc7abcff34a8537327bc6d78f1c84ba7"
+    },
+    {
+      "path": "R7-reexecution/raw-results.jsonl",
+      "sha256": "c8c5dd2740ae42f09248cae640dbc6bc8a925ef0eba86a2fb2702cd87e48d505"
+    },
+    {
+      "path": "R7-reexecution/README.md",
+      "sha256": "66f22e5b3d1bca44ec9aaa0985763fd66308cc8c053412c0868b8ff0c7596ce2"
+    },
+    {
+      "path": "R7-reexecution/run-provenance.csv",
+      "sha256": "1ac38b942ac3d065de762619043dd321d0f1f76141dbf2ce45b21161d272b92c"
+    },
+    {
+      "path": "README.md",
+      "sha256": "b30b89bd2c55ec36b18def74e894c45c8ec08c517d92b0627b0ac0fadb90030e"
+    },
+    {
+      "path": "supporting-evidence/acceptance-checks.csv",
+      "sha256": "e6d91ab6b197693b7e90f916b4a769c9e0054289052d248bcddb7286e54f4ee2"
+    },
+    {
+      "path": "supporting-evidence/behavior-basis-100/README.md",
+      "sha256": "fcc49dec6a624d3800b0c0f882c4ff40b92cd5d3a77a42f4bc5a07be4fa6b86c"
+    },
+    {
+      "path": "supporting-evidence/behavior-basis-100/statements.csv",
+      "sha256": "e168cec4e5e578f815152afd2435994a484ac8cc16a554eca34cb5588ef0d651"
+    },
+    {
+      "path": "supporting-evidence/remarks-input-audit-20261029/annotation-availability.csv",
+      "sha256": "ddd7fbff7d9504cf42ad4c263e78724a74be2a14c7d0f020b4ad87d98bce8a07"
+    },
+    {
+      "path": "supporting-evidence/remarks-input-audit-20261029/credential-availability.csv",
+      "sha256": "05c4ff366778a38ba7fb3a7f8ee90d883ca991b6d26c5e2d08150fba1daffe82"
+    },
+    {
+      "path": "supporting-evidence/remarks-input-audit-20261029/README.md",
+      "sha256": "729cd0fac334b0c8ed82f1cb2ce015903112e4b8e6d3aa50dfdd0ffea3eddbf4"
+    },
+    {
+      "path": "supporting-evidence/remarks-r2-history-audit-20261029/credential-history-audit.csv",
+      "sha256": "c5c7606fdf34d6391c236921bd8d72bea30266f3900ef3d4bd8496ac2480b44e"
+    },
+    {
+      "path": "supporting-evidence/remarks-r2-history-audit-20261029/README.md",
+      "sha256": "3a960ce3a4cede09f97c00421e276d6593c3603136d688e2a0d79fd35ac08c20"
+    },
+    {
+      "path": "supporting-evidence/table10-reproduced.csv",
+      "sha256": "909a20a914395310702221a8bfc379f95c01835866b6f6599d0239fac85b0261"
+    }
+  ]
+}

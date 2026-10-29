@@ -118,8 +118,8 @@ describe("verification application service", () => {
     expect(repository.saveExtractedClaim).toHaveBeenCalledWith(
       expect.objectContaining({
         promptId: "prompt-1",
-        extractionPromptVersion: "3.2.0",
-        verificationRuleVersion: "3.1.0",
+        extractionPromptVersion: "3.3.0",
+        verificationRuleVersion: "3.2.0",
       }),
     );
     expect(repository.saveClaimVerification).toHaveBeenCalledWith(

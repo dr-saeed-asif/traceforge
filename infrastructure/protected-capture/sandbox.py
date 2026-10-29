@@ -1,7 +1,7 @@
 """Root-owned Linux tool dispatcher primitives. No host filesystem or network in tools.
 The controlling Windows/WSL administrator is trusted; agent commands are not.
 """
-import ctypes, json, os, resource, shutil, socket, subprocess, sys, sysconfig
+import ctypes, json, os, resource, shutil, socket, stat, subprocess, sys, sysconfig
 from pathlib import Path
 
 COLLECTOR_UID, HOST_UID, AGENT_UID = 61000, 61001, 61002
@@ -9,6 +9,9 @@ COLLECTOR_UID, HOST_UID, AGENT_UID = 61000, 61001, 61002
 def prepare_root(path):
     path=Path(path);path.mkdir(mode=0o755,parents=True)
     for d in ["usr/bin","usr/lib","lib","lib64","bin","run","protected","workspace","tmp"]:(path/d).mkdir(parents=True,exist_ok=True)
+    (path/'dev').mkdir()
+    for name,minor in [('null',3),('random',8),('urandom',9)]:
+        device=path/'dev'/name;os.mknod(device,stat.S_IFCHR|0o666,os.makedev(1,minor));device.chmod(0o666)
     binary=Path(sys.executable).resolve()
     executables={binary:path/"usr/bin/python3",Path("/bin/sh").resolve():path/"bin/sh",Path("/usr/bin/node").resolve():path/"usr/bin/node"}
     for src,dst in executables.items():shutil.copy2(src,dst)
@@ -31,10 +34,11 @@ def prepare_root(path):
     (path/"run/collector.sock").touch()
     return path
 
-def sandbox_preexec(root, store, endpoint):
+def sandbox_preexec(root, store, endpoint, *, loopback=False):
     # Separate namespaces; no /proc, Windows drives, WSL /init, or host credentials.
     libc=ctypes.CDLL(None,use_errno=True)
     if libc.unshare(0x40000000|0x00020000)!=0:raise OSError(ctypes.get_errno(),"Namespace isolation unavailable")
+    if loopback:subprocess.run(['/usr/sbin/ip','link','set','lo','up'],check=True)
     subprocess.run(["mount","--make-rprivate","/"],check=True)
     subprocess.run(["mount","--bind",str(store),str(root/"protected")],check=True)
     subprocess.run(["mount","--bind",str(endpoint),str(root/"run/collector.sock")],check=True)
@@ -44,6 +48,14 @@ def sandbox_preexec(root, store, endpoint):
     resource.setrlimit(resource.RLIMIT_CPU,(10,10));resource.setrlimit(resource.RLIMIT_FSIZE,(2*1024*1024,2*1024*1024));resource.setrlimit(resource.RLIMIT_NOFILE,(64,64));resource.setrlimit(resource.RLIMIT_NPROC,(32,32))
 
 def agent_probe(root,store,endpoint,probe,request=None):
+    host_path=Path(store).parent/'host-only-isolation-sentinel'
+    host_control=None
+    if probe=='host_escape':
+        host_path.write_text('traceforge-host-path-positive-control');host_path.chmod(0o644)
+        def outside_uid():os.setgroups([]);os.setgid(AGENT_UID);os.setuid(AGENT_UID)
+        control=subprocess.run(['/usr/bin/python3','-I','-c','from pathlib import Path; print(Path('+repr(str(host_path))+').read_text())'],capture_output=True,text=True,preexec_fn=outside_uid)
+        host_control=control.returncode==0 and control.stdout.strip()=='traceforge-host-path-positive-control'
+        if not host_control:raise RuntimeError('Linux host-path positive control failed')
     code = r'''
 import json,os,socket
 result={"uid":os.getuid(),"gid":os.getgid(),"probe":PROBE}
@@ -55,14 +67,15 @@ try:
  elif PROBE=="key_read": open("/protected/collector.key","rb").read();result["unexpected_success"]=True
  elif PROBE=="network":
   s=socket.socket();s.settimeout(.2);s.connect(("1.1.1.1",443));result["unexpected_success"]=True
- elif PROBE=="host_escape": open("/mnt/c/Windows/System32/wsl.exe","rb").read();result["unexpected_success"]=True
+ elif PROBE=="host_escape": open(HOST_PATH,"rb").read();result["unexpected_success"]=True
 except OSError as e: result.update({"blocked":True,"errno":e.errno})
 print(json.dumps(result))
-'''.replace("PROBE",repr(probe)).replace("REQUEST",repr((json.dumps(request or {"op":"event","sessionId":"victim","sequence":1,"eventId":"forged","payload":{}})+"\n").encode()))
+'''.replace("PROBE",repr(probe)).replace("HOST_PATH",repr(str(host_path))).replace("REQUEST",repr((json.dumps(request or {"op":"event","sessionId":"victim","sequence":1,"eventId":"forged","payload":{}})+"\n").encode()))
     r=subprocess.run(["/usr/bin/python3","-I","-c",code],capture_output=True,text=True,timeout=15,env={"PATH":"/usr/bin","LANG":"C.UTF-8"},preexec_fn=lambda:sandbox_preexec(root,store,endpoint))
     if r.returncode:raise RuntimeError("Sandbox failed: "+r.stderr[:500])
     value=json.loads(r.stdout)
     if not value.get("blocked") or value.get("unexpected_success"):raise RuntimeError("Sandbox isolation failed: "+json.dumps(value))
+    if probe=='host_escape':value.update({'hostPath':str(host_path),'hostReadableOutsideSandboxAsAgent':host_control,'passed':host_control and value.get('blocked',False)})
     return value
 
 def host_call(endpoint, messages):

@@ -1,0 +1,1 @@
+Repository configuration and annotation availability audit; secret values are never exported. Public wallet addresses do not grant signing or archive authentication. Template values are not usable credentials. Historical committed secrets are compromised and must not be reused. This audit cannot revoke keys at external providers.

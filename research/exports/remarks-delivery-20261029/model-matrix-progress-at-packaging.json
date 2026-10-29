@@ -1,0 +1,48 @@
+[
+  {
+    "model": "qwen3:4b",
+    "seed": "7",
+    "agent": true,
+    "status": "COMPLETE",
+    "exitCode": 0,
+    "analysisExitCode": 0
+  },
+  {
+    "model": "qwen3:4b",
+    "seed": "7",
+    "agent": false,
+    "status": "COMPLETE",
+    "exitCode": 0,
+    "analysisExitCode": 0
+  },
+  {
+    "model": "qwen3:4b",
+    "seed": "17",
+    "agent": false,
+    "status": "RUNNING"
+  },
+  {
+    "model": "qwen3:4b",
+    "seed": "27",
+    "agent": false,
+    "status": "QUEUED"
+  },
+  {
+    "model": "qwen3:8b",
+    "seed": "7",
+    "agent": false,
+    "status": "QUEUED"
+  },
+  {
+    "model": "qwen3:8b",
+    "seed": "17",
+    "agent": false,
+    "status": "QUEUED"
+  },
+  {
+    "model": "qwen3:8b",
+    "seed": "27",
+    "agent": false,
+    "status": "QUEUED"
+  }
+]

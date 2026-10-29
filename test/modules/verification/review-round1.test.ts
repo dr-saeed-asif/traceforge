@@ -85,7 +85,7 @@ describe("T2: strict target matching", () => {
   it("matches a command inside an && chain and a whole-argument test path", () => {
     expect(
       verifyClaim(claim({ claimType: "TEST_PASSED", target: "npm test" }), [
-        testRun(1, "cd app && npm test -- --run"),
+        testRun(1, "cd app && npm test"),
       ]).verdict,
     ).toBe("VERIFIED");
     expect(

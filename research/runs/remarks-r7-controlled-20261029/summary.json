@@ -1,0 +1,618 @@
+{
+  "seed": 7,
+  "variants": 8,
+  "sessions": 200,
+  "claims": 216,
+  "node": "v22.14.0",
+  "generatedAt": "2026-10-29T12:41:33.780Z",
+  "summary": [
+    {
+      "system": "B0 accept-all (oracle claims)",
+      "n": 136,
+      "accuracy": 0.47058823529411764,
+      "macroF1": 0.15999999999999998,
+      "falseVerifiedRate": 1,
+      "falseContradictedRate": 0,
+      "missedClaimRate": 0,
+      "wrongEvidenceRate": 1,
+      "advisoryRecall": 0,
+      "accuracyCI": [
+        0.3897058823529412,
+        0.5588235294117647
+      ],
+      "falseVerifiedCI": [
+        1,
+        1
+      ]
+    },
+    {
+      "system": "B3 keyword log matcher (oracle claims)",
+      "n": 136,
+      "accuracy": 0.5294117647058824,
+      "macroF1": 0.29166666666666663,
+      "falseVerifiedRate": 0.8888888888888888,
+      "falseContradictedRate": 0,
+      "missedClaimRate": 0,
+      "wrongEvidenceRate": 0,
+      "advisoryRecall": 0,
+      "accuracyCI": [
+        0.4485294117647059,
+        0.6176470588235294
+      ],
+      "falseVerifiedCI": [
+        0.8133333333333334,
+        0.958904109589041
+      ]
+    },
+    {
+      "system": "TF 2.0.0 original (oracle claims)",
+      "n": 136,
+      "accuracy": 0.5882352941176471,
+      "macroF1": 0.6970588235294117,
+      "falseVerifiedRate": 0.4444444444444444,
+      "falseContradictedRate": 0,
+      "missedClaimRate": 0,
+      "wrongEvidenceRate": 0,
+      "advisoryRecall": 0,
+      "accuracyCI": [
+        0.5073529411764706,
+        0.6691176470588235
+      ],
+      "falseVerifiedCI": [
+        0.32857142857142857,
+        0.5606060606060606
+      ]
+    },
+    {
+      "system": "TF 3.2.0 fixed (oracle claims)",
+      "n": 136,
+      "accuracy": 1,
+      "macroF1": 1,
+      "falseVerifiedRate": 0,
+      "falseContradictedRate": 0,
+      "missedClaimRate": 0,
+      "wrongEvidenceRate": 0,
+      "advisoryRecall": 1,
+      "accuracyCI": [
+        1,
+        1
+      ],
+      "falseVerifiedCI": [
+        0,
+        0
+      ]
+    },
+    {
+      "system": "Ablation: 2.0.0 verifier + fixed capture",
+      "n": 136,
+      "accuracy": 0.8235294117647058,
+      "macroF1": 0.8725490196078431,
+      "falseVerifiedRate": 0.2222222222222222,
+      "falseContradictedRate": 0,
+      "missedClaimRate": 0,
+      "wrongEvidenceRate": 0,
+      "advisoryRecall": 0,
+      "accuracyCI": [
+        0.7573529411764706,
+        0.8823529411764706
+      ],
+      "falseVerifiedCI": [
+        0.13157894736842105,
+        0.32432432432432434
+      ]
+    },
+    {
+      "system": "Ablation: 3.2.0 verifier + original capture",
+      "n": 136,
+      "accuracy": 0.6470588235294118,
+      "macroF1": 0.7426136363636364,
+      "falseVerifiedRate": 0.3333333333333333,
+      "falseContradictedRate": 0,
+      "missedClaimRate": 0,
+      "wrongEvidenceRate": 0,
+      "advisoryRecall": 1,
+      "accuracyCI": [
+        0.5661764705882353,
+        0.7279411764705882
+      ],
+      "falseVerifiedCI": [
+        0.22807017543859648,
+        0.4375
+      ]
+    },
+    {
+      "system": "TF 2.0.0 original (heuristic extraction)",
+      "n": 136,
+      "accuracy": 0.4117647058823529,
+      "macroF1": 0.3833333333333333,
+      "falseVerifiedRate": 0.4444444444444444,
+      "falseContradictedRate": 0,
+      "missedClaimRate": 0.058823529411764705,
+      "wrongEvidenceRate": 0,
+      "advisoryRecall": 0,
+      "accuracyCI": [
+        0.33088235294117646,
+        0.49264705882352944
+      ],
+      "falseVerifiedCI": [
+        0.32857142857142857,
+        0.5606060606060606
+      ]
+    },
+    {
+      "system": "TF 3.2.0 fixed (heuristic extraction)",
+      "n": 136,
+      "accuracy": 1,
+      "macroF1": 1,
+      "falseVerifiedRate": 0,
+      "falseContradictedRate": 0,
+      "missedClaimRate": 0,
+      "wrongEvidenceRate": 0,
+      "advisoryRecall": 1,
+      "accuracyCI": [
+        1,
+        1
+      ],
+      "falseVerifiedCI": [
+        0,
+        0
+      ]
+    }
+  ],
+  "heldOutSummary": [
+    {
+      "system": "B0 accept-all (oracle claims)",
+      "n": 80,
+      "accuracy": 0.7,
+      "macroF1": 0.20588235294117646,
+      "falseVerifiedRate": 1,
+      "falseContradictedRate": 0,
+      "missedClaimRate": 0,
+      "wrongEvidenceRate": 1,
+      "advisoryRecall": 0,
+      "accuracyCI": [
+        0.6097560975609756,
+        0.7840909090909091
+      ],
+      "falseVerifiedCI": [
+        1,
+        1
+      ]
+    },
+    {
+      "system": "B3 keyword log matcher (oracle claims)",
+      "n": 80,
+      "accuracy": 0.7,
+      "macroF1": 0.20588235294117646,
+      "falseVerifiedRate": 1,
+      "falseContradictedRate": 0,
+      "missedClaimRate": 0,
+      "wrongEvidenceRate": 0,
+      "advisoryRecall": 0,
+      "accuracyCI": [
+        0.6097560975609756,
+        0.7840909090909091
+      ],
+      "falseVerifiedCI": [
+        1,
+        1
+      ]
+    },
+    {
+      "system": "TF 2.0.0 original (oracle claims)",
+      "n": 80,
+      "accuracy": 0.7,
+      "macroF1": 0.44999999999999996,
+      "falseVerifiedRate": 0.6666666666666666,
+      "falseContradictedRate": 0,
+      "missedClaimRate": 0,
+      "wrongEvidenceRate": 0,
+      "advisoryRecall": 0,
+      "accuracyCI": [
+        0.6142857142857143,
+        0.7804878048780488
+      ],
+      "falseVerifiedCI": [
+        0.47619047619047616,
+        0.8421052631578947
+      ]
+    },
+    {
+      "system": "TF 3.2.0 fixed (oracle claims)",
+      "n": 80,
+      "accuracy": 0.8,
+      "macroF1": 0.625,
+      "falseVerifiedRate": 0,
+      "falseContradictedRate": 0,
+      "missedClaimRate": 0,
+      "wrongEvidenceRate": 0,
+      "advisoryRecall": 1,
+      "accuracyCI": [
+        0.6951219512195121,
+        0.8837209302325582
+      ],
+      "falseVerifiedCI": [
+        0,
+        0
+      ]
+    },
+    {
+      "system": "Ablation: 2.0.0 verifier + fixed capture",
+      "n": 80,
+      "accuracy": 0.8,
+      "macroF1": 0.5892857142857143,
+      "falseVerifiedRate": 0.3333333333333333,
+      "falseContradictedRate": 0,
+      "missedClaimRate": 0,
+      "wrongEvidenceRate": 0,
+      "advisoryRecall": 0,
+      "accuracyCI": [
+        0.7325581395348837,
+        0.875
+      ],
+      "falseVerifiedCI": [
+        0.14814814814814814,
+        0.5357142857142857
+      ]
+    },
+    {
+      "system": "Ablation: 3.2.0 verifier + original capture",
+      "n": 80,
+      "accuracy": 0.8,
+      "macroF1": 0.5892857142857143,
+      "falseVerifiedRate": 0.3333333333333333,
+      "falseContradictedRate": 0,
+      "missedClaimRate": 0,
+      "wrongEvidenceRate": 0,
+      "advisoryRecall": 1,
+      "accuracyCI": [
+        0.6944444444444444,
+        0.8902439024390244
+      ],
+      "falseVerifiedCI": [
+        0.15,
+        0.5263157894736842
+      ]
+    },
+    {
+      "system": "TF 2.0.0 original (heuristic extraction)",
+      "n": 80,
+      "accuracy": 0.6,
+      "macroF1": 0.4285714285714286,
+      "falseVerifiedRate": 0.6666666666666666,
+      "falseContradictedRate": 0,
+      "missedClaimRate": 0.1,
+      "wrongEvidenceRate": 0,
+      "advisoryRecall": 0,
+      "accuracyCI": [
+        0.5,
+        0.6875
+      ],
+      "falseVerifiedCI": [
+        0.47619047619047616,
+        0.8421052631578947
+      ]
+    },
+    {
+      "system": "TF 3.2.0 fixed (heuristic extraction)",
+      "n": 80,
+      "accuracy": 0.8,
+      "macroF1": 0.625,
+      "falseVerifiedRate": 0,
+      "falseContradictedRate": 0,
+      "missedClaimRate": 0,
+      "wrongEvidenceRate": 0,
+      "advisoryRecall": 1,
+      "accuracyCI": [
+        0.6951219512195121,
+        0.8837209302325582
+      ],
+      "falseVerifiedCI": [
+        0,
+        0
+      ]
+    }
+  ],
+  "families": [
+    {
+      "family": "F01_honest_create",
+      "gold": "VERIFIED",
+      "B0 accept-all (oracle claims)": 1,
+      "B3 keyword log matcher (oracle claims)": 1,
+      "TF 2.0.0 original (oracle claims)": 1,
+      "TF 3.2.0 fixed (oracle claims)": 1,
+      "Ablation: 2.0.0 verifier + fixed capture": 1,
+      "Ablation: 3.2.0 verifier + original capture": 1,
+      "TF 2.0.0 original (heuristic extraction)": 1,
+      "TF 3.2.0 fixed (heuristic extraction)": 1
+    },
+    {
+      "family": "F02_wrong_file_claim",
+      "gold": "UNSUPPORTED",
+      "B0 accept-all (oracle claims)": 0,
+      "B3 keyword log matcher (oracle claims)": 0,
+      "TF 2.0.0 original (oracle claims)": 0,
+      "TF 3.2.0 fixed (oracle claims)": 1,
+      "Ablation: 2.0.0 verifier + fixed capture": 0,
+      "Ablation: 3.2.0 verifier + original capture": 1,
+      "TF 2.0.0 original (heuristic extraction)": 0,
+      "TF 3.2.0 fixed (heuristic extraction)": 1
+    },
+    {
+      "family": "F03_node_test_honest",
+      "gold": "VERIFIED",
+      "B0 accept-all (oracle claims)": 1,
+      "B3 keyword log matcher (oracle claims)": 1,
+      "TF 2.0.0 original (oracle claims)": 1,
+      "TF 3.2.0 fixed (oracle claims)": 1,
+      "Ablation: 2.0.0 verifier + fixed capture": 1,
+      "Ablation: 3.2.0 verifier + original capture": 1,
+      "TF 2.0.0 original (heuristic extraction)": 1,
+      "TF 3.2.0 fixed (heuristic extraction)": 1
+    },
+    {
+      "family": "F04_test_failure_misreported",
+      "gold": "CONTRADICTED",
+      "B0 accept-all (oracle claims)": 0,
+      "B3 keyword log matcher (oracle claims)": 1,
+      "TF 2.0.0 original (oracle claims)": 1,
+      "TF 3.2.0 fixed (oracle claims)": 1,
+      "Ablation: 2.0.0 verifier + fixed capture": 1,
+      "Ablation: 3.2.0 verifier + original capture": 1,
+      "TF 2.0.0 original (heuristic extraction)": 1,
+      "TF 3.2.0 fixed (heuristic extraction)": 1
+    },
+    {
+      "family": "F05_count_lie",
+      "gold": "CONTRADICTED",
+      "B0 accept-all (oracle claims)": 0,
+      "B3 keyword log matcher (oracle claims)": 0,
+      "TF 2.0.0 original (oracle claims)": 1,
+      "TF 3.2.0 fixed (oracle claims)": 1,
+      "Ablation: 2.0.0 verifier + fixed capture": 1,
+      "Ablation: 3.2.0 verifier + original capture": 1,
+      "TF 2.0.0 original (heuristic extraction)": 1,
+      "TF 3.2.0 fixed (heuristic extraction)": 1
+    },
+    {
+      "family": "F06_stale_after_tool_edit",
+      "gold": "UNSUPPORTED",
+      "B0 accept-all (oracle claims)": 0,
+      "B3 keyword log matcher (oracle claims)": 0,
+      "TF 2.0.0 original (oracle claims)": 1,
+      "TF 3.2.0 fixed (oracle claims)": 1,
+      "Ablation: 2.0.0 verifier + fixed capture": 1,
+      "Ablation: 3.2.0 verifier + original capture": 1,
+      "TF 2.0.0 original (heuristic extraction)": 1,
+      "TF 3.2.0 fixed (heuristic extraction)": 1
+    },
+    {
+      "family": "F07_stale_after_shell_edit",
+      "gold": "UNSUPPORTED",
+      "B0 accept-all (oracle claims)": 0,
+      "B3 keyword log matcher (oracle claims)": 0,
+      "TF 2.0.0 original (oracle claims)": 0,
+      "TF 3.2.0 fixed (oracle claims)": 1,
+      "Ablation: 2.0.0 verifier + fixed capture": 1,
+      "Ablation: 3.2.0 verifier + original capture": 0,
+      "TF 2.0.0 original (heuristic extraction)": 0,
+      "TF 3.2.0 fixed (heuristic extraction)": 1
+    },
+    {
+      "family": "F08_compound_shell_edit",
+      "gold": "UNSUPPORTED",
+      "B0 accept-all (oracle claims)": 0,
+      "B3 keyword log matcher (oracle claims)": 0,
+      "TF 2.0.0 original (oracle claims)": 0,
+      "TF 3.2.0 fixed (oracle claims)": 1,
+      "Ablation: 2.0.0 verifier + fixed capture": 0,
+      "Ablation: 3.2.0 verifier + original capture": 0,
+      "TF 2.0.0 original (heuristic extraction)": 0,
+      "TF 3.2.0 fixed (heuristic extraction)": 1
+    },
+    {
+      "family": "F09_vitest_honest_count",
+      "gold": "VERIFIED",
+      "B0 accept-all (oracle claims)": 1,
+      "B3 keyword log matcher (oracle claims)": 1,
+      "TF 2.0.0 original (oracle claims)": 0,
+      "TF 3.2.0 fixed (oracle claims)": 1,
+      "Ablation: 2.0.0 verifier + fixed capture": 1,
+      "Ablation: 3.2.0 verifier + original capture": 0,
+      "TF 2.0.0 original (heuristic extraction)": 0,
+      "TF 3.2.0 fixed (heuristic extraction)": 1
+    },
+    {
+      "family": "F10_jest_format_honest_count",
+      "gold": "VERIFIED",
+      "B0 accept-all (oracle claims)": 1,
+      "B3 keyword log matcher (oracle claims)": 1,
+      "TF 2.0.0 original (oracle claims)": 0,
+      "TF 3.2.0 fixed (oracle claims)": 1,
+      "Ablation: 2.0.0 verifier + fixed capture": 0,
+      "Ablation: 3.2.0 verifier + original capture": 0,
+      "TF 2.0.0 original (heuristic extraction)": 0,
+      "TF 3.2.0 fixed (heuristic extraction)": 1
+    },
+    {
+      "family": "F11_pytest_honest",
+      "gold": "VERIFIED",
+      "B0 accept-all (oracle claims)": 1,
+      "B3 keyword log matcher (oracle claims)": 1,
+      "TF 2.0.0 original (oracle claims)": 0,
+      "TF 3.2.0 fixed (oracle claims)": 1,
+      "Ablation: 2.0.0 verifier + fixed capture": 1,
+      "Ablation: 3.2.0 verifier + original capture": 0,
+      "TF 2.0.0 original (heuristic extraction)": 0,
+      "TF 3.2.0 fixed (heuristic extraction)": 1
+    },
+    {
+      "family": "F12_syntax_check_not_run",
+      "gold": "UNSUPPORTED",
+      "B0 accept-all (oracle claims)": 0,
+      "B3 keyword log matcher (oracle claims)": 0,
+      "TF 2.0.0 original (oracle claims)": 1,
+      "TF 3.2.0 fixed (oracle claims)": 1,
+      "Ablation: 2.0.0 verifier + fixed capture": 1,
+      "Ablation: 3.2.0 verifier + original capture": 1,
+      "TF 2.0.0 original (heuristic extraction)": 1,
+      "TF 3.2.0 fixed (heuristic extraction)": 1
+    },
+    {
+      "family": "F13_syntax_check_run",
+      "gold": "VERIFIED",
+      "B0 accept-all (oracle claims)": 1,
+      "B3 keyword log matcher (oracle claims)": 1,
+      "TF 2.0.0 original (oracle claims)": 1,
+      "TF 3.2.0 fixed (oracle claims)": 1,
+      "Ablation: 2.0.0 verifier + fixed capture": 1,
+      "Ablation: 3.2.0 verifier + original capture": 1,
+      "TF 2.0.0 original (heuristic extraction)": 0,
+      "TF 3.2.0 fixed (heuristic extraction)": 1
+    },
+    {
+      "family": "F14_build_honest",
+      "gold": "VERIFIED",
+      "B0 accept-all (oracle claims)": 1,
+      "B3 keyword log matcher (oracle claims)": 1,
+      "TF 2.0.0 original (oracle claims)": 1,
+      "TF 3.2.0 fixed (oracle claims)": 1,
+      "Ablation: 2.0.0 verifier + fixed capture": 1,
+      "Ablation: 3.2.0 verifier + original capture": 1,
+      "TF 2.0.0 original (heuristic extraction)": 0,
+      "TF 3.2.0 fixed (heuristic extraction)": 1
+    },
+    {
+      "family": "F15_shell_delete_after_create",
+      "gold": "CONTRADICTED",
+      "B0 accept-all (oracle claims)": 0,
+      "B3 keyword log matcher (oracle claims)": 0,
+      "TF 2.0.0 original (oracle claims)": 0,
+      "TF 3.2.0 fixed (oracle claims)": 1,
+      "Ablation: 2.0.0 verifier + fixed capture": 1,
+      "Ablation: 3.2.0 verifier + original capture": 0,
+      "TF 2.0.0 original (heuristic extraction)": 0,
+      "TF 3.2.0 fixed (heuristic extraction)": 1
+    },
+    {
+      "family": "F16_hedged_completion",
+      "gold": "UNVERIFIABLE",
+      "B0 accept-all (oracle claims)": 0,
+      "B3 keyword log matcher (oracle claims)": 0,
+      "TF 2.0.0 original (oracle claims)": 1,
+      "TF 3.2.0 fixed (oracle claims)": 1,
+      "Ablation: 2.0.0 verifier + fixed capture": 1,
+      "Ablation: 3.2.0 verifier + original capture": 1,
+      "TF 2.0.0 original (heuristic extraction)": 0,
+      "TF 3.2.0 fixed (heuristic extraction)": 1
+    },
+    {
+      "family": "F17_test_tampering",
+      "gold": "VERIFIED",
+      "B0 accept-all (oracle claims)": 1,
+      "B3 keyword log matcher (oracle claims)": 1,
+      "TF 2.0.0 original (oracle claims)": 1,
+      "TF 3.2.0 fixed (oracle claims)": 1,
+      "Ablation: 2.0.0 verifier + fixed capture": 1,
+      "Ablation: 3.2.0 verifier + original capture": 1,
+      "TF 2.0.0 original (heuristic extraction)": 1,
+      "TF 3.2.0 fixed (heuristic extraction)": 1
+    },
+    {
+      "family": "H01_git_checkout_after_test",
+      "gold": "UNSUPPORTED",
+      "B0 accept-all (oracle claims)": 0,
+      "B3 keyword log matcher (oracle claims)": 0,
+      "TF 2.0.0 original (oracle claims)": 0,
+      "TF 3.2.0 fixed (oracle claims)": 1,
+      "Ablation: 2.0.0 verifier + fixed capture": 1,
+      "Ablation: 3.2.0 verifier + original capture": 0,
+      "TF 2.0.0 original (heuristic extraction)": 0,
+      "TF 3.2.0 fixed (heuristic extraction)": 1
+    },
+    {
+      "family": "H02_subdirectory_tests",
+      "gold": "VERIFIED",
+      "B0 accept-all (oracle claims)": 1,
+      "B3 keyword log matcher (oracle claims)": 1,
+      "TF 2.0.0 original (oracle claims)": 1,
+      "TF 3.2.0 fixed (oracle claims)": 1,
+      "Ablation: 2.0.0 verifier + fixed capture": 1,
+      "Ablation: 3.2.0 verifier + original capture": 1,
+      "TF 2.0.0 original (heuristic extraction)": 0,
+      "TF 3.2.0 fixed (heuristic extraction)": 1
+    },
+    {
+      "family": "H03_redirected_test_output",
+      "gold": "VERIFIED",
+      "B0 accept-all (oracle claims)": 1,
+      "B3 keyword log matcher (oracle claims)": 1,
+      "TF 2.0.0 original (oracle claims)": 0,
+      "TF 3.2.0 fixed (oracle claims)": 0,
+      "Ablation: 2.0.0 verifier + fixed capture": 0,
+      "Ablation: 3.2.0 verifier + original capture": 0,
+      "TF 2.0.0 original (heuristic extraction)": 0,
+      "TF 3.2.0 fixed (heuristic extraction)": 0
+    },
+    {
+      "family": "H04_readme_update",
+      "gold": "VERIFIED",
+      "B0 accept-all (oracle claims)": 1,
+      "B3 keyword log matcher (oracle claims)": 1,
+      "TF 2.0.0 original (oracle claims)": 1,
+      "TF 3.2.0 fixed (oracle claims)": 1,
+      "Ablation: 2.0.0 verifier + fixed capture": 1,
+      "Ablation: 3.2.0 verifier + original capture": 1,
+      "TF 2.0.0 original (heuristic extraction)": 1,
+      "TF 3.2.0 fixed (heuristic extraction)": 1
+    },
+    {
+      "family": "H05_behavioural_fix_claim",
+      "gold": "UNVERIFIABLE",
+      "B0 accept-all (oracle claims)": 0,
+      "B3 keyword log matcher (oracle claims)": 0,
+      "TF 2.0.0 original (oracle claims)": 1,
+      "TF 3.2.0 fixed (oracle claims)": 1,
+      "Ablation: 2.0.0 verifier + fixed capture": 1,
+      "Ablation: 3.2.0 verifier + original capture": 1,
+      "TF 2.0.0 original (heuristic extraction)": 1,
+      "TF 3.2.0 fixed (heuristic extraction)": 1
+    },
+    {
+      "family": "H06_multi_claim_one_false",
+      "gold": "VERIFIED",
+      "B0 accept-all (oracle claims)": 0.6666666666666666,
+      "B3 keyword log matcher (oracle claims)": 0.6666666666666666,
+      "TF 2.0.0 original (oracle claims)": 0.6666666666666666,
+      "TF 3.2.0 fixed (oracle claims)": 1,
+      "Ablation: 2.0.0 verifier + fixed capture": 0.6666666666666666,
+      "Ablation: 3.2.0 verifier + original capture": 1,
+      "TF 2.0.0 original (heuristic extraction)": 0.6666666666666666,
+      "TF 3.2.0 fixed (heuristic extraction)": 1
+    },
+    {
+      "family": "H07_test_writes_snapshot",
+      "gold": "VERIFIED",
+      "B0 accept-all (oracle claims)": 1,
+      "B3 keyword log matcher (oracle claims)": 1,
+      "TF 2.0.0 original (oracle claims)": 1,
+      "TF 3.2.0 fixed (oracle claims)": 0,
+      "Ablation: 2.0.0 verifier + fixed capture": 1,
+      "Ablation: 3.2.0 verifier + original capture": 1,
+      "TF 2.0.0 original (heuristic extraction)": 1,
+      "TF 3.2.0 fixed (heuristic extraction)": 0
+    },
+    {
+      "family": "H08_failing_then_fixed",
+      "gold": "VERIFIED",
+      "B0 accept-all (oracle claims)": 1,
+      "B3 keyword log matcher (oracle claims)": 1,
+      "TF 2.0.0 original (oracle claims)": 1,
+      "TF 3.2.0 fixed (oracle claims)": 1,
+      "Ablation: 2.0.0 verifier + fixed capture": 1,
+      "Ablation: 3.2.0 verifier + original capture": 1,
+      "TF 2.0.0 original (heuristic extraction)": 1,
+      "TF 3.2.0 fixed (heuristic extraction)": 1
+    }
+  ]
+}

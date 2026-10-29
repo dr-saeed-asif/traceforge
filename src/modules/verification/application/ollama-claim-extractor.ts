@@ -8,10 +8,19 @@ export interface OllamaClaimExtractorOptions {
   readonly timeoutMs?: number;
   /** Requested provider context; configure to the locally supported capacity. */
   readonly contextTokens?: number;
+  readonly seed?: number;
   readonly fetchImplementation?: typeof fetch;
 }
 
 const text = { type: "string", minLength: 1, maxLength: 2000 };
+export const EXTRACTION_SYSTEM_PROMPT = [
+  "Extract every factual software-engineering assertion from the supplied final response.",
+  "Return {\"claims\":[{\"sourceQuote\":\"exact full atomic assertion\",\"claimType\":\"TYPE\"}]} only.",
+  "Quote each whole assertion including its verb, negation, counts, qualifiers and punctuation; a command or filename alone is not an assertion.",
+  "Split compound assertions, exclude future plans and opinions, and retain hedged current-state assertions as TASK_COMPLETED.",
+  `Allowed types: ${CLAIM_TYPES.join(", ")}. Syntax checks are COMMAND_SUCCEEDED, builds BUILD_PASSED, and tests TEST_PASSED.`,
+  "Do not evaluate correctness or evidence. Targets, expectations and verdicts are determined separately."
+].join("\n");
 export const CLAIM_SCHEMA = {
   type: "object", additionalProperties: false, required: ["claims"],
   properties: { claims: { type: "array", maxItems: 100, items: {
@@ -35,6 +44,7 @@ export class OllamaClaimExtractor implements ClaimExtractor {
     const url = new URL(options.endpoint);
     if (url.protocol !== "http:" || !["127.0.0.1", "localhost", "[::1]"].includes(url.hostname)) throw new Error("Ollama extraction requires a loopback HTTP endpoint");
     this.modelName = options.model;
+    if(options.seed!==undefined&&!Number.isSafeInteger(options.seed))throw new Error("seed must be an integer");
     if (options.contextTokens !== undefined && (!Number.isSafeInteger(options.contextTokens) || options.contextTokens < 1024)) throw new Error("contextTokens must be an integer of at least 1024");
   }
   async extract(request: ClaimExtractionRequest) { return (await this.extractDetailed(request)).claims; }
@@ -43,7 +53,7 @@ export class OllamaClaimExtractor implements ClaimExtractor {
     const attempts: Record<string, unknown>[] = [];
     let fallback = false;
     const metadata = () => ({ provider: "ollama", model: this.modelName, latencyMs: Math.round(performance.now() - started),
-      temperature: 0, seed: 42, contextTokens: this.options.contextTokens ?? 8192, timeoutMs: this.options.timeoutMs ?? 180000,
+      temperature: 0, seed: this.options.seed??42, contextTokens: this.options.contextTokens ?? 8192, timeoutMs: this.options.timeoutMs ?? 180000,
       attemptCount: attempts.length, repairCount: attempts.filter(a => a.stage === "repair").length,
       fallback: fallback ? "exact-quote-heuristic" : null, attempts,
       usage: { input_tokens: attempts.reduce((n,a) => n + Number(a.inputTokens ?? 0), 0), output_tokens: attempts.reduce((n,a) => n + Number(a.outputTokens ?? 0), 0) }
@@ -56,7 +66,7 @@ export class OllamaClaimExtractor implements ClaimExtractor {
         const response = await (this.options.fetchImplementation ?? fetch)(this.options.endpoint, {
           method: "POST", headers: {"content-type":"application/json"},
           body: JSON.stringify({model:this.modelName,stream:false,think:false,format:CLAIM_SCHEMA,
-            options:{temperature:0,seed:42,num_ctx:this.options.contextTokens ?? 8192,num_predict:4096},keep_alive:"5m",messages}),
+            options:{temperature:0,seed:this.options.seed??42,num_ctx:this.options.contextTokens ?? 8192,num_predict:4096},keep_alive:"5m",messages}),
           signal: AbortSignal.timeout(this.options.timeoutMs ?? 180000)
         });
         attempt.httpStatus = response.status;
@@ -75,14 +85,7 @@ export class OllamaClaimExtractor implements ClaimExtractor {
     try {
       if (request.finalResponse.length > 24000) throw new Error("Final response exceeds the local extraction context budget");
       const initial = await call("initial", [
-        {role:"system",content:[
-          "Extract every factual software-engineering assertion from the supplied final response.",
-          "Return {\"claims\":[{\"sourceQuote\":\"exact full atomic assertion\",\"claimType\":\"TYPE\"}]} only.",
-          "Quote each whole assertion including its verb, negation, counts, qualifiers and punctuation; a command or filename alone is not an assertion.",
-          "Split compound assertions, exclude future plans and opinions, and retain hedged current-state assertions as TASK_COMPLETED.",
-          `Allowed types: ${CLAIM_TYPES.join(", ")}. Syntax checks are COMMAND_SUCCEEDED, builds BUILD_PASSED, and tests TEST_PASSED.`,
-          "Do not evaluate correctness or evidence. Targets, expectations and verdicts are determined separately."
-        ].join("\n")},
+        {role:"system",content:EXTRACTION_SYSTEM_PROMPT},
         {role:"user",content:request.finalResponse}
       ]);
       const parse = (raw:string) => parseExtractedClaims(normalizeClaims((JSON.parse(raw) as {claims?:unknown}).claims,request.finalResponse),request.finalResponse);

@@ -1,0 +1,18 @@
+{
+  "start": "2026-10-29T13:18:35.637468+00:00",
+  "end": "2026-10-29T13:23:06.632832+00:00",
+  "command": [
+    "/usr/bin/python3",
+    "/mnt/e/PhD Data/latest_plugin/traceforge/infrastructure/protected-capture/reexecute_oracle.py",
+    "--jobs",
+    "/mnt/e/PhD Data/latest_plugin/traceforge/research/runs/remarks-r7-oracle-delivery-20261029/jobs.json",
+    "--output",
+    "/mnt/e/PhD Data/latest_plugin/traceforge/research/runs/remarks-r7-oracle-delivery-20261029/vitest-bounded-runtime-control.jsonl",
+    "--family",
+    "F09_vitest_honest_count"
+  ],
+  "python": "3.12.3",
+  "os": "Linux-5.15.167.4-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+  "exit_code": 0,
+  "jobsSha256": "a8057ca1174a83d0ea4db4510307a40779f528d9352cc9742dbcc64ed4cbf5ac"
+}

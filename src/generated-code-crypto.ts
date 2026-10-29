@@ -1,4 +1,4 @@
-import { createCipheriv, createDecipheriv, randomBytes } from "node:crypto";
+import { createCipheriv, createDecipheriv, createHash, randomBytes } from "node:crypto";
 
 export interface EncryptedGeneratedCode {
   readonly version: 1;
@@ -18,6 +18,8 @@ export function parseGeneratedCodeKey(value: string | undefined): Buffer {
 }
 
 export function encryptGeneratedCode(value: unknown, key: Buffer): EncryptedGeneratedCode {
+  if(createHash('sha256').update(key.toString('base64')).digest('hex')==='8f1fc09e7f31734b0a288a1c147e71aeefdc7591e8fb65faa3a9e7e699b85d95')
+    throw new Error('The historical generated-code encryption key is exposed. Rotate it before encrypting new data; retain restricted legacy decryption only for migration.');
   const iv = randomBytes(12);
   const cipher = createCipheriv("aes-256-gcm", key, iv);
   const ciphertext = Buffer.concat([cipher.update(JSON.stringify(value), "utf8"), cipher.final()]);

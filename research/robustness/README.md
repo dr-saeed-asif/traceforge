@@ -75,8 +75,14 @@ silently dropped. No monetary cost is inferred from local-model token counts.
 
 `CAPTURE-ACCEPTANCE.md` resolves the threat boundary, missing-tail detection,
 hook-disable test, invalid-session behavior and reason-code mapping. It is a
-design contract for E4, **not an implemented security guarantee**. Trusted OS
-accounts, protected tool dispatch and collector deployment are still required.
+design contract for E4. **The experimental Linux profile 3.2.0-capture.1 is now
+implemented and locally deployed**, with separate UIDs, protected dispatch and
+signed completion seals. See `infrastructure/protected-capture/README.md` and
+`research/exports/protected-capture-20261029/`. The legacy Windows outbox and
+live OpenCode integration remain unprotected; authenticated replay is not a
+live-agent evaluation.
 
-This work does not rotate keys, rewrite Git history, publish/tag a release,
-deploy contracts, assert missing remote traces do not exist, or implement E6/E7.
+The frozen replay itself does not rotate keys, rewrite Git history, publish a
+release or deploy contracts. New matching/extraction versions are additional
+experiments under `research/revision-r1/`; keep their rows separate. Remote
+trace retention and external publication cannot be inferred from local files.

@@ -197,6 +197,10 @@ function verifyPreparedClaim(
       new Set(candidates.map(event => commandIdentity(eventTarget(event)))).size > 1) {
     return result(claim, { verdict: "UNSUPPORTED", reasonCode: "MATCHING_EVIDENCE_NOT_FOUND", explanation: "The claim does not identify which of several different commands it refers to.", evidence: [] }, ruleVersion);
   }
+  if (options.targetMatching !== "legacy-token" && ["FILE_CREATED", "FILE_MODIFIED"].includes(claim.claimType) &&
+      new Set(candidates.map(event => eventTarget(event).replace(/\\/gu,"/").replace(/^\.\//u,""))).size > 1) {
+    return result(claim, unsupported("Ambiguous file suffix matches multiple distinct observed paths.", []), ruleVersion);
+  }
   const decision = rule({
     ...(options.freshness === undefined ? {} : { freshness: options.freshness }),
     claim,
@@ -729,10 +733,14 @@ function targetMatches(
   if (["COMMAND_SUCCEEDED", "TEST_PASSED", "BUILD_PASSED"].includes(claimType)) {
     if (GENERIC_COMMAND_TARGETS.has(label)) return true;
     const expected = commandIdentity(target);
-    const segments = eventTarget(event).split(/\s*&&\s*/u).map(commandIdentity);
-    if (segments.some(actual => actual === expected || actual.startsWith(`${expected}\u0000`))) return true;
+    const segments = splitCommandSegments(eventTarget(event)).map(commandIdentity);
+    if (segments.some(actual => admissibleCommandMatch(expected,actual))) return true;
     if (/[/.]/u.test(target) && !/\s/u.test(target)) {
-      return segments.some(segment => segment.split("\u0000").some(arg => pathMatches(target, arg.replace(/^["']|["']$/gu, ""))));
+      return segments.some(segment => {
+        const args=segment.split("\u0000"),program=args[0]?.split(/[\\/]/u).at(-1);
+        return /^(?:node|python(?:3(?:\.\d+)?)?|bash|sh|deno|bun|tsx|ts-node)$/u.test(program??"") &&
+          args.slice(1).some(arg => pathMatches(target,arg.replace(/^["']|["']$/gu,"")));
+      });
     }
     return false;
   }
@@ -741,9 +749,38 @@ function targetMatches(
 
 }
 
+/** Extensions cannot silently narrow a test invocation or change its mode. */
+function admissibleCommandMatch(expected:string,actual:string):boolean {
+  if(actual===expected)return true;
+  if(!actual.startsWith(`${expected}\u0000`))return false;
+  const base=expected.split("\u0000"),extra=actual.split("\u0000").slice(base.length);
+  if(extra.some(arg=>/^(?:--|-t|--testNamePattern|-k|--grep|-g|--dry-run|--watch|--listTests|--onlyChanged)(?:=|$)/u.test(arg)))return false;
+  const runner=base.some(arg=>/^(?:tests?|pytest|vitest|jest|mocha|ava|phpunit|nextest)$/u.test(arg))||base.some(arg=>arg==="--test");
+  // Unknown runner extensions may carry selectors. Require explicit claims
+  // rather than guessing their semantics (includes file/directory operands).
+  return !runner;
+}
+
 /** Flags, operands, case, and quoted whitespace remain significant. */
 function commandIdentity(value: string): string {
   return (value.trim().match(/"(?:\\.|[^"\\])*"|'[^']*'|[^\s]+/gu) ?? []).join("\u0000");
+}
+
+/** An && inside a quoted argument or substitution is data, not a sibling
+ * invocation whose successful completion can be inferred from this event. */
+function splitCommandSegments(command:string):string[] {
+  const parts:string[]=[];let quote='',escaped=false,depth=0,start=0;
+  for(let i=0;i<command.length;i++){
+    const ch=command[i]!;
+    if(escaped){escaped=false;continue;}
+    if(ch==='\\'&&quote!=="'"){escaped=true;continue;}
+    if(quote){if(ch===quote)quote='';continue;}
+    if(ch==='"'||ch==="'"){quote=ch;continue;}
+    if(ch==='('||ch==='{')depth++;else if(ch===')'||ch==='}')depth=Math.max(0,depth-1);
+    if(depth===0&&ch==='&'&&command[i+1]==='&'){parts.push(command.slice(start,i));start=i+2;i++;}
+  }
+  if(quote||escaped||depth)return [];
+  parts.push(command.slice(start));return parts;
 }
 
 function stripDotSlash(value: string): string {
