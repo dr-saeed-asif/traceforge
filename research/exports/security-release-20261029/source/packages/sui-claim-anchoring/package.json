@@ -1,0 +1,26 @@
+{
+  "name": "@traceforge/sui-claim-anchoring",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "files": [
+    "contracts",
+    "src"
+  ],
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@traceforge/claim-anchoring": "*",
+    "@traceforge/verification-contracts": "*"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.2"
+  },
+  "engines": {
+    "node": ">=22.22.2"
+  }
+}

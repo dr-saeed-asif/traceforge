@@ -1,0 +1,25 @@
+"check","passed","detail"
+"valid authorization","true","Executed"
+"duplicate rejected","true","Missing or invalid parameters.
+Double check you have provided the correct parameters."
+"expired rejected","true","Missing or invalid parameters.
+Double check you have provided the correct parameters."
+"foreign signer rejected","true","Missing or invalid parameters.
+Double check you have provided the correct parameters."
+"revoked signer rejected","true","Missing or invalid parameters.
+Double check you have provided the correct parameters."
+"payload edit rejected","true","Missing or invalid parameters.
+Double check you have provided the correct parameters."
+"malformed signature rejected","true","Missing or invalid parameters.
+Double check you have provided the correct parameters."
+"high-s rejected","true","Missing or invalid parameters.
+Double check you have provided the correct parameters."
+"non-owner rotation rejected","true","Missing or invalid parameters.
+Double check you have provided the correct parameters."
+"revoked rotation rejected","true","Missing or invalid parameters.
+Double check you have provided the correct parameters."
+"owner rotation succeeds","true","Executed"
+"old epoch rejected","true","Missing or invalid parameters.
+Double check you have provided the correct parameters."
+"new signer succeeds","true","Executed"
+"V1-compatible anchor getter","true","Executed"

@@ -1,0 +1,8 @@
+"component","status","evidence_or_missing_input"
+"controlled_accuracy_and_ablations","EXISTING_RESULTS","Tables 6/7 CSVs; controlled benchmark only"
+"consumer_gate","EXISTING_RESULTS","Table 8 and tamper CSVs"
+"snapshot_overhead","EXISTING_RESULTS","Table 9 CSV; historical hardware"
+"pilot_distribution","OBSERVATION_ONLY","Table 10 CSV; screenshot transcription"
+"single_run_timing","OBSERVATION_ONLY","Table 11 CSV; manuscript transcription"
+"natural_accuracy_and_judges","PENDING","Independent annotation, adjudication, more session collection"
+"public_network_measurements","PENDING","Real Sepolia/Sui receipts, fees and timings"

@@ -1,0 +1,3 @@
+"eval_name","extractor","baseline","stage","count","min_ms","max_ms","mean_ms","median_ms","error_count"
+"02-ollama-deterministic","ollama","","extraction","200","8038","42538","11418.27","9994.5",""
+"02-ollama-deterministic","ollama","deterministic","verification","200","0","2","0.03","0",""

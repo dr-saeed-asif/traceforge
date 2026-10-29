@@ -1,0 +1,3 @@
+"check","exit_code","status","detail"
+"blank_adjudication_rejected","1","EXPECTED_REJECTION","All 40 sessions require genuine human adjudication"
+"evaluation_command_plan","0","DRY_RUN_ONLY","Five direct-Node configurations; qwen3:4b; separate fresh output directories; no evaluation executed"

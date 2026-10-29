@@ -1,0 +1,8 @@
+"requirement","paper_target","observed","status","source"
+"sessions","150","40","MORE_COLLECTION_REQUIRED","Manuscript section 7.8"
+"agent_models","3","2","MORE_COLLECTION_REQUIRED","Manuscript section 7.8"
+"languages","3","","HUMAN_METADATA_REQUIRED","Manuscript section 7.8"
+"test_runners","4","","HUMAN_METADATA_REQUIRED","Manuscript section 7.8"
+"independent_annotators","2","0","HUMAN_ANNOTATION_REQUIRED","Blank source worksheets"
+"adjudicated_sessions","40","0","HUMAN_ADJUDICATION_REQUIRED","Current frozen export"
+"span_type_verdict_agreement","raw agreement and Cohen kappa","","HUMAN_LABELS_REQUIRED","Annotation protocol"

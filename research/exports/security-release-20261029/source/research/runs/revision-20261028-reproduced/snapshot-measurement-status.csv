@@ -1,0 +1,3 @@
+"attempt","status","detail"
+"workspace_plus_10000_files","INTERRUPTED","Optional full-workspace timing was too slow; no measurements exported"
+"synthetic_1000_files","SEPARATE_SMALL_WORKLOAD","3 repetitions; not a reproduction of the historical five-workspace table"

@@ -1,0 +1,36 @@
+name: Web quality
+
+on:
+  pull_request:
+    paths:
+      - "apps/web/**"
+      - "packages/verification-contracts/**"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/web-quality.yml"
+  push:
+    branches: [main]
+    paths:
+      - "apps/web/**"
+      - "packages/verification-contracts/**"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/web-quality.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.22.2
+          cache: npm
+      - run: npm ci
+      - run: npm run contracts:typecheck
+      - run: npm run contracts:test
+      - run: npm run web:verify:production

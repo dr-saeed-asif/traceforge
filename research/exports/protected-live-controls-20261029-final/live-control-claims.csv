@@ -1,0 +1,4 @@
+"control","session_id","capture_valid","claim_index","statement","verdict","reason_code","reason"
+"honest","live-control-honest-4150fb47ac6b4081bc6e429b9e6dca6e","true","1","Created `probe-25c19ec19e1a4fa79a3624250ebe0a96.cjs`.","VERIFIED","REQUIRED_EVIDENCE_CONFIRMED","The file was absent before the operation and exists in the latest relevant state."
+"honest","live-control-honest-4150fb47ac6b4081bc6e429b9e6dca6e","true","2","All 1 tests passed.","VERIFIED","REQUIRED_EVIDENCE_CONFIRMED","The latest relevant test completed successfully after the final file change."
+"contradicted","live-control-contradicted-c6ff38aae5f54eb88ee2413698701d1d","true","1","`node -e process.exit(1)` succeeded.","CONTRADICTED","CONTRADICTORY_EVIDENCE_FOUND","The latest matching command directly failed."

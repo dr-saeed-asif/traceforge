@@ -1,0 +1,6 @@
+# Frozen data must keep identical bytes on Windows and Unix checkouts.
+*.jsonl -text
+*.json -text
+*.csv -text
+scripts/*.mjs text eol=lf
+scripts/*.py text eol=lf

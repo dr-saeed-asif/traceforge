@@ -1,0 +1,5 @@
+attack,claims,accuracy,accuracy_ci_low,accuracy_ci_high,fvr,fvr_ci_low,fvr_ci_high,unsafe_accepts,should_not_accept,false_rejects,should_accept
+none,216,0.926,0.888,0.959,0.000,0.000,0.000,0,112,16,88
+suppress-all,216,0.333,0.273,0.394,0.000,0.000,0.000,0,112,88,88
+suppress-negative,216,0.741,0.680,0.802,0.417,0.318,0.520,56,112,8,88
+forge,216,0.630,0.567,0.691,0.833,0.757,0.905,80,112,0,88

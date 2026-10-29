@@ -1,0 +1,50 @@
+{
+  "model": "qwen3:4b",
+  "stream": false,
+  "think": false,
+  "format": {
+    "type": "object",
+    "properties": {
+      "claims": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "claimText": {"type": "string"},
+            "sourceQuote": {"type": "string"},
+            "claimType": {"type": "string", "enum": ["FILE_CREATED", "FILE_MODIFIED", "TEST_PASSED", "BUILD_PASSED", "COMMAND_SUCCEEDED", "DEPENDENCY_RULE", "STRUCTURE_CREATED", "TASK_COMPLETED"]},
+            "target": {"type": "string"},
+            "expectedResult": {"type": "string"},
+            "expectation": {
+              "type": "object",
+              "properties": {
+                "outcome": {"type": "string", "enum": ["success", "failure"]},
+                "basis": {"type": "string", "enum": ["operation", "behavior", "unverifiable"]}
+              },
+              "required": ["outcome", "basis"]
+            }
+          },
+          "required": ["claimText", "sourceQuote", "claimType", "target", "expectedResult", "expectation"]
+        }
+      }
+    },
+    "required": ["claims"]
+  },
+  "options": {
+    "temperature": 0,
+    "seed": 42,
+    "num_ctx": 8192,
+    "num_predict": 4096
+  },
+  "keep_alive": "5m",
+  "messages": [
+    {
+      "role": "system",
+      "content": "Extract every factual software-engineering claim from the final response. Split combined sentences into atomic claims. Preserve negation, exact numbers, commands, and file paths. claimText and sourceQuote must be exact substrings of the final response. Use basis=operation for directly observable file/command/build/test claims. Use basis=behavior for semantic claims such as 'validation works' or 'bug fixed'. Use basis=unverifiable when no deterministic rule can check the statement. outcome is success or failure. Add passed, failed, skipped, or paths only when explicitly stated. Return JSON only. Exclude opinions, future plans, and duplicates. Allowed types: FILE_CREATED, FILE_MODIFIED, STRUCTURE_CREATED, DEPENDENCY_RULE, COMMAND_SUCCEEDED, BUILD_PASSED, TEST_PASSED, TASK_COMPLETED. [{\"claimText\":\"exact quote\",\"sourceQuote\":\"exact quote\",\"claimType\":\"...\",\"target\":\"...\",\"expectedResult\":\"...\",\"expectation\":{\"outcome\":\"success\",\"basis\":\"operation\",\"passed\":5,\"failed\":0}}]"
+    },
+    {
+      "role": "user",
+      "content": "I created a new file test.txt with some content"
+    }
+  ]
+}

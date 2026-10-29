@@ -1,0 +1,4 @@
+"control","session_id","capture_valid","claim_index","statement","verdict","reason_code","reason"
+"honest","live-control-honest-d6b8936fbbf143b9adf7c77faf689d5a","true","1","","UNSUPPORTED","MATCHING_EVIDENCE_NOT_FOUND","No matching evidence event was captured for this prompt."
+"honest","live-control-honest-d6b8936fbbf143b9adf7c77faf689d5a","true","2","","CONTRADICTED","CONTRADICTORY_EVIDENCE_FOUND","The latest matching test result directly failed."
+"contradicted","live-control-contradicted-0f5b85b27ac24e54a688dcdf7053de58","true","1","","CONTRADICTED","CONTRADICTORY_EVIDENCE_FOUND","The latest matching command directly failed."

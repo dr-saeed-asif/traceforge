@@ -1,0 +1,20 @@
+{
+  "date": "2026-10-29",
+  "baseCommit": "8bdcb7823e768a5e6c385d86f7ab4f0251f87a2d",
+  "workingTreeDirty": true,
+  "node": "v22.14.0",
+  "repositoryTests": {
+    "total": 148,
+    "passed": 148,
+    "failed": 0
+  },
+  "registryChecks": {
+    "total": 14,
+    "passed": 14,
+    "environment": "Ganache JavaScript fallback, local chain 1337"
+  },
+  "typescript": "root and web passed",
+  "frozenRuntime": "verified",
+  "liveControls": "final unique-file controls: two Verified and one Contradicted; initial failures retained",
+  "published": false
+}

@@ -1,0 +1,2 @@
+"base_commit","dirty","node","command","exit_code","environment"
+"8bdcb7823e768a5e6c385d86f7ab4f0251f87a2d","true","v22.14.0","node research/security/test-registry-v2.mjs","0","Ganache 7.9.2 local EVM; solc 0.8.24; no real keys"

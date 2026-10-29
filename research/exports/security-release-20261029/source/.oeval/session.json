@@ -1,0 +1,1914 @@
+{
+  "files": [
+    "README.md",
+    "package.json",
+    "apps/web/package.json",
+    "apps/web/README.md",
+    "src/evaluate.ts",
+    "src/export-research-dataset.ts",
+    "src/research/baselines.ts",
+    "src/research/claim-alignment.ts",
+    "src/research/metrics.ts",
+    "src/research/run-manifest.ts",
+    "research/README.md",
+    "research/benchmark/ANNOTATION.md",
+    "research/datasets/natural-v1.manifest.json",
+    "research/datasets/natural-v1.jsonl",
+    "research/evaluation.example.jsonl",
+    "src/modules/verification/domain/contracts.ts",
+    "src/modules/verification/domain/claim-types.ts",
+    "src/modules/verification/domain/verdicts.ts",
+    "src/modules/verification/application/claim-extractor.ts",
+    "src/modules/verification/application/ollama-claim-extractor.ts",
+    "test/research-judge-harness.test.ts",
+    "test/research-metrics.test.ts",
+    "test/modules/verification/claim-extractor.test.ts",
+    "test/modules/verification/ollama-claim-extractor.test.ts",
+    "test/modules/verification/verification-schema-contract.test.ts",
+    "test/modules/verification/research-regressions.test.ts",
+    "research/benchmark/llm-judge.mjs",
+    "research/benchmark/run-benchmark.mjs",
+    "research/benchmark/run-controlled-benchmark.mjs",
+    "research/benchmark/README.md",
+    "research/datasets",
+    "research/datasets/natural-v1.annotations.csv",
+    "src/modules/verification",
+    "research/annotation/lib.mjs",
+    "research/annotation/prepare-worksheets.mjs",
+    "research/annotation/build-adjudicated-dataset.mjs",
+    "research/annotation/run-evaluation-suite.mjs",
+    "research/annotation/README.md",
+    "research/annotation/adjudication-template.csv",
+    "test/research-annotation-tools.test.ts",
+    "research/annotation/build-controlled-dataset.mjs",
+    "src",
+    "research/annotation/export-evaluation-suite.mjs"
+  ],
+  "commands": [
+    {
+      "command": "node --version; npm --version",
+      "exit": 0
+    },
+    {
+      "command": "git status --short",
+      "exit": 0
+    },
+    {
+      "command": "where.exe nvm; where.exe fnm; where.exe volta",
+      "exit": 1
+    },
+    {
+      "command": "Test-Path -LiteralPath \"node_modules\"; Test-Path -LiteralPath \"apps\\web\\node_modules\"",
+      "exit": 0
+    },
+    {
+      "command": "Get-NetTCPConnection -State Listen -LocalPort 3000,8080 -ErrorAction SilentlyContinue | Format-Table -AutoSize LocalAddress,LocalPort,OwningProcess",
+      "exit": 0
+    },
+    {
+      "command": "Get-CimInstance Win32_Process -Filter \"ProcessId = 6348\" | Format-List ProcessId,Name,CommandLine",
+      "exit": 0
+    },
+    {
+      "command": "curl.exe -sS -o NUL -w \"HTTP %{http_code}`n\" http://localhost:3000",
+      "exit": 0
+    },
+    {
+      "command": "curl.exe -sS -o NUL -w \"HTTP %{http_code}`n\" http://127.0.0.1:8080/healthz",
+      "exit": 1
+    },
+    {
+      "command": "Start-Process -FilePath \"npm.cmd\" -ArgumentList @(\"run\", \"api:up\") -WorkingDirectory \"E:\\PhD Data\\latest_plugin\\traceforge\" -RedirectStandardOutput \"C:\\Users\\asifs\\AppData\\Local\\Temp\\opencode\\traceforge-api.log\" -RedirectStandardError \"C:\\Users\\asifs\\AppData\\Local\\Temp\\opencode\\traceforge-api-error.log\" -PassThru | Format-List Id,ProcessName"
+    },
+    {
+      "command": "Start-Process -FilePath \"npm.cmd\" -ArgumentList @(\"run\", \"web:dev\") -WorkingDirectory \"E:\\PhD Data\\latest_plugin\\traceforge\" -RedirectStandardOutput \"C:\\Users\\asifs\\AppData\\Local\\Temp\\opencode\\traceforge-web.log\" -RedirectStandardError \"C:\\Users\\asifs\\AppData\\Local\\Temp\\opencode\\traceforge-web-error.log\" -PassThru | Format-List Id,ProcessName"
+    },
+    {
+      "command": "prepare and evaluate TraceForge paper dataset"
+    },
+    {
+      "command": "git status --short; git log --oneline -5",
+      "exit": 0
+    },
+    {
+      "command": "Get-ChildItem -Recurse -File research | Select-Object FullName, Length | Format-Table -AutoSize",
+      "exit": 0
+    },
+    {
+      "command": "Get-ChildItem -File src\\research, test | Select-Object FullName, Length | Format-Table -AutoSize",
+      "exit": 0
+    },
+    {
+      "command": "node -e \"const fs=require('fs');const ls=fs.readFileSync('research/datasets/natural-v1.jsonl','utf8').split(/\\r?\\n/).filter(Boolean);console.log('lines',ls.length);const r=JSON.parse(ls[0]);console.log(JSON.stringify(r,null,2).slice(0,8000));console.log('KEYS',Object.keys(r));\"",
+      "exit": 0
+    },
+    {
+      "command": "node -e \"const fs=require('fs');const s=fs.readFileSync('research/datasets/natural-v1.claims.csv','utf8');console.log(s.split(/\\r?\\n/).slice(0,12).join('\\n'))\"",
+      "exit": 0
+    },
+    {
+      "command": "node -e \"const fs=require('fs');const s=fs.readFileSync('research/datasets/natural-v1.sessions.csv','utf8');console.log(s.split(/\\r?\\n/).slice(0,8).join('\\n'))\"",
+      "exit": 0
+    },
+    {
+      "command": "Get-ChildItem -File dist -ErrorAction SilentlyContinue | Select-Object Name, Length | Format-Table -AutoSize; Get-ChildItem -File src | Select-Object Name | Format-Table -AutoSize",
+      "exit": 0
+    },
+    {
+      "command": "Get-ChildItem -Recurse -File .oeval, research\\runs, .traceforge -ErrorAction SilentlyContinue | Select-Object FullName, Length | Format-Table -AutoSize",
+      "exit": 0
+    },
+    {
+      "command": "node -e \"const fs=require('fs');const rows=fs.readFileSync('research/datasets/natural-v1.jsonl','utf8').split(/\\r?\\n/).filter(Boolean).map(JSON.parse);for(const r of rows){const ev=r.evidence||[];console.log([r.id.slice(0,8),r.promptQuery.split(/\\r?\\n/)[0].slice(0,45),JSON.stringify(r.finalResponse).slice(0,50),ev.length,r.goldClaims.length,r.annotationStatus].join(' | '))}\"",
+      "exit": 0
+    },
+    {
+      "command": "node -e \"const fs=require('fs');const s=fs.readFileSync('research/datasets/natural-v1.claims.csv','utf8').trim().split(/\\r?\\n/);console.log('claim rows',s.length-1);for(const line of s.slice(1,6))console.log(line.slice(0,300))\"",
+      "exit": 0
+    },
+    {
+      "command": "node -e \"const fs=require('fs');const s=fs.readFileSync('research/datasets/natural-v1.claims.csv','utf8');let rows=[],f='',r=[],q=false;for(let i=0;i<s.length;i++){const c=s[i];if(q){if(c==='\\\"'&&s[i+1]==='\\\"'){f+='\\\"';i++;}else if(c==='\\\"')q=false;else f+=c;}else if(c==='\\\"')q=true;else if(c===','){r.push(f);f='';}else if(c==='\\n'||c==='\\r'){if(c==='\\r'&&s[i+1]==='\\n')i++;r.push(f);rows.push(r);r=[];f='';}else f+=c;}if(f||r.length){r.push(f);rows.push(r);}console.log('rows',rows.length-1);console.log(rows[0].join(' | '));for(const x of rows.slice(1,6))console.log(x[0].slice(0,8),x[1],x[5],x[6],x[7],x[10]);\"",
+      "exit": 1
+    },
+    {
+      "command": "rg -n \"expectedResult|claimType|claimText|sourceQuote\" src\\modules\\verification\\application\\claim-verifier.ts src\\modules\\verification\\application\\claim-extractor.ts src\\modules\\verification\\application\\ollama-claim-extractor.ts | Select-Object -First 80",
+      "exit": 1
+    },
+    {
+      "command": "Get-Content .env.example | Select-Object -First 80",
+      "exit": 0
+    },
+    {
+      "command": "Get-ChildItem -Recurse -File .oeval | Select-Object FullName, Length | Format-Table -AutoSize",
+      "exit": 0
+    },
+    {
+      "command": "ollama list",
+      "exit": 0
+    },
+    {
+      "command": "node -e \"const fs=require('fs');const rows=fs.readFileSync('research/datasets/natural-v1.jsonl','utf8').split(/\\r?\\n/).filter(Boolean).map(JSON.parse);const r=rows.find(x=>x.id.startsWith('67f800b5'));console.log(JSON.stringify({prompt:r.promptQuery,final:r.finalResponse,refs:r.evidence.map(e=>({eventId:e.eventId.slice(0,10),seq:e.sequenceNumber,type:e.eventType,outcome:e.outcome,target:e.target,path:e.metadata.path,command:e.metadata.command,tool:e.metadata.tool,exitCode:e.metadata.exitCode,existsAfter:e.metadata.fileExistsAfter,passed:e.metadata.passed,failed:e.metadata.failed,output:e.metadata.output?.slice?.(0,300)}))},null,2).slice(0,12000))\"",
+      "exit": 0
+    },
+    {
+      "command": "node -e \"const fs=require('fs');const rows=fs.readFileSync('research/datasets/natural-v1.jsonl','utf8').split(/\\r?\\n/).filter(Boolean).map(JSON.parse);console.log('sessions',rows.length,'no-final',rows.filter(r=>!r.finalResponse).length,'NOT_AVAILABLE',rows.filter(r=>r.finalResponse==='NOT_AVAILABLE').length,'zero-evidence',rows.filter(r=>!r.evidence.length).length);const types={};for(const r of rows)for(const e of r.evidence)types[e.eventType]=(types[e.eventType]||0)+1;console.log(types);\"",
+      "exit": 0
+    },
+    {
+      "command": "Get-ChildItem -File research\\datasets | Select-Object Name, Length, LastWriteTime | Format-Table -AutoSize",
+      "exit": 0
+    },
+    {
+      "command": "$s = Import-Csv research/datasets/natural-v1.sessions.csv; $s | Group-Object claim_count | Sort-Object { [int]$_.Name } | Select-Object Name, Count | Format-Table -AutoSize; ($s | Measure-Object -Property claim_count -Maximum -Average) | Format-List",
+      "exit": 0
+    },
+    {
+      "command": "$a = Import-Csv research/datasets/natural-v1.annotations.csv; \"rows=$($a.Count)\"; $a | Group-Object { if ($_.adjudicated_verdict -eq '') {'blank'} else {'filled'} } | Select-Object Name, Count",
+      "exit": 0
+    },
+    {
+      "command": "git status --short research src/evaluate.ts research/benchmark | Select-Object -First 50",
+      "exit": 0
+    },
+    {
+      "command": "Get-Content tsconfig.json",
+      "exit": 0
+    },
+    {
+      "command": "Get-Content vitest.config.ts",
+      "exit": 0
+    },
+    {
+      "command": "Get-Content .gitignore -ErrorAction SilentlyContinue",
+      "exit": 0
+    },
+    {
+      "command": "Get-ChildItem research -Force | Select-Object Name, Mode | Format-Table -AutoSize",
+      "exit": 0
+    },
+    {
+      "command": "node --version; node node_modules/typescript/bin/tsc --version",
+      "exit": 0
+    },
+    {
+      "command": "node research/annotation/prepare-worksheets.mjs",
+      "exit": 0
+    },
+    {
+      "command": "Get-ChildItem -File research\\datasets\\natural-v1.annotator-*.csv | Select-Object Name, Length | Format-Table -AutoSize; Get-Content research\\datasets\\natural-v1.annotator-a.csv -TotalCount 1",
+      "exit": 0
+    },
+    {
+      "command": "node -e \"const fs=require('fs');for(const f of ['research/datasets/natural-v1.annotator-a.csv','research/datasets/natural-v1.annotator-b.csv']){const s=fs.readFileSync(f,'utf8');console.log(f, {traceforge_verdict:s.includes('traceforge_verdict'),gold_verdict:s.includes('gold_verdict'),goldClaims:s.includes('goldClaims'),claimsCsv:s.includes('extractor_model'),predicted:s.includes('predicted'),predictedVerdicts:(s.match(/TRACEFORGE/g)||[]).length});}\"",
+      "exit": 0
+    },
+    {
+      "command": "$a=Import-Csv research\\datasets\\natural-v1.annotator-a.csv; \"rows=$($a.Count) sessions=$((($a | Select-Object -ExpandProperty session_id -Unique)).Count)\"; $a | Select-Object -First 2 | Format-List worksheet_id,annotator_slot,session_id,claim_slot,annotator_verdict,annotation_status",
+      "exit": 0
+    },
+    {
+      "command": "node node_modules/vitest/vitest.mjs run test/research-annotation-tools.test.ts --reporter=verbose",
+      "exit": 0
+    },
+    {
+      "command": "node node_modules/typescript/bin/tsc -p tsconfig.json --noEmit",
+      "exit": 0
+    },
+    {
+      "command": "node research/annotation/run-evaluation-suite.mjs --dry-run",
+      "exit": 1
+    },
+    {
+      "command": "node research/annotation/build-adjudicated-dataset.mjs --dry-run",
+      "exit": 1
+    },
+    {
+      "command": "node research/annotation/run-evaluation-suite.mjs --dry-run",
+      "exit": 0
+    },
+    {
+      "command": "node research/annotation/build-adjudicated-dataset.mjs --annotations research/datasets/natural-v1.annotations.csv --dry-run",
+      "exit": 1
+    },
+    {
+      "command": "node -e \"const fs=require('fs');for(const f of ['research/datasets/natural-v1.annotator-a.csv','research/datasets/natural-v1.annotator-b.csv']){const s=fs.readFileSync(f,'utf8');for(const t of ['VERIFIED','CONTRADICTED','UNSUPPORTED','UNVERIFIABLE','traceforge','TraceForge','predicted','goldClaims','claim_text','reason_code'])console.log(f.split('/').pop(),t,(s.match(new RegExp(t,'g'))||[]).length)}\"",
+      "exit": 0
+    },
+    {
+      "command": "node -e \"const fs=require('fs');const rows=fs.readFileSync('research/datasets/natural-v1.jsonl','utf8').split(/\\r?\\n/).filter(Boolean).map(JSON.parse);console.log('sessions',rows.length,'goldClaims',rows.reduce((n,r)=>n+r.goldClaims.length,0),'adjudicated',rows.filter(r=>r.annotationStatus==='adjudicated').length);const a=fs.readFileSync('research/datasets/natural-v1.annotations.csv','utf8').trim().split(/\\r?\\n/).slice(1);console.log('annotation rows',a.length,'nonblank labels',a.filter(l=>l.replace(/\\\"/g,'').split(',').slice(1).some(x=>x.trim())).length)\"",
+      "exit": 1
+    },
+    {
+      "command": "git status --short research test/research-annotation-tools.test.ts | Format-Table -AutoSize",
+      "exit": 0
+    },
+    {
+      "command": "node node_modules/typescript/bin/tsc -p tsconfig.json",
+      "exit": 0
+    },
+    {
+      "command": "$out = Join-Path $env:TEMP (\"traceforge-smoke-\" + [guid]::NewGuid().ToString(\"N\")); node dist/evaluate.js --dataset research/evaluation.example.jsonl --extractors oracle,heuristic --baselines deterministic,accept,regex --allow-unadjudicated --bootstrap 100 --output $out; if ($?) { Get-ChildItem -File $out | Select-Object Name, Length | Format-Table -AutoSize }",
+      "exit": 0
+    },
+    {
+      "command": "node node_modules/vitest/vitest.mjs run --reporter=dot",
+      "exit": 0
+    },
+    {
+      "command": "Test-Path research\\datasets\\natural-v1-adjudicated.jsonl; Test-Path research\\datasets\\natural-v1.adjudications.csv; Get-ChildItem -File research\\datasets | Select-Object Name, Length | Format-Table -AutoSize",
+      "exit": 0
+    },
+    {
+      "command": "Get-ChildItem -File research\\annotation | Select-Object Name, Length | Format-Table -AutoSize; git diff --stat -- src/evaluate.ts research/annotation test/research-annotation-tools.test.ts",
+      "exit": 0
+    },
+    {
+      "command": "git status --short -- research/annotation research/datasets test/research-annotation-tools.test.ts src/evaluate.ts",
+      "exit": 0
+    },
+    {
+      "command": "Get-ChildItem -Recurse -File data -ErrorAction SilentlyContinue | Select-Object FullName, Length | Format-Table -AutoSize; Get-ChildItem -Recurse -File .oeval -ErrorAction SilentlyContinue | Select-Object FullName, Length | Format-Table -AutoSize",
+      "exit": 0
+    },
+    {
+      "command": "node -e \"const fs=require('fs');const f='.oeval/live-provenance.jsonl';if(!fs.existsSync(f)){console.log('missing');process.exit()}const ls=fs.readFileSync(f,'utf8').split(/\\r?\\n/).filter(Boolean);console.log('lines',ls.length);const ids=new Set();let keys={};for(const l of ls){const r=JSON.parse(l);const id=r.promptId||r.prompt_id||r.id||r.sessionId;if(id)ids.add(id);for(const k of Object.keys(r))keys[k]=(keys[k]||0)+1}console.log('unique ids',ids.size);console.log('keys',keys);console.log('first',JSON.stringify(JSON.parse(ls[0]),null,2).slice(0,2000))\"",
+      "exit": 1
+    },
+    {
+      "command": "Get-ChildItem -Recurse -File -Filter *.sqlite -ErrorAction SilentlyContinue | Select-Object FullName, Length | Format-Table -AutoSize; Get-ChildItem -Recurse -File -Filter *.db -ErrorAction SilentlyContinue | Select-Object FullName, Length | Format-Table -AutoSize",
+      "exit": 0
+    },
+    {
+      "command": "node -e \"const fs=require('fs');const s=fs.readFileSync('research/benchmark/results/sessions.jsonl','utf8').trim().split(/\\r?\\n/);console.log('benchmark sessions rows',s.length);const r=JSON.parse(s[0]);console.log('keys',Object.keys(r));console.log('families',[...new Set(s.map(l=>JSON.parse(l).family))].length);console.log('gold claims',s.reduce((n,l)=>n+JSON.parse(l).gold.length,0))\"",
+      "exit": 0
+    },
+    {
+      "command": "node -e \"const fs=require('fs');const ls=fs.readFileSync('research/benchmark/results/sessions.jsonl','utf8').trim().split(/\\r?\\n/);const r=JSON.parse(ls[0]);console.log(JSON.stringify(r,null,2).slice(0,10000))\"",
+      "exit": 0
+    },
+    {
+      "command": "node -e \"const fs=require('fs');const ls=fs.readFileSync('research/benchmark/results/sessions.jsonl','utf8').trim().split(/\\r?\\n/).map(JSON.parse);const c={};for(const r of ls)c[r.family]=(c[r.family]||0)+1;console.log(c);console.log('evidence types',[...new Set(ls.flatMap(r=>r.evidence.map(e=>e.eventType)))].join(','));console.log('gold sample',JSON.stringify(ls[0].gold,null,2));console.log('evidence sample',JSON.stringify(ls[0].evidence.slice(0,5),null,2))\"",
+      "exit": 0
+    },
+    {
+      "command": "Get-Content research\\benchmark\\run-controlled-benchmark.mjs -TotalCount 120",
+      "exit": 0
+    },
+    {
+      "command": "Get-Content src\\infrastructure\\sqlite\\sqlite-database.ts -TotalCount 80",
+      "exit": 0
+    },
+    {
+      "command": "node -e \"const fs=require('fs');const p='.oeval/live-provenance.jsonl';const b=fs.readFileSync(p);console.log('size',b.length,'nul',b.indexOf(0));let start=0;for(let i=0;i<b.length&&i<100;i++){if(b[i]!==0){start=i;break}}console.log('first nonzero',start,JSON.stringify(b.subarray(start,start+200).toString()))\"",
+      "exit": 0
+    },
+    {
+      "command": "node -e \"const fs=require('fs');const s=fs.readFileSync('research/benchmark/results/summary.json','utf8');console.log(s.slice(0,3000))\"",
+      "exit": 0
+    },
+    {
+      "command": "node -e 'const {DatabaseSync}=require(\"node:sqlite\");const db=new DatabaseSync(\"data/traceforge.sqlite\",{readOnly:true});const t=db.prepare(\"SELECT name FROM sqlite_master WHERE type=\\\"table\\\" ORDER BY name\").all();console.log(t.map(x=>x.name).join(\"\\n\"));for(const name of [\"execution_sessions\",\"prompt_results\",\"agent_claims\"]){try{console.log(name,db.prepare(`SELECT count(*) AS n FROM ${name}`).get())}catch(e){console.log(name,e.message)}}'",
+      "exit": 1
+    },
+    {
+      "command": "node -e 'const {DatabaseSync}=require(\"node:sqlite\");const db=new DatabaseSync(\"data/traceforge.sqlite\",{readOnly:true});try{console.log(db.prepare(\"SELECT prompt_id,policy_version,started_at FROM execution_sessions ORDER BY started_at LIMIT 5\").all())}catch(e){console.log(e.message)}'",
+      "exit": 1
+    },
+    {
+      "command": "node -e 'const fs=require(\"fs\");const b=fs.readFileSync(\".oeval/live-provenance.jsonl\");const s=b.toString(\"utf8\").replace(/\\u0000/g,\"\\n\");const ls=s.split(/\\r?\\n/).filter(l=>l.trim().startsWith(\"{\"));console.log(\"json lines\",ls.length);const ids=new Set();let bad=0;for(const l of ls){try{const r=JSON.parse(l);const d=r.data&&r.data.event;if(d&&d.properties){const id=d.properties.promptId||d.properties.prompt_id||d.properties.id;if(id)ids.add(id)}}catch{bad++}}console.log(\"unique ids\",ids.size,\"bad\",bad)'",
+      "exit": 1
+    },
+    {
+      "command": "node C:\\Users\\asifs\\AppData\\Local\\Temp\\opencode\\inspect-db.mjs",
+      "exit": 0
+    },
+    {
+      "command": "Test-Path ..\\tf-old; if (Test-Path ..\\tf-old) { Get-ChildItem ..\\tf-old -Force | Select-Object Name | Format-Table -AutoSize }; Test-Path dist\\modules\\verification\\application\\claim-verifier.js; Test-Path packages\\adapter-opencode\\dist\\workspace-observer.js",
+      "exit": 0
+    },
+    {
+      "command": "Get-Content research\\benchmark\\run-controlled-benchmark.mjs | Select-Object -Skip 120 -First 260",
+      "exit": 0
+    },
+    {
+      "command": "node -e \"const fs=require('fs');const ls=fs.readFileSync('research/benchmark/results/sessions.jsonl','utf8').trim().split(/\\r?\\n/).map(JSON.parse);let missing=0,notExact=0;const types={};for(const r of ls)for(const g of r.gold){types[g.claimType]=(types[g.claimType]||0)+1;if(!r.response.includes(g.quote))notExact++;if(!g.target)missing++}console.log({sessions:ls.length,claims:ls.reduce((n,r)=>n+r.gold.length,0),notExact,missing,types});\"",
+      "exit": 0
+    },
+    {
+      "command": "node C:\\Users\\asifs\\AppData\\Local\\Temp\\opencode\\probe-ollama.mjs",
+      "exit": 0
+    },
+    {
+      "command": "node C:\\Users\\asifs\\AppData\\Local\\Temp\\opencode\\probe-ollama.mjs",
+      "exit": 0
+    },
+    {
+      "command": "node -e \"const fs=require('fs');const ls=fs.readFileSync('research/benchmark/results/rows.jsonl','utf8').trim().split(/\\r?\\n/);console.log('rows',ls.length);const r=JSON.parse(ls[0]);console.log(JSON.stringify(r,null,2).slice(0,3000));const systems=new Set(ls.map(l=>JSON.parse(l).system));console.log('systems',systems.size,[...systems]);\"",
+      "exit": 0
+    },
+    {
+      "command": "node -e \"const fs=require('fs');const s=JSON.parse(fs.readFileSync('research/benchmark/results/summary.json','utf8'));console.log('summary rows',s.summary.length);console.log(s.summary.map(x=>x.system).join('\\n'));console.log('other keys',Object.keys(s));\"",
+      "exit": 0
+    },
+    {
+      "command": "node -e \"const fs=require('fs');const s=fs.readFileSync('research/benchmark/results/sessions.jsonl','utf8').trim().split(/\\r?\\n/).map(JSON.parse);const ev=s.reduce((n,r)=>n+r.evidence.length,0);console.log({sessions:s.length,claims:s.reduce((n,r)=>n+r.gold.length,0),evidence:ev});\"",
+      "exit": 0
+    },
+    {
+      "command": "node -e \"const fs=require('fs');const s=JSON.parse(fs.readFileSync('research/benchmark/results/summary.json','utf8'));console.log('heldOut',JSON.stringify(s.heldOutSummary,null,2).slice(0,3000));console.log('families',JSON.stringify(s.families,null,2).slice(0,1500));\"",
+      "exit": 0
+    },
+    {
+      "command": "node research/annotation/build-controlled-dataset.mjs",
+      "exit": 0
+    },
+    {
+      "command": "Get-ChildItem -File research\\exports\\controlled-v1 | Select-Object Name, Length | Format-Table -AutoSize; $s=Import-Csv research\\exports\\controlled-v1\\sessions.csv; $g=Import-Csv research\\exports\\controlled-v1\\gold-claims.csv; $e=Import-Csv research\\exports\\controlled-v1\\evidence.csv; $p=Import-Csv research\\exports\\controlled-v1\\benchmark-per-claim.csv; \"sessions=$($s.Count) claims=$($g.Count) evidence=$($e.Count) perClaim=$($p.Count)\"",
+      "exit": 0
+    },
+    {
+      "command": "node -e \"const fs=require('fs');const r=JSON.parse(fs.readFileSync('research/datasets/controlled-v1.jsonl','utf8').split(/\\r?\\n/)[0]);console.log(JSON.stringify(r,null,2).slice(0,2500))\"",
+      "exit": 0
+    },
+    {
+      "command": "node node_modules/typescript/bin/tsc -p tsconfig.json --noEmit",
+      "exit": 0
+    },
+    {
+      "command": "node research/annotation/build-controlled-dataset.mjs --force",
+      "exit": 0
+    },
+    {
+      "command": "node research/annotation/run-evaluation-suite.mjs --dataset research/datasets/controlled-v1.jsonl --allow-unadjudicated --skip-build --only 01",
+      "exit": 0
+    },
+    {
+      "command": "node -e \"const fs=require('fs');const base='research/runs/natural-v1-2026-10-28T13-03-35-474Z-67f597e0/01-oracle-heuristic-deterministic-accept-regex';const m=JSON.parse(fs.readFileSync(base+'/metrics.json','utf8'));for(const [k,v] of Object.entries(m))console.log(k,JSON.stringify({gold:v.goldClaims,acc:v.accuracy,missed:v.missedClaims,spurious:v.spuriousClaims,ci:v.confidenceIntervals?.accuracy}));\"",
+      "exit": 0
+    },
+    {
+      "command": "Get-ChildItem -File research\\runs\\natural-v1-2026-10-28T13-03-35-474Z-67f597e0 -Recurse | Select-Object FullName, Length | Format-Table -AutoSize",
+      "exit": 0
+    },
+    {
+      "command": "node -e \"const fs=require('fs');const f='research/runs/natural-v1-2026-10-28T13-03-35-474Z-67f597e0/01-oracle-heuristic-deterministic-accept-regex/predictions.jsonl';const ls=fs.readFileSync(f,'utf8').trim().split(/\\r?\\n/).map(JSON.parse);const h=ls.find(x=>x.extractor==='heuristic');console.log(JSON.stringify(h,null,2).slice(0,5000));const o=ls.find(x=>x.extractor==='oracle');console.log('oracle align',JSON.stringify(o.alignment.slice(0,3)));\"",
+      "exit": 0
+    },
+    {
+      "command": "node -e \"const fs=require('fs');const f='research/runs/natural-v1-2026-10-28T13-03-35-474Z-67f597e0/01-oracle-heuristic-deterministic-accept-regex/extraction.jsonl';const ls=fs.readFileSync(f,'utf8').trim().split(/\\r?\\n/).map(JSON.parse);const h=ls.filter(x=>x.extractor==='heuristic');console.log(h.slice(0,5));console.log('totals',h.reduce((a,x)=>({gold:a.gold+x.gold,pred:a.pred+x.predicted,matched:a.matched+x.matched,failed:a.failed+(x.failed?1:0),empty:a.empty+(x.successfulEmpty?1:0)}),{gold:0,pred:0,matched:0,failed:0,empty:0}));\"",
+      "exit": 0
+    },
+    {
+      "command": "Select-String -Path research\\benchmark\\run-controlled-benchmark.mjs -Pattern \"match|quote|heuristic|gold\" -Context 1,2 | Select-Object -First 80",
+      "exit": 0
+    },
+    {
+      "command": "Select-String -Path research\\annotation\\build-controlled-dataset.mjs -Pattern \"sourceQuote|claimText|quote|function\" -Context 2,3",
+      "exit": 0
+    },
+    {
+      "command": "node research/annotation/build-controlled-dataset.mjs --force",
+      "exit": 0
+    },
+    {
+      "command": "rg -n \"benchmarkQuote|goldClaims|claimSchema|sourceQuote\" src | Select-Object -First 60",
+      "exit": 1
+    },
+    {
+      "command": "node research/annotation/run-evaluation-suite.mjs --dataset research/datasets/controlled-v1.jsonl --allow-unadjudicated --skip-build --only 01",
+      "exit": 0
+    },
+    {
+      "command": "node -e \"const fs=require('fs');const base='research/runs/controlled-v1-2026-10-28T13-08-01-638Z-6ca06097/01-oracle-heuristic-deterministic-accept-regex';const m=JSON.parse(fs.readFileSync(base+'/metrics.json','utf8'));for(const [k,v] of Object.entries(m))console.log(k,JSON.stringify({gold:v.goldClaims,acc:v.accuracy,precision:v.precision,recall:v.recall,missed:v.missedClaims,spurious:v.spuriousClaims,fv:v.falseVerified,ci:v.confidenceIntervals?.accuracy}));\"",
+      "exit": 0
+    },
+    {
+      "command": "Get-ChildItem -File research\\runs\\controlled-v1-2026-10-28T13-08-01-638Z-6ca06097\\01-oracle-heuristic-deterministic-accept-regex | Select-Object Name, Length | Format-Table -AutoSize",
+      "exit": 0
+    },
+    {
+      "command": "$p='research\\runs\\natural-v1-2026-10-28T13-03-35-474Z-67f597e0'; if (Test-Path -LiteralPath $p) { Remove-Item -LiteralPath $p -Recurse -Force; \"removed $p\" } else { \"not found\" }",
+      "exit": 0
+    },
+    {
+      "command": "node -e \"const fs=require('fs');const base='research/runs/controlled-v1-2026-10-28T13-08-01-638Z-6ca06097/01-oracle-heuristic-deterministic-accept-regex';const m=JSON.parse(fs.readFileSync(base+'/metrics.json','utf8'));console.log(Object.keys(m));console.log(JSON.stringify(m['oracle/deterministic'],null,2).slice(0,4000));\"",
+      "exit": 0
+    },
+    {
+      "command": "node -e \"const fs=require('fs');const base='research/runs/controlled-v1-2026-10-28T13-08-01-638Z-6ca06097/01-oracle-heuristic-deterministic-accept-regex';const ls=fs.readFileSync(base+'/predictions.jsonl','utf8').trim().split(/\\r?\\n/).map(JSON.parse);console.log(JSON.stringify(ls[1],null,2).slice(0,4000));\"",
+      "exit": 0
+    },
+    {
+      "command": "node -e \"const fs=require('fs');const base='research/runs/controlled-v1-2026-10-28T13-08-01-638Z-6ca06097/01-oracle-heuristic-deterministic-accept-regex';const ls=fs.readFileSync(base+'/latencies.jsonl','utf8').trim().split(/\\r?\\n/).map(JSON.parse);console.log(ls.slice(0,3));console.log('n',ls.length);\"",
+      "exit": 0
+    },
+    {
+      "command": "Select-String -Path src\\research\\llm-judge.ts -Pattern \"fetch|ollama|for |map|judge|claim\" -Context 1,2 | Select-Object -First 80",
+      "exit": 1
+    },
+    {
+      "command": "Get-ChildItem src\\research | Select-Object Name",
+      "exit": 0
+    },
+    {
+      "command": "Select-String -Path research\\annotation\\run-evaluation-suite.mjs -Pattern \"judge|model|baselines\" -Context 1,2",
+      "exit": 0
+    },
+    {
+      "command": "$stamp = Get-Date -Format 'yyyyMMdd-HHmmss'; $out = \"research\\runs\\controlled-model-$stamp.out.log\"; $err = \"research\\runs\\controlled-model-$stamp.err.log\"; $node = (Get-Command node).Source; $args = @('research/annotation/run-evaluation-suite.mjs','--dataset','research/datasets/controlled-v1.jsonl','--allow-unadjudicated','--skip-build','--only','02,03,04'); $p = Start-Process -FilePath $node -ArgumentList $args -WorkingDirectory (Get-Location).Path -RedirectStandardOutput $out -RedirectStandardError $err -PassThru -WindowStyle Hidden; \"PID=$($p.Id)`nOUT=$out`nERR=$err\""
+    },
+    {
+      "command": "Get-Process -Id 28336 -ErrorAction SilentlyContinue | Select-Object Id, ProcessName, CPU, StartTime | Format-Table -AutoSize; Get-Content -LiteralPath research\\runs\\controlled-model-20261028-140950.out.log -Tail 30 -ErrorAction SilentlyContinue",
+      "exit": 0
+    },
+    {
+      "command": "node -e \"const fs=require('fs');const d=JSON.parse(fs.readFileSync('research/runs/controlled-v1-2026-10-28T13-08-01-638Z-6ca06097/01-oracle-heuristic-deterministic-accept-regex/metrics.json','utf8'));console.log(JSON.stringify({keys:Object.keys(d), sample:d['oracle/deterministic'], top:[...Object.entries(d)].slice(0,2).map(([k,v])=>[k,Object.keys(v)])},null,2));\"",
+      "exit": 0
+    },
+    {
+      "command": "node --check research/annotation/export-evaluation-suite.mjs",
+      "exit": 0
+    },
+    {
+      "command": "node research/annotation/export-evaluation-suite.mjs --run-dir research/runs/controlled-v1-2026-10-28T13-08-01-638Z-6ca06097 --out-dir research/exports/evaluation/controlled-v1-fast",
+      "exit": 0
+    },
+    {
+      "command": "Get-ChildItem research\\exports\\evaluation\\controlled-v1-fast | Select-Object Name, Length | Format-Table -AutoSize; Import-Csv research\\exports\\evaluation\\controlled-v1-fast\\system-metrics.csv | Select-Object eval_name, extractor, baseline, gold_claims, accuracy, ci_lower, ci_upper | Format-Table -AutoSize",
+      "exit": 0
+    },
+    {
+      "command": "Get-Process -Id 28336 -ErrorAction SilentlyContinue | Select-Object Id, CPU | Format-Table -AutoSize; Get-Content -LiteralPath research\\runs\\controlled-model-20261028-140950.out.log -Tail 20 -ErrorAction SilentlyContinue; if (Test-Path -LiteralPath research\\runs\\controlled-model-20261028-140950.err.log) { Get-Content -LiteralPath research\\runs\\controlled-model-20261028-140950.err.log -Tail 20 -ErrorAction SilentlyContinue }",
+      "exit": 0
+    },
+    {
+      "command": "$start=Get-Date; $limit=New-Timespan -Minutes 5; while($true){ $p=Get-Process -Id 28336 -ErrorAction SilentlyContinue; if(-not $p){ \"MODEL_RUN_FINISHED\"; break }; if ((Get-Date)-$start -gt $limit){ \"MODEL_RUN_STILL_RUNNING_AFTER_5_MIN\"; break }; \"still_running $(Get-Date -Format HH:mm:ss)\"; Start-Sleep -Seconds 20 }",
+      "exit": 0
+    },
+    {
+      "command": "Test-NetConnection -ComputerName 127.0.0.1 -Port 11434; Invoke-WebRequest -Uri http://127.0.0.1:11434/api/tags -Method Get -TimeoutSec 5 -ErrorAction SilentlyContinue | Select-Object StatusCode, Content",
+      "exit": 1
+    },
+    {
+      "command": "Get-Process -Id 28336 -ErrorAction SilentlyContinue | Select-Object Id, CPU, StartTime, TotalProcessorTime | Format-Table -AutoSize",
+      "exit": 0
+    },
+    {
+      "command": "node -e \"fetch('http://127.0.0.1:11434/api/tags').then(r=>r.text()).then(t=>console.log(t.slice(0,1000))).catch(e=>console.error('ERR',e.message))\"",
+      "exit": 0
+    },
+    {
+      "command": "Get-Process -Name ollama -ErrorAction SilentlyContinue | Select-Object Id, CPU, StartTime, TotalProcessorTime, PM, WS | Format-Table -AutoSize",
+      "exit": 0
+    },
+    {
+      "command": "Select-String -Path src\\modules\\verification\\application\\ollama-claim-extractor.ts -Pattern \"retry|attempt|timeout|fetch|AbortSignal|backoff|delay\" -Context 1,2 | Select-Object -First 100",
+      "exit": 0
+    },
+    {
+      "command": "$start=Get-Date; $limit=New-Timespan -Minutes 10; while($true){ $p=Get-Process -Id 28336 -ErrorAction SilentlyContinue; if(-not $p){ \"MODEL_RUN_FINISHED\"; break }; if ((Get-Date)-$start -gt $limit){ \"MODEL_RUN_STILL_RUNNING_AFTER_10_MIN\"; break }; \"still_running $(Get-Date -Format HH:mm:ss)\"; Start-Sleep -Seconds 30 }",
+      "exit": 0
+    },
+    {
+      "command": "Get-ChildItem -File research\\runs\\controlled-v1-2026-10-28T13-09-50-864Z-3a497503 -Recurse | Select-Object FullName, Length | Format-Table -AutoSize -Wrap",
+      "exit": 0
+    },
+    {
+      "command": "Get-Process -Id 28336 -ErrorAction SilentlyContinue | Select-Object Id, CPU | Format-Table -AutoSize",
+      "exit": 0
+    },
+    {
+      "command": "node -e \"const fs=require('fs');const b='research/runs/controlled-v1-2026-10-28T13-09-50-864Z-3a497503/02-ollama-deterministic';const m=JSON.parse(fs.readFileSync(b+'/metrics.json','utf8'));for(const [k,v] of Object.entries(m))console.log(k,JSON.stringify({gold:v.goldClaims,acc:v.accuracy,missed:v.missedClaims,spurious:v.spuriousClaims,ci:v.confidenceIntervals?.accuracy,failures:v.failureCount||manifestFailures}));\" 2>&1 | head -20\nnode -e \"const fs=require('fs');const b='research/runs/controlled-v1-2026-10-28T13-09-50-864Z-3a497503/02-ollama-deterministic';const ex=fs.readFileSync(b+'/extraction.jsonl','utf8').trim().split(/\\r?\\n/).map(JSON.parse);console.log('extraction rows',ex.length);console.log('totals',ex.reduce((a,x)=>({gold:a.gold+x.gold,pred:a.predicted+x.predicted,matched:a.matched+x.matched,typeCorrect:a.typeCorrect+x.typeCorrect,failed:a.failed+(x.failed?1:0),empty:a.empty+(x.successfulEmpty?1:0)}),{gold:0,pred:0,matched:0,typeCorrect:0,failed:0,empty:0}));const lat=fs.readFileSync(b+'/latencies.jsonl','utf8').trim().split(/\\r?\\n/).map(JSON.parse);console.log('latencies',lat.length,'extraction mean',lat.filter(x=>x.stage==='extraction').map(x=>x.latencyMs).reduce((a,b)=>a+b,0)/lat.filter(x=>x.stage==='extraction').length,'verification mean',lat.filter(x=>x.stage==='verification').map(x=>x.latencyMs).reduce((a,b)=>a+b,0)/lat.filter(x=>x.stage==='verification').length);\"",
+      "exit": 0
+    },
+    {
+      "command": "node -e \"const fs=require('fs');const b='research/runs/controlled-v1-2026-10-28T13-09-50-864Z-3a497503/02-ollama-deterministic';const m=JSON.parse(fs.readFileSync(b+'/metrics.json','utf8'));for(const [k,v] of Object.entries(m))console.log(k,JSON.stringify({gold:v.goldClaims,acc:v.accuracy,missed:v.missedClaims,spurious:v.spuriousClaims,ci:v.confidenceIntervals?.accuracy}));const ex=fs.readFileSync(b+'/extraction.jsonl','utf8').trim().split(/\\r?\\n/).map(JSON.parse);console.log('extraction fields',Object.keys(ex[0]));console.log('totals',ex.reduce((a,x)=>({gold:a.gold+x.gold,pred:a.pred+x.predicted,matched:a.matched+x.matched,typeCorrect:a.typeCorrect+x.typeCorrect,failed:a.failed+(x.failed?1:0),empty:a.empty+(x.successfulEmpty?1:0)}),{gold:0,pred:0,matched:0,typeCorrect:0,failed:0,empty:0}));\"",
+      "exit": 0
+    },
+    {
+      "command": "$start=Get-Date; $limit=New-Timespan -Minutes 10; while($true){ $p=Get-Process -Id 28336 -ErrorAction SilentlyContinue; if(-not $p){ \"MODEL_RUN_FINISHED\"; break }; if ((Get-Date)-$start -gt $limit){ \"MODEL_RUN_STILL_RUNNING_AFTER_10_MIN\"; break }; \"still_running $(Get-Date -Format HH:mm:ss)\"; Start-Sleep -Seconds 30 }"
+    }
+  ],
+  "tools": [
+    {
+      "tool": "glob"
+    },
+    {
+      "tool": "glob"
+    },
+    {
+      "tool": "glob"
+    },
+    {
+      "tool": "glob"
+    },
+    {
+      "tool": "glob"
+    },
+    {
+      "tool": "glob"
+    },
+    {
+      "tool": "glob"
+    },
+    {
+      "tool": "glob"
+    },
+    {
+      "tool": "glob"
+    },
+    {
+      "tool": "glob"
+    },
+    {
+      "tool": "glob"
+    },
+    {
+      "tool": "glob"
+    },
+    {
+      "tool": "read",
+      "path": "README.md",
+      "status": "README.md",
+      "exit": 0
+    },
+    {
+      "tool": "read",
+      "path": "package.json",
+      "status": "package.json"
+    },
+    {
+      "tool": "read",
+      "path": "apps/web/package.json",
+      "status": "apps\\web\\package.json"
+    },
+    {
+      "tool": "glob"
+    },
+    {
+      "tool": "glob"
+    },
+    {
+      "tool": "glob"
+    },
+    {
+      "tool": "glob"
+    },
+    {
+      "tool": "grep",
+      "path": "README.md",
+      "status": "(?i)(quick start|getting started|npm install|npm run api|npm run web|localhost|prerequisite)"
+    },
+    {
+      "tool": "read",
+      "path": "apps/web/README.md",
+      "status": "apps\\web\\README.md"
+    },
+    {
+      "tool": "bash",
+      "command": "node --version; npm --version",
+      "status": "node --version; npm --version",
+      "exit": 0
+    },
+    {
+      "tool": "bash",
+      "command": "git status --short",
+      "status": "git status --short",
+      "exit": 0
+    },
+    {
+      "tool": "read",
+      "path": "README.md",
+      "status": "README.md"
+    },
+    {
+      "tool": "bash",
+      "command": "where.exe nvm; where.exe fnm; where.exe volta",
+      "status": "where.exe nvm; where.exe fnm; where.exe volta",
+      "exit": 1
+    },
+    {
+      "tool": "bash",
+      "command": "Test-Path -LiteralPath \"node_modules\"; Test-Path -LiteralPath \"apps\\web\\node_modules\"",
+      "status": "Test-Path -LiteralPath \"node_modules\"; Test-Path -LiteralPath \"apps\\web\\node_modules\"",
+      "exit": 0
+    },
+    {
+      "tool": "bash",
+      "command": "Get-NetTCPConnection -State Listen -LocalPort 3000,8080 -ErrorAction SilentlyContinue | Format-Table -AutoSize LocalAddress,LocalPort,OwningProcess",
+      "status": "Get-NetTCPConnection -State Listen -LocalPort 3000,8080 -ErrorAction SilentlyContinue | Format-Table -AutoSize LocalAddress,LocalPort,OwningProcess",
+      "exit": 0
+    },
+    {
+      "tool": "bash",
+      "command": "Get-CimInstance Win32_Process -Filter \"ProcessId = 6348\" | Format-List ProcessId,Name,CommandLine",
+      "status": "Get-CimInstance Win32_Process -Filter \"ProcessId = 6348\" | Format-List ProcessId,Name,CommandLine",
+      "exit": 0
+    },
+    {
+      "tool": "bash",
+      "command": "curl.exe -sS -o NUL -w \"HTTP %{http_code}`n\" http://localhost:3000",
+      "status": "curl.exe -sS -o NUL -w \"HTTP %{http_code}`n\" http://localhost:3000",
+      "exit": 0
+    },
+    {
+      "tool": "bash",
+      "command": "curl.exe -sS -o NUL -w \"HTTP %{http_code}`n\" http://127.0.0.1:8080/healthz",
+      "status": "curl.exe -sS -o NUL -w \"HTTP %{http_code}`n\" http://127.0.0.1:8080/healthz",
+      "exit": 1
+    },
+    {
+      "tool": "bash",
+      "command": "Start-Process -FilePath \"npm.cmd\" -ArgumentList @(\"run\", \"api:up\") -WorkingDirectory \"E:\\PhD Data\\latest_plugin\\traceforge\" -RedirectStandardOutput \"C:\\Users\\asifs\\AppData\\Local\\Temp\\opencode\\traceforge-api.log\" -RedirectStandardError \"C:\\Users\\asifs\\AppData\\Local\\Temp\\opencode\\traceforge-api-error.log\" -PassThru | Format-List Id,ProcessName"
+    },
+    {
+      "tool": "bash",
+      "command": "Start-Process -FilePath \"npm.cmd\" -ArgumentList @(\"run\", \"web:dev\") -WorkingDirectory \"E:\\PhD Data\\latest_plugin\\traceforge\" -RedirectStandardOutput \"C:\\Users\\asifs\\AppData\\Local\\Temp\\opencode\\traceforge-web.log\" -RedirectStandardError \"C:\\Users\\asifs\\AppData\\Local\\Temp\\opencode\\traceforge-web-error.log\" -PassThru | Format-List Id,ProcessName"
+    },
+    {
+      "tool": "todowrite",
+      "status": "6 todos"
+    },
+    {
+      "tool": "task",
+      "command": "prepare and evaluate TraceForge paper dataset"
+    },
+    {
+      "tool": "glob"
+    },
+    {
+      "tool": "glob"
+    },
+    {
+      "tool": "grep",
+      "status": "natural-v1|natural_v1|natural v1"
+    },
+    {
+      "tool": "grep",
+      "status": "accept-all|accept_all|regex|oracle|heuristic|Ollama|ollama|qwen3:4b"
+    },
+    {
+      "tool": "glob"
+    },
+    {
+      "tool": "glob"
+    },
+    {
+      "tool": "glob"
+    },
+    {
+      "tool": "glob"
+    },
+    {
+      "tool": "glob"
+    },
+    {
+      "tool": "glob"
+    },
+    {
+      "tool": "glob"
+    },
+    {
+      "tool": "grep",
+      "status": "annotations\\.csv|claims\\.csv|sessions\\.csv|audit\\.jsonl|manifest\\.json|annotation_status|adjudicat"
+    },
+    {
+      "tool": "grep",
+      "path": "package.json",
+      "status": "research:|benchmark|judge"
+    },
+    {
+      "tool": "glob"
+    },
+    {
+      "tool": "glob"
+    },
+    {
+      "tool": "glob"
+    },
+    {
+      "tool": "glob"
+    },
+    {
+      "tool": "glob"
+    },
+    {
+      "tool": "read",
+      "path": "src/evaluate.ts",
+      "status": "src\\evaluate.ts"
+    },
+    {
+      "tool": "read",
+      "path": "src/export-research-dataset.ts",
+      "status": "src\\export-research-dataset.ts"
+    },
+    {
+      "tool": "read",
+      "path": "src/research/baselines.ts",
+      "status": "src\\research\\baselines.ts"
+    },
+    {
+      "tool": "read",
+      "path": "src/research/claim-alignment.ts",
+      "status": "src\\research\\claim-alignment.ts"
+    },
+    {
+      "tool": "read",
+      "path": "src/research/metrics.ts",
+      "status": "src\\research\\metrics.ts"
+    },
+    {
+      "tool": "read",
+      "path": "src/research/run-manifest.ts",
+      "status": "src\\research\\run-manifest.ts"
+    },
+    {
+      "tool": "read",
+      "path": "research/README.md",
+      "status": "research\\README.md"
+    },
+    {
+      "tool": "read",
+      "path": "research/benchmark/ANNOTATION.md",
+      "status": "research\\benchmark\\ANNOTATION.md"
+    },
+    {
+      "tool": "read",
+      "path": "package.json",
+      "status": "package.json"
+    },
+    {
+      "tool": "read",
+      "path": "research/datasets/natural-v1.manifest.json",
+      "status": "research\\datasets\\natural-v1.manifest.json"
+    },
+    {
+      "tool": "read",
+      "path": "research/datasets/natural-v1.jsonl",
+      "status": "research\\datasets\\natural-v1.jsonl"
+    },
+    {
+      "tool": "read",
+      "path": "research/evaluation.example.jsonl",
+      "status": "research\\evaluation.example.jsonl"
+    },
+    {
+      "tool": "read",
+      "path": "src/modules/verification/domain/contracts.ts",
+      "status": "src\\modules\\verification\\domain\\contracts.ts"
+    },
+    {
+      "tool": "read",
+      "path": "src/modules/verification/domain/claim-types.ts",
+      "status": "src\\modules\\verification\\domain\\claim-types.ts"
+    },
+    {
+      "tool": "read",
+      "path": "src/modules/verification/domain/verdicts.ts",
+      "status": "src\\modules\\verification\\domain\\verdicts.ts"
+    },
+    {
+      "tool": "read",
+      "path": "src/modules/verification/application/claim-extractor.ts",
+      "status": "src\\modules\\verification\\application\\claim-extractor.ts"
+    },
+    {
+      "tool": "read",
+      "path": "src/modules/verification/application/ollama-claim-extractor.ts",
+      "status": "src\\modules\\verification\\application\\ollama-claim-extractor.ts"
+    },
+    {
+      "tool": "read",
+      "path": "test/research-judge-harness.test.ts",
+      "status": "test\\research-judge-harness.test.ts"
+    },
+    {
+      "tool": "read",
+      "path": "test/research-metrics.test.ts",
+      "status": "test\\research-metrics.test.ts"
+    },
+    {
+      "tool": "read",
+      "path": "test/modules/verification/claim-extractor.test.ts",
+      "status": "test\\modules\\verification\\claim-extractor.test.ts"
+    },
+    {
+      "tool": "read",
+      "path": "test/modules/verification/ollama-claim-extractor.test.ts",
+      "status": "test\\modules\\verification\\ollama-claim-extractor.test.ts"
+    },
+    {
+      "tool": "read",
+      "path": "test/modules/verification/verification-schema-contract.test.ts",
+      "status": "test\\modules\\verification\\verification-schema-contract.test.ts"
+    },
+    {
+      "tool": "read",
+      "path": "test/modules/verification/research-regressions.test.ts",
+      "status": "test\\modules\\verification\\research-regressions.test.ts",
+      "exit": 0
+    },
+    {
+      "tool": "read",
+      "path": "research/benchmark/llm-judge.mjs",
+      "status": "research\\benchmark\\llm-judge.mjs"
+    },
+    {
+      "tool": "read",
+      "path": "research/benchmark/run-benchmark.mjs",
+      "status": "research\\benchmark\\run-benchmark.mjs"
+    },
+    {
+      "tool": "read",
+      "path": "research/benchmark/run-controlled-benchmark.mjs",
+      "status": "research\\benchmark\\run-controlled-benchmark.mjs",
+      "exit": 0
+    },
+    {
+      "tool": "read",
+      "path": "research/benchmark/README.md",
+      "status": "research\\benchmark\\README.md"
+    },
+    {
+      "tool": "grep",
+      "path": "research/datasets"
+    },
+    {
+      "tool": "grep",
+      "status": "qwen3:4b|qwen3\\.5:4b|qwen3:14b",
+      "exit": 0
+    },
+    {
+      "tool": "grep",
+      "path": "research/datasets",
+      "status": "\"annotationStatus\":\"[^\"]+\"",
+      "exit": 0
+    },
+    {
+      "tool": "glob"
+    },
+    {
+      "tool": "glob"
+    },
+    {
+      "tool": "grep",
+      "status": "--extractors|--baselines|--judge-model|--allow-unadjudicated|--target-matching|--matching|--bootstrap|--cluster"
+    },
+    {
+      "tool": "grep",
+      "status": "adjudicated_verdict|annotator_a_verdict|annotator_b_verdict"
+    },
+    {
+      "tool": "glob"
+    },
+    {
+      "tool": "glob"
+    },
+    {
+      "tool": "glob"
+    },
+    {
+      "tool": "glob"
+    },
+    {
+      "tool": "bash",
+      "command": "git status --short; git log --oneline -5",
+      "status": "git status --short; git log --oneline -5",
+      "exit": 0
+    },
+    {
+      "tool": "glob"
+    },
+    {
+      "tool": "glob"
+    },
+    {
+      "tool": "glob"
+    },
+    {
+      "tool": "glob"
+    },
+    {
+      "tool": "glob"
+    },
+    {
+      "tool": "glob"
+    },
+    {
+      "tool": "bash",
+      "command": "Get-ChildItem -Recurse -File research | Select-Object FullName, Length | Format-Table -AutoSize",
+      "status": "Get-ChildItem -Recurse -File research | Select-Object FullName, Length | Format-Table -AutoSize",
+      "exit": 0
+    },
+    {
+      "tool": "bash",
+      "command": "Get-ChildItem -File src\\research, test | Select-Object FullName, Length | Format-Table -AutoSize",
+      "status": "Get-ChildItem -File src\\research, test | Select-Object FullName, Length | Format-Table -AutoSize",
+      "exit": 0
+    },
+    {
+      "tool": "read",
+      "path": "research/README.md",
+      "status": "research\\README.md"
+    },
+    {
+      "tool": "read",
+      "path": "research/benchmark/ANNOTATION.md",
+      "status": "research\\benchmark\\ANNOTATION.md"
+    },
+    {
+      "tool": "read",
+      "path": "research/datasets/natural-v1.annotations.csv",
+      "status": "research\\datasets\\natural-v1.annotations.csv"
+    },
+    {
+      "tool": "read",
+      "path": "research/datasets/natural-v1.manifest.json",
+      "status": "research\\datasets\\natural-v1.manifest.json"
+    },
+    {
+      "tool": "read",
+      "path": "src/evaluate.ts",
+      "status": "src\\evaluate.ts"
+    },
+    {
+      "tool": "read",
+      "path": "src/research/baselines.ts",
+      "status": "src\\research\\baselines.ts"
+    },
+    {
+      "tool": "read",
+      "path": "src/research/claim-alignment.ts",
+      "status": "src\\research\\claim-alignment.ts"
+    },
+    {
+      "tool": "read",
+      "path": "src/research/metrics.ts",
+      "status": "src\\research\\metrics.ts"
+    },
+    {
+      "tool": "read",
+      "path": "package.json",
+      "status": "package.json"
+    },
+    {
+      "tool": "bash",
+      "command": "node -e \"const fs=require('fs');const ls=fs.readFileSync('research/datasets/natural-v1.jsonl','utf8').split(/\\r?\\n/).filter(Boolean);console.log('lines',ls.length);const r=JSON.parse(ls[0]);console.log(JSON.stringify(r,null,2).slice(0,8000));console.log('KEYS',Object.keys(r));\"",
+      "status": "node -e \"const fs=require('fs');const ls=fs.readFileSync('research/datasets/natural-v1.jsonl','utf8').split(/\\r?\\n/).filter(Boolean);console.log('lines',ls.length);const r=JSON.parse(ls[0]);console.lo",
+      "exit": 0
+    },
+    {
+      "tool": "bash",
+      "command": "node -e \"const fs=require('fs');const s=fs.readFileSync('research/datasets/natural-v1.claims.csv','utf8');console.log(s.split(/\\r?\\n/).slice(0,12).join('\\n'))\"",
+      "status": "node -e \"const fs=require('fs');const s=fs.readFileSync('research/datasets/natural-v1.claims.csv','utf8');console.log(s.split(/\\r?\\n/).slice(0,12).join('\\n'))\"",
+      "exit": 0
+    },
+    {
+      "tool": "bash",
+      "command": "node -e \"const fs=require('fs');const s=fs.readFileSync('research/datasets/natural-v1.sessions.csv','utf8');console.log(s.split(/\\r?\\n/).slice(0,8).join('\\n'))\"",
+      "status": "node -e \"const fs=require('fs');const s=fs.readFileSync('research/datasets/natural-v1.sessions.csv','utf8');console.log(s.split(/\\r?\\n/).slice(0,8).join('\\n'))\"",
+      "exit": 0
+    },
+    {
+      "tool": "bash",
+      "command": "Get-ChildItem -File dist -ErrorAction SilentlyContinue | Select-Object Name, Length | Format-Table -AutoSize; Get-ChildItem -File src | Select-Object Name | Format-Table -AutoSize",
+      "status": "Get-ChildItem -File dist -ErrorAction SilentlyContinue | Select-Object Name, Length | Format-Table -AutoSize; Get-ChildItem -File src | Select-Object Name | Format-Table -AutoSize",
+      "exit": 0
+    },
+    {
+      "tool": "read",
+      "path": "src/modules/verification/domain/contracts.ts",
+      "status": "src\\modules\\verification\\domain\\contracts.ts"
+    },
+    {
+      "tool": "read",
+      "path": "src/modules/verification/domain/claim-types.ts",
+      "status": "src\\modules\\verification\\domain\\claim-types.ts"
+    },
+    {
+      "tool": "read",
+      "path": "src/modules/verification/domain/verdicts.ts",
+      "status": "src\\modules\\verification\\domain\\verdicts.ts"
+    },
+    {
+      "tool": "read",
+      "path": "src/export-research-dataset.ts",
+      "status": "src\\export-research-dataset.ts"
+    },
+    {
+      "tool": "read",
+      "path": "test/research-judge-harness.test.ts",
+      "status": "test\\research-judge-harness.test.ts"
+    },
+    {
+      "tool": "read",
+      "path": "research/benchmark/README.md",
+      "status": "research\\benchmark\\README.md"
+    },
+    {
+      "tool": "read",
+      "path": "research/benchmark/llm-judge.mjs",
+      "status": "research\\benchmark\\llm-judge.mjs"
+    },
+    {
+      "tool": "read",
+      "path": "research/benchmark/run-benchmark.mjs",
+      "status": "research\\benchmark\\run-benchmark.mjs"
+    },
+    {
+      "tool": "read",
+      "path": "test/research-metrics.test.ts",
+      "status": "test\\research-metrics.test.ts"
+    },
+    {
+      "tool": "read",
+      "path": "src/research/run-manifest.ts",
+      "status": "src\\research\\run-manifest.ts"
+    },
+    {
+      "tool": "bash",
+      "command": "Get-ChildItem -Recurse -File .oeval, research\\runs, .traceforge -ErrorAction SilentlyContinue | Select-Object FullName, Length | Format-Table -AutoSize",
+      "status": "Get-ChildItem -Recurse -File .oeval, research\\runs, .traceforge -ErrorAction SilentlyContinue | Select-Object FullName, Length | Format-Table -AutoSize",
+      "exit": 0
+    },
+    {
+      "tool": "bash",
+      "command": "node -e \"const fs=require('fs');const rows=fs.readFileSync('research/datasets/natural-v1.jsonl','utf8').split(/\\r?\\n/).filter(Boolean).map(JSON.parse);for(const r of rows){const ev=r.evidence||[];console.log([r.id.slice(0,8),r.promptQuery.split(/\\r?\\n/)[0].slice(0,45),JSON.stringify(r.finalResponse).slice(0,50),ev.length,r.goldClaims.length,r.annotationStatus].join(' | '))}\"",
+      "status": "node -e \"const fs=require('fs');const rows=fs.readFileSync('research/datasets/natural-v1.jsonl','utf8').split(/\\r?\\n/).filter(Boolean).map(JSON.parse);for(const r of rows){const ev=r.evidence||[];cons",
+      "exit": 0
+    },
+    {
+      "tool": "bash",
+      "command": "node -e \"const fs=require('fs');const s=fs.readFileSync('research/datasets/natural-v1.claims.csv','utf8').trim().split(/\\r?\\n/);console.log('claim rows',s.length-1);for(const line of s.slice(1,6))console.log(line.slice(0,300))\"",
+      "status": "node -e \"const fs=require('fs');const s=fs.readFileSync('research/datasets/natural-v1.claims.csv','utf8').trim().split(/\\r?\\n/);console.log('claim rows',s.length-1);for(const line of s.slice(1,6))cons",
+      "exit": 0
+    },
+    {
+      "tool": "bash",
+      "command": "node -e \"const fs=require('fs');const s=fs.readFileSync('research/datasets/natural-v1.claims.csv','utf8');let rows=[],f='',r=[],q=false;for(let i=0;i<s.length;i++){const c=s[i];if(q){if(c==='\\\"'&&s[i+1]==='\\\"'){f+='\\\"';i++;}else if(c==='\\\"')q=false;else f+=c;}else if(c==='\\\"')q=true;else if(c===','){r.push(f);f='';}else if(c==='\\n'||c==='\\r'){if(c==='\\r'&&s[i+1]==='\\n')i++;r.push(f);rows.push(r);r=[];f='';}else f+=c;}if(f||r.length){r.push(f);rows.push(r);}console.log('rows',rows.length-1);console.log(rows[0].join(' | '));for(const x of rows.slice(1,6))console.log(x[0].slice(0,8),x[1],x[5],x[6],x[7],x[10]);\"",
+      "status": "node -e \"const fs=require('fs');const s=fs.readFileSync('research/datasets/natural-v1.claims.csv','utf8');let rows=[],f='',r=[],q=false;for(let i=0;i<s.length;i++){const c=s[i];if(q){if(c==='\\\"'&&s[i+",
+      "exit": 1
+    },
+    {
+      "tool": "bash",
+      "command": "rg -n \"expectedResult|claimType|claimText|sourceQuote\" src\\modules\\verification\\application\\claim-verifier.ts src\\modules\\verification\\application\\claim-extractor.ts src\\modules\\verification\\application\\ollama-claim-extractor.ts | Select-Object -First 80",
+      "status": "rg -n \"expectedResult|claimType|claimText|sourceQuote\" src\\modules\\verification\\application\\claim-verifier.ts src\\modules\\verification\\application\\claim-extractor.ts src\\modules\\verification\\applicati",
+      "exit": 1
+    },
+    {
+      "tool": "bash",
+      "command": "Get-Content .env.example | Select-Object -First 80",
+      "status": "Get-Content .env.example | Select-Object -First 80",
+      "exit": 0
+    },
+    {
+      "tool": "grep",
+      "path": "src/modules/verification",
+      "status": "expectedResult"
+    },
+    {
+      "tool": "grep",
+      "path": "src/modules/verification/application/claim-extractor.ts",
+      "status": "sourceQuote|claimText"
+    },
+    {
+      "tool": "bash",
+      "command": "Get-ChildItem -Recurse -File .oeval | Select-Object FullName, Length | Format-Table -AutoSize",
+      "status": "Get-ChildItem -Recurse -File .oeval | Select-Object FullName, Length | Format-Table -AutoSize",
+      "exit": 0
+    },
+    {
+      "tool": "bash",
+      "command": "ollama list",
+      "status": "ollama list",
+      "exit": 0
+    },
+    {
+      "tool": "read",
+      "path": "src/modules/verification/application/claim-extractor.ts",
+      "status": "src\\modules\\verification\\application\\claim-extractor.ts"
+    },
+    {
+      "tool": "read",
+      "path": "src/modules/verification/application/ollama-claim-extractor.ts",
+      "status": "src\\modules\\verification\\application\\ollama-claim-extractor.ts"
+    },
+    {
+      "tool": "bash",
+      "command": "node -e \"const fs=require('fs');const rows=fs.readFileSync('research/datasets/natural-v1.jsonl','utf8').split(/\\r?\\n/).filter(Boolean).map(JSON.parse);const r=rows.find(x=>x.id.startsWith('67f800b5'));console.log(JSON.stringify({prompt:r.promptQuery,final:r.finalResponse,refs:r.evidence.map(e=>({eventId:e.eventId.slice(0,10),seq:e.sequenceNumber,type:e.eventType,outcome:e.outcome,target:e.target,path:e.metadata.path,command:e.metadata.command,tool:e.metadata.tool,exitCode:e.metadata.exitCode,existsAfter:e.metadata.fileExistsAfter,passed:e.metadata.passed,failed:e.metadata.failed,output:e.metadata.output?.slice?.(0,300)}))},null,2).slice(0,12000))\"",
+      "status": "node -e \"const fs=require('fs');const rows=fs.readFileSync('research/datasets/natural-v1.jsonl','utf8').split(/\\r?\\n/).filter(Boolean).map(JSON.parse);const r=rows.find(x=>x.id.startsWith('67f800b5'))",
+      "exit": 0
+    },
+    {
+      "tool": "grep",
+      "status": "capture_completeness|captureCompleteness|testTampering|test_tampering"
+    },
+    {
+      "tool": "bash",
+      "command": "node -e \"const fs=require('fs');const rows=fs.readFileSync('research/datasets/natural-v1.jsonl','utf8').split(/\\r?\\n/).filter(Boolean).map(JSON.parse);console.log('sessions',rows.length,'no-final',rows.filter(r=>!r.finalResponse).length,'NOT_AVAILABLE',rows.filter(r=>r.finalResponse==='NOT_AVAILABLE').length,'zero-evidence',rows.filter(r=>!r.evidence.length).length);const types={};for(const r of rows)for(const e of r.evidence)types[e.eventType]=(types[e.eventType]||0)+1;console.log(types);\"",
+      "status": "node -e \"const fs=require('fs');const rows=fs.readFileSync('research/datasets/natural-v1.jsonl','utf8').split(/\\r?\\n/).filter(Boolean).map(JSON.parse);console.log('sessions',rows.length,'no-final',row",
+      "exit": 0
+    },
+    {
+      "tool": "bash",
+      "command": "Get-ChildItem -File research\\datasets | Select-Object Name, Length, LastWriteTime | Format-Table -AutoSize",
+      "status": "Get-ChildItem -File research\\datasets | Select-Object Name, Length, LastWriteTime | Format-Table -AutoSize",
+      "exit": 0
+    },
+    {
+      "tool": "bash",
+      "command": "$s = Import-Csv research/datasets/natural-v1.sessions.csv; $s | Group-Object claim_count | Sort-Object { [int]$_.Name } | Select-Object Name, Count | Format-Table -AutoSize; ($s | Measure-Object -Property claim_count -Maximum -Average) | Format-List",
+      "status": "$s = Import-Csv research/datasets/natural-v1.sessions.csv; $s | Group-Object claim_count | Sort-Object { [int]$_.Name } | Select-Object Name, Count | Format-Table -AutoSize; ($s | Measure-Object -Prop",
+      "exit": 0
+    },
+    {
+      "tool": "bash",
+      "command": "$a = Import-Csv research/datasets/natural-v1.annotations.csv; \"rows=$($a.Count)\"; $a | Group-Object { if ($_.adjudicated_verdict -eq '') {'blank'} else {'filled'} } | Select-Object Name, Count",
+      "status": "$a = Import-Csv research/datasets/natural-v1.annotations.csv; \"rows=$($a.Count)\"; $a | Group-Object { if ($_.adjudicated_verdict -eq '') {'blank'} else {'filled'} } | Select-Object Name, Count",
+      "exit": 0
+    },
+    {
+      "tool": "bash",
+      "command": "git status --short research src/evaluate.ts research/benchmark | Select-Object -First 50",
+      "status": "git status --short research src/evaluate.ts research/benchmark | Select-Object -First 50",
+      "exit": 0
+    },
+    {
+      "tool": "read",
+      "path": "research/evaluation.example.jsonl",
+      "status": "research\\evaluation.example.jsonl"
+    },
+    {
+      "tool": "bash",
+      "command": "Get-Content tsconfig.json",
+      "status": "Get-Content tsconfig.json",
+      "exit": 0
+    },
+    {
+      "tool": "bash",
+      "command": "Get-Content vitest.config.ts",
+      "status": "Get-Content vitest.config.ts",
+      "exit": 0
+    },
+    {
+      "tool": "bash",
+      "command": "Get-Content .gitignore -ErrorAction SilentlyContinue",
+      "status": "Get-Content .gitignore -ErrorAction SilentlyContinue",
+      "exit": 0
+    },
+    {
+      "tool": "bash",
+      "command": "Get-ChildItem research -Force | Select-Object Name, Mode | Format-Table -AutoSize",
+      "status": "Get-ChildItem research -Force | Select-Object Name, Mode | Format-Table -AutoSize",
+      "exit": 0
+    },
+    {
+      "tool": "bash",
+      "command": "node --version; node node_modules/typescript/bin/tsc --version",
+      "status": "node --version; node node_modules/typescript/bin/tsc --version",
+      "exit": 0
+    },
+    {
+      "tool": "todowrite",
+      "status": "4 todos"
+    },
+    {
+      "tool": "write",
+      "path": "research/annotation/lib.mjs",
+      "status": "research\\annotation\\lib.mjs"
+    },
+    {
+      "tool": "write",
+      "path": "research/annotation/prepare-worksheets.mjs",
+      "status": "research\\annotation\\prepare-worksheets.mjs"
+    },
+    {
+      "tool": "write",
+      "path": "research/annotation/build-adjudicated-dataset.mjs",
+      "status": "research\\annotation\\build-adjudicated-dataset.mjs"
+    },
+    {
+      "tool": "write",
+      "path": "research/annotation/run-evaluation-suite.mjs",
+      "status": "research\\annotation\\run-evaluation-suite.mjs"
+    },
+    {
+      "tool": "write",
+      "path": "research/annotation/README.md",
+      "status": "research\\annotation\\README.md"
+    },
+    {
+      "tool": "write",
+      "path": "research/annotation/adjudication-template.csv",
+      "status": "research\\annotation\\adjudication-template.csv"
+    },
+    {
+      "tool": "bash",
+      "command": "node research/annotation/prepare-worksheets.mjs",
+      "status": "node research/annotation/prepare-worksheets.mjs",
+      "exit": 0
+    },
+    {
+      "tool": "bash",
+      "command": "Get-ChildItem -File research\\datasets\\natural-v1.annotator-*.csv | Select-Object Name, Length | Format-Table -AutoSize; Get-Content research\\datasets\\natural-v1.annotator-a.csv -TotalCount 1",
+      "status": "Get-ChildItem -File research\\datasets\\natural-v1.annotator-*.csv | Select-Object Name, Length | Format-Table -AutoSize; Get-Content research\\datasets\\natural-v1.annotator-a.csv -TotalCount 1",
+      "exit": 0
+    },
+    {
+      "tool": "bash",
+      "command": "node -e \"const fs=require('fs');for(const f of ['research/datasets/natural-v1.annotator-a.csv','research/datasets/natural-v1.annotator-b.csv']){const s=fs.readFileSync(f,'utf8');console.log(f, {traceforge_verdict:s.includes('traceforge_verdict'),gold_verdict:s.includes('gold_verdict'),goldClaims:s.includes('goldClaims'),claimsCsv:s.includes('extractor_model'),predicted:s.includes('predicted'),predictedVerdicts:(s.match(/TRACEFORGE/g)||[]).length});}\"",
+      "status": "node -e \"const fs=require('fs');for(const f of ['research/datasets/natural-v1.annotator-a.csv','research/datasets/natural-v1.annotator-b.csv']){const s=fs.readFileSync(f,'utf8');console.log(f, {tracef",
+      "exit": 0
+    },
+    {
+      "tool": "bash",
+      "command": "$a=Import-Csv research\\datasets\\natural-v1.annotator-a.csv; \"rows=$($a.Count) sessions=$((($a | Select-Object -ExpandProperty session_id -Unique)).Count)\"; $a | Select-Object -First 2 | Format-List worksheet_id,annotator_slot,session_id,claim_slot,annotator_verdict,annotation_status",
+      "status": "$a=Import-Csv research\\datasets\\natural-v1.annotator-a.csv; \"rows=$($a.Count) sessions=$((($a | Select-Object -ExpandProperty session_id -Unique)).Count)\"; $a | Select-Object -First 2 | Format-List wo",
+      "exit": 0
+    },
+    {
+      "tool": "write",
+      "path": "test/research-annotation-tools.test.ts",
+      "status": "test\\research-annotation-tools.test.ts"
+    },
+    {
+      "tool": "bash",
+      "command": "node node_modules/vitest/vitest.mjs run test/research-annotation-tools.test.ts --reporter=verbose",
+      "status": "node node_modules/vitest/vitest.mjs run test/research-annotation-tools.test.ts --reporter=verbose",
+      "exit": 0
+    },
+    {
+      "tool": "bash",
+      "command": "node node_modules/typescript/bin/tsc -p tsconfig.json --noEmit",
+      "status": "node node_modules/typescript/bin/tsc -p tsconfig.json --noEmit",
+      "exit": 0
+    },
+    {
+      "tool": "bash",
+      "command": "node research/annotation/run-evaluation-suite.mjs --dry-run",
+      "status": "node research/annotation/run-evaluation-suite.mjs --dry-run",
+      "exit": 1
+    },
+    {
+      "tool": "bash",
+      "command": "node research/annotation/build-adjudicated-dataset.mjs --dry-run",
+      "status": "node research/annotation/build-adjudicated-dataset.mjs --dry-run",
+      "exit": 1
+    },
+    {
+      "tool": "edit",
+      "path": "research/annotation/run-evaluation-suite.mjs",
+      "status": "research\\annotation\\run-evaluation-suite.mjs"
+    },
+    {
+      "tool": "edit",
+      "path": "research/annotation/run-evaluation-suite.mjs",
+      "status": "research\\annotation\\run-evaluation-suite.mjs"
+    },
+    {
+      "tool": "bash",
+      "command": "node research/annotation/run-evaluation-suite.mjs --dry-run",
+      "status": "node research/annotation/run-evaluation-suite.mjs --dry-run",
+      "exit": 0
+    },
+    {
+      "tool": "bash",
+      "command": "node research/annotation/build-adjudicated-dataset.mjs --annotations research/datasets/natural-v1.annotations.csv --dry-run",
+      "status": "node research/annotation/build-adjudicated-dataset.mjs --annotations research/datasets/natural-v1.annotations.csv --dry-run",
+      "exit": 1
+    },
+    {
+      "tool": "bash",
+      "command": "node -e \"const fs=require('fs');for(const f of ['research/datasets/natural-v1.annotator-a.csv','research/datasets/natural-v1.annotator-b.csv']){const s=fs.readFileSync(f,'utf8');for(const t of ['VERIFIED','CONTRADICTED','UNSUPPORTED','UNVERIFIABLE','traceforge','TraceForge','predicted','goldClaims','claim_text','reason_code'])console.log(f.split('/').pop(),t,(s.match(new RegExp(t,'g'))||[]).length)}\"",
+      "status": "node -e \"const fs=require('fs');for(const f of ['research/datasets/natural-v1.annotator-a.csv','research/datasets/natural-v1.annotator-b.csv']){const s=fs.readFileSync(f,'utf8');for(const t of ['VERIF",
+      "exit": 0
+    },
+    {
+      "tool": "bash",
+      "command": "node -e \"const fs=require('fs');const rows=fs.readFileSync('research/datasets/natural-v1.jsonl','utf8').split(/\\r?\\n/).filter(Boolean).map(JSON.parse);console.log('sessions',rows.length,'goldClaims',rows.reduce((n,r)=>n+r.goldClaims.length,0),'adjudicated',rows.filter(r=>r.annotationStatus==='adjudicated').length);const a=fs.readFileSync('research/datasets/natural-v1.annotations.csv','utf8').trim().split(/\\r?\\n/).slice(1);console.log('annotation rows',a.length,'nonblank labels',a.filter(l=>l.replace(/\\\"/g,'').split(',').slice(1).some(x=>x.trim())).length)\"",
+      "status": "node -e \"const fs=require('fs');const rows=fs.readFileSync('research/datasets/natural-v1.jsonl','utf8').split(/\\r?\\n/).filter(Boolean).map(JSON.parse);console.log('sessions',rows.length,'goldClaims',r",
+      "exit": 1
+    },
+    {
+      "tool": "bash",
+      "command": "git status --short research test/research-annotation-tools.test.ts | Format-Table -AutoSize",
+      "status": "git status --short research test/research-annotation-tools.test.ts | Format-Table -AutoSize",
+      "exit": 0
+    },
+    {
+      "tool": "bash",
+      "command": "node node_modules/typescript/bin/tsc -p tsconfig.json",
+      "status": "node node_modules/typescript/bin/tsc -p tsconfig.json",
+      "exit": 0
+    },
+    {
+      "tool": "bash",
+      "command": "$out = Join-Path $env:TEMP (\"traceforge-smoke-\" + [guid]::NewGuid().ToString(\"N\")); node dist/evaluate.js --dataset research/evaluation.example.jsonl --extractors oracle,heuristic --baselines deterministic,accept,regex --allow-unadjudicated --bootstrap 100 --output $out; if ($?) { Get-ChildItem -File $out | Select-Object Name, Length | Format-Table -AutoSize }",
+      "status": "$out = Join-Path $env:TEMP (\"traceforge-smoke-\" + [guid]::NewGuid().ToString(\"N\")); node dist/evaluate.js --dataset research/evaluation.example.jsonl --extractors oracle,heuristic --baselines determin",
+      "exit": 0
+    },
+    {
+      "tool": "bash",
+      "command": "node node_modules/vitest/vitest.mjs run --reporter=dot",
+      "status": "node node_modules/vitest/vitest.mjs run --reporter=dot",
+      "exit": 0
+    },
+    {
+      "tool": "bash",
+      "command": "Test-Path research\\datasets\\natural-v1-adjudicated.jsonl; Test-Path research\\datasets\\natural-v1.adjudications.csv; Get-ChildItem -File research\\datasets | Select-Object Name, Length | Format-Table -AutoSize",
+      "status": "Test-Path research\\datasets\\natural-v1-adjudicated.jsonl; Test-Path research\\datasets\\natural-v1.adjudications.csv; Get-ChildItem -File research\\datasets | Select-Object Name, Length | Format-Table -A",
+      "exit": 0
+    },
+    {
+      "tool": "bash",
+      "command": "Get-ChildItem -File research\\annotation | Select-Object Name, Length | Format-Table -AutoSize; git diff --stat -- src/evaluate.ts research/annotation test/research-annotation-tools.test.ts",
+      "status": "Get-ChildItem -File research\\annotation | Select-Object Name, Length | Format-Table -AutoSize; git diff --stat -- src/evaluate.ts research/annotation test/research-annotation-tools.test.ts",
+      "exit": 0
+    },
+    {
+      "tool": "bash",
+      "command": "git status --short -- research/annotation research/datasets test/research-annotation-tools.test.ts src/evaluate.ts",
+      "status": "git status --short -- research/annotation research/datasets test/research-annotation-tools.test.ts src/evaluate.ts",
+      "exit": 0
+    },
+    {
+      "tool": "todowrite",
+      "status": "2 todos"
+    },
+    {
+      "tool": "todowrite",
+      "status": "7 todos"
+    },
+    {
+      "tool": "bash",
+      "command": "Get-ChildItem -Recurse -File data -ErrorAction SilentlyContinue | Select-Object FullName, Length | Format-Table -AutoSize; Get-ChildItem -Recurse -File .oeval -ErrorAction SilentlyContinue | Select-Object FullName, Length | Format-Table -AutoSize",
+      "status": "Get-ChildItem -Recurse -File data -ErrorAction SilentlyContinue | Select-Object FullName, Length | Format-Table -AutoSize; Get-ChildItem -Recurse -File .oeval -ErrorAction SilentlyContinue | Select-Ob",
+      "exit": 0
+    },
+    {
+      "tool": "bash",
+      "command": "node -e \"const fs=require('fs');const f='.oeval/live-provenance.jsonl';if(!fs.existsSync(f)){console.log('missing');process.exit()}const ls=fs.readFileSync(f,'utf8').split(/\\r?\\n/).filter(Boolean);console.log('lines',ls.length);const ids=new Set();let keys={};for(const l of ls){const r=JSON.parse(l);const id=r.promptId||r.prompt_id||r.id||r.sessionId;if(id)ids.add(id);for(const k of Object.keys(r))keys[k]=(keys[k]||0)+1}console.log('unique ids',ids.size);console.log('keys',keys);console.log('first',JSON.stringify(JSON.parse(ls[0]),null,2).slice(0,2000))\"",
+      "status": "node -e \"const fs=require('fs');const f='.oeval/live-provenance.jsonl';if(!fs.existsSync(f)){console.log('missing');process.exit()}const ls=fs.readFileSync(f,'utf8').split(/\\r?\\n/).filter(Boolean);con",
+      "exit": 1
+    },
+    {
+      "tool": "bash",
+      "command": "Get-ChildItem -Recurse -File -Filter *.sqlite -ErrorAction SilentlyContinue | Select-Object FullName, Length | Format-Table -AutoSize; Get-ChildItem -Recurse -File -Filter *.db -ErrorAction SilentlyContinue | Select-Object FullName, Length | Format-Table -AutoSize",
+      "status": "Get-ChildItem -Recurse -File -Filter *.sqlite -ErrorAction SilentlyContinue | Select-Object FullName, Length | Format-Table -AutoSize; Get-ChildItem -Recurse -File -Filter *.db -ErrorAction SilentlyCo",
+      "exit": 0
+    },
+    {
+      "tool": "bash",
+      "command": "node -e \"const fs=require('fs');const s=fs.readFileSync('research/benchmark/results/sessions.jsonl','utf8').trim().split(/\\r?\\n/);console.log('benchmark sessions rows',s.length);const r=JSON.parse(s[0]);console.log('keys',Object.keys(r));console.log('families',[...new Set(s.map(l=>JSON.parse(l).family))].length);console.log('gold claims',s.reduce((n,l)=>n+JSON.parse(l).gold.length,0))\"",
+      "status": "node -e \"const fs=require('fs');const s=fs.readFileSync('research/benchmark/results/sessions.jsonl','utf8').trim().split(/\\r?\\n/);console.log('benchmark sessions rows',s.length);const r=JSON.parse(s[0",
+      "exit": 0
+    },
+    {
+      "tool": "bash",
+      "command": "node -e \"const fs=require('fs');const ls=fs.readFileSync('research/benchmark/results/sessions.jsonl','utf8').trim().split(/\\r?\\n/);const r=JSON.parse(ls[0]);console.log(JSON.stringify(r,null,2).slice(0,10000))\"",
+      "status": "node -e \"const fs=require('fs');const ls=fs.readFileSync('research/benchmark/results/sessions.jsonl','utf8').trim().split(/\\r?\\n/);const r=JSON.parse(ls[0]);console.log(JSON.stringify(r,null,2).slice(",
+      "exit": 0
+    },
+    {
+      "tool": "bash",
+      "command": "node -e \"const fs=require('fs');const ls=fs.readFileSync('research/benchmark/results/sessions.jsonl','utf8').trim().split(/\\r?\\n/).map(JSON.parse);const c={};for(const r of ls)c[r.family]=(c[r.family]||0)+1;console.log(c);console.log('evidence types',[...new Set(ls.flatMap(r=>r.evidence.map(e=>e.eventType)))].join(','));console.log('gold sample',JSON.stringify(ls[0].gold,null,2));console.log('evidence sample',JSON.stringify(ls[0].evidence.slice(0,5),null,2))\"",
+      "status": "node -e \"const fs=require('fs');const ls=fs.readFileSync('research/benchmark/results/sessions.jsonl','utf8').trim().split(/\\r?\\n/).map(JSON.parse);const c={};for(const r of ls)c[r.family]=(c[r.family]",
+      "exit": 0
+    },
+    {
+      "tool": "bash",
+      "command": "Get-Content research\\benchmark\\run-controlled-benchmark.mjs -TotalCount 120",
+      "status": "Get-Content research\\benchmark\\run-controlled-benchmark.mjs -TotalCount 120",
+      "exit": 0
+    },
+    {
+      "tool": "bash",
+      "command": "Get-Content src\\infrastructure\\sqlite\\sqlite-database.ts -TotalCount 80",
+      "status": "Get-Content src\\infrastructure\\sqlite\\sqlite-database.ts -TotalCount 80",
+      "exit": 0
+    },
+    {
+      "tool": "bash",
+      "command": "node -e \"const fs=require('fs');const p='.oeval/live-provenance.jsonl';const b=fs.readFileSync(p);console.log('size',b.length,'nul',b.indexOf(0));let start=0;for(let i=0;i<b.length&&i<100;i++){if(b[i]!==0){start=i;break}}console.log('first nonzero',start,JSON.stringify(b.subarray(start,start+200).toString()))\"",
+      "status": "node -e \"const fs=require('fs');const p='.oeval/live-provenance.jsonl';const b=fs.readFileSync(p);console.log('size',b.length,'nul',b.indexOf(0));let start=0;for(let i=0;i<b.length&&i<100;i++){if(b[i]",
+      "exit": 0
+    },
+    {
+      "tool": "bash",
+      "command": "node -e \"const fs=require('fs');const s=fs.readFileSync('research/benchmark/results/summary.json','utf8');console.log(s.slice(0,3000))\"",
+      "status": "node -e \"const fs=require('fs');const s=fs.readFileSync('research/benchmark/results/summary.json','utf8');console.log(s.slice(0,3000))\"",
+      "exit": 0
+    },
+    {
+      "tool": "bash",
+      "command": "node -e 'const {DatabaseSync}=require(\"node:sqlite\");const db=new DatabaseSync(\"data/traceforge.sqlite\",{readOnly:true});const t=db.prepare(\"SELECT name FROM sqlite_master WHERE type=\\\"table\\\" ORDER BY name\").all();console.log(t.map(x=>x.name).join(\"\\n\"));for(const name of [\"execution_sessions\",\"prompt_results\",\"agent_claims\"]){try{console.log(name,db.prepare(`SELECT count(*) AS n FROM ${name}`).get())}catch(e){console.log(name,e.message)}}'",
+      "status": "node -e 'const {DatabaseSync}=require(\"node:sqlite\");const db=new DatabaseSync(\"data/traceforge.sqlite\",{readOnly:true});const t=db.prepare(\"SELECT name FROM sqlite_master WHERE type=\\\"table\\\" ORDER B",
+      "exit": 1
+    },
+    {
+      "tool": "bash",
+      "command": "node -e 'const {DatabaseSync}=require(\"node:sqlite\");const db=new DatabaseSync(\"data/traceforge.sqlite\",{readOnly:true});try{console.log(db.prepare(\"SELECT prompt_id,policy_version,started_at FROM execution_sessions ORDER BY started_at LIMIT 5\").all())}catch(e){console.log(e.message)}'",
+      "status": "node -e 'const {DatabaseSync}=require(\"node:sqlite\");const db=new DatabaseSync(\"data/traceforge.sqlite\",{readOnly:true});try{console.log(db.prepare(\"SELECT prompt_id,policy_version,started_at FROM exe",
+      "exit": 1
+    },
+    {
+      "tool": "bash",
+      "command": "node -e 'const fs=require(\"fs\");const b=fs.readFileSync(\".oeval/live-provenance.jsonl\");const s=b.toString(\"utf8\").replace(/\\u0000/g,\"\\n\");const ls=s.split(/\\r?\\n/).filter(l=>l.trim().startsWith(\"{\"));console.log(\"json lines\",ls.length);const ids=new Set();let bad=0;for(const l of ls){try{const r=JSON.parse(l);const d=r.data&&r.data.event;if(d&&d.properties){const id=d.properties.promptId||d.properties.prompt_id||d.properties.id;if(id)ids.add(id)}}catch{bad++}}console.log(\"unique ids\",ids.size,\"bad\",bad)'",
+      "status": "node -e 'const fs=require(\"fs\");const b=fs.readFileSync(\".oeval/live-provenance.jsonl\");const s=b.toString(\"utf8\").replace(/\\u0000/g,\"\\n\");const ls=s.split(/\\r?\\n/).filter(l=>l.trim().startsWith(\"{\"))",
+      "exit": 1
+    },
+    {
+      "tool": "write"
+    },
+    {
+      "tool": "write"
+    },
+    {
+      "tool": "bash",
+      "command": "node C:\\Users\\asifs\\AppData\\Local\\Temp\\opencode\\inspect-db.mjs",
+      "status": "node C:\\Users\\asifs\\AppData\\Local\\Temp\\opencode\\inspect-db.mjs",
+      "exit": 0
+    },
+    {
+      "tool": "bash",
+      "command": "Test-Path ..\\tf-old; if (Test-Path ..\\tf-old) { Get-ChildItem ..\\tf-old -Force | Select-Object Name | Format-Table -AutoSize }; Test-Path dist\\modules\\verification\\application\\claim-verifier.js; Test-Path packages\\adapter-opencode\\dist\\workspace-observer.js",
+      "status": "Test-Path ..\\tf-old; if (Test-Path ..\\tf-old) { Get-ChildItem ..\\tf-old -Force | Select-Object Name | Format-Table -AutoSize }; Test-Path dist\\modules\\verification\\application\\claim-verifier.js; Test-",
+      "exit": 0
+    },
+    {
+      "tool": "bash",
+      "command": "Get-Content research\\benchmark\\run-controlled-benchmark.mjs | Select-Object -Skip 120 -First 260",
+      "status": "Get-Content research\\benchmark\\run-controlled-benchmark.mjs | Select-Object -Skip 120 -First 260",
+      "exit": 0
+    },
+    {
+      "tool": "bash",
+      "command": "node -e \"const fs=require('fs');const ls=fs.readFileSync('research/benchmark/results/sessions.jsonl','utf8').trim().split(/\\r?\\n/).map(JSON.parse);let missing=0,notExact=0;const types={};for(const r of ls)for(const g of r.gold){types[g.claimType]=(types[g.claimType]||0)+1;if(!r.response.includes(g.quote))notExact++;if(!g.target)missing++}console.log({sessions:ls.length,claims:ls.reduce((n,r)=>n+r.gold.length,0),notExact,missing,types});\"",
+      "status": "node -e \"const fs=require('fs');const ls=fs.readFileSync('research/benchmark/results/sessions.jsonl','utf8').trim().split(/\\r?\\n/).map(JSON.parse);let missing=0,notExact=0;const types={};for(const r o",
+      "exit": 0
+    },
+    {
+      "tool": "write"
+    },
+    {
+      "tool": "write"
+    },
+    {
+      "tool": "bash",
+      "command": "node C:\\Users\\asifs\\AppData\\Local\\Temp\\opencode\\probe-ollama.mjs",
+      "status": "node C:\\Users\\asifs\\AppData\\Local\\Temp\\opencode\\probe-ollama.mjs",
+      "exit": 0
+    },
+    {
+      "tool": "bash",
+      "command": "node C:\\Users\\asifs\\AppData\\Local\\Temp\\opencode\\probe-ollama.mjs",
+      "status": "node C:\\Users\\asifs\\AppData\\Local\\Temp\\opencode\\probe-ollama.mjs",
+      "exit": 0
+    },
+    {
+      "tool": "bash",
+      "command": "node -e \"const fs=require('fs');const ls=fs.readFileSync('research/benchmark/results/rows.jsonl','utf8').trim().split(/\\r?\\n/);console.log('rows',ls.length);const r=JSON.parse(ls[0]);console.log(JSON.stringify(r,null,2).slice(0,3000));const systems=new Set(ls.map(l=>JSON.parse(l).system));console.log('systems',systems.size,[...systems]);\"",
+      "status": "node -e \"const fs=require('fs');const ls=fs.readFileSync('research/benchmark/results/rows.jsonl','utf8').trim().split(/\\r?\\n/);console.log('rows',ls.length);const r=JSON.parse(ls[0]);console.log(JSON.",
+      "exit": 0
+    },
+    {
+      "tool": "bash",
+      "command": "node -e \"const fs=require('fs');const s=JSON.parse(fs.readFileSync('research/benchmark/results/summary.json','utf8'));console.log('summary rows',s.summary.length);console.log(s.summary.map(x=>x.system).join('\\n'));console.log('other keys',Object.keys(s));\"",
+      "status": "node -e \"const fs=require('fs');const s=JSON.parse(fs.readFileSync('research/benchmark/results/summary.json','utf8'));console.log('summary rows',s.summary.length);console.log(s.summary.map(x=>x.system",
+      "exit": 0
+    },
+    {
+      "tool": "bash",
+      "command": "node -e \"const fs=require('fs');const s=fs.readFileSync('research/benchmark/results/sessions.jsonl','utf8').trim().split(/\\r?\\n/).map(JSON.parse);const ev=s.reduce((n,r)=>n+r.evidence.length,0);console.log({sessions:s.length,claims:s.reduce((n,r)=>n+r.gold.length,0),evidence:ev});\"",
+      "status": "node -e \"const fs=require('fs');const s=fs.readFileSync('research/benchmark/results/sessions.jsonl','utf8').trim().split(/\\r?\\n/).map(JSON.parse);const ev=s.reduce((n,r)=>n+r.evidence.length,0);consol",
+      "exit": 0
+    },
+    {
+      "tool": "bash",
+      "command": "node -e \"const fs=require('fs');const s=JSON.parse(fs.readFileSync('research/benchmark/results/summary.json','utf8'));console.log('heldOut',JSON.stringify(s.heldOutSummary,null,2).slice(0,3000));console.log('families',JSON.stringify(s.families,null,2).slice(0,1500));\"",
+      "status": "node -e \"const fs=require('fs');const s=JSON.parse(fs.readFileSync('research/benchmark/results/summary.json','utf8'));console.log('heldOut',JSON.stringify(s.heldOutSummary,null,2).slice(0,3000));conso",
+      "exit": 0
+    },
+    {
+      "tool": "write",
+      "path": "research/annotation/build-controlled-dataset.mjs",
+      "status": "research\\annotation\\build-controlled-dataset.mjs"
+    },
+    {
+      "tool": "edit",
+      "path": "research/annotation/run-evaluation-suite.mjs",
+      "status": "research\\annotation\\run-evaluation-suite.mjs"
+    },
+    {
+      "tool": "edit",
+      "path": "research/annotation/run-evaluation-suite.mjs",
+      "status": "research\\annotation\\run-evaluation-suite.mjs"
+    },
+    {
+      "tool": "edit",
+      "path": "research/annotation/run-evaluation-suite.mjs",
+      "status": "research\\annotation\\run-evaluation-suite.mjs"
+    },
+    {
+      "tool": "edit",
+      "path": "research/annotation/run-evaluation-suite.mjs",
+      "status": "research\\annotation\\run-evaluation-suite.mjs"
+    },
+    {
+      "tool": "bash",
+      "command": "node research/annotation/build-controlled-dataset.mjs",
+      "status": "node research/annotation/build-controlled-dataset.mjs",
+      "exit": 0
+    },
+    {
+      "tool": "bash",
+      "command": "Get-ChildItem -File research\\exports\\controlled-v1 | Select-Object Name, Length | Format-Table -AutoSize; $s=Import-Csv research\\exports\\controlled-v1\\sessions.csv; $g=Import-Csv research\\exports\\controlled-v1\\gold-claims.csv; $e=Import-Csv research\\exports\\controlled-v1\\evidence.csv; $p=Import-Csv research\\exports\\controlled-v1\\benchmark-per-claim.csv; \"sessions=$($s.Count) claims=$($g.Count) evidence=$($e.Count) perClaim=$($p.Count)\"",
+      "status": "Get-ChildItem -File research\\exports\\controlled-v1 | Select-Object Name, Length | Format-Table -AutoSize; $s=Import-Csv research\\exports\\controlled-v1\\sessions.csv; $g=Import-Csv research\\exports\\cont",
+      "exit": 0
+    },
+    {
+      "tool": "bash",
+      "command": "node -e \"const fs=require('fs');const r=JSON.parse(fs.readFileSync('research/datasets/controlled-v1.jsonl','utf8').split(/\\r?\\n/)[0]);console.log(JSON.stringify(r,null,2).slice(0,2500))\"",
+      "status": "node -e \"const fs=require('fs');const r=JSON.parse(fs.readFileSync('research/datasets/controlled-v1.jsonl','utf8').split(/\\r?\\n/)[0]);console.log(JSON.stringify(r,null,2).slice(0,2500))\"",
+      "exit": 0
+    },
+    {
+      "tool": "bash",
+      "command": "node node_modules/typescript/bin/tsc -p tsconfig.json --noEmit",
+      "status": "node node_modules/typescript/bin/tsc -p tsconfig.json --noEmit",
+      "exit": 0
+    },
+    {
+      "tool": "edit",
+      "path": "research/annotation/build-controlled-dataset.mjs",
+      "status": "research\\annotation\\build-controlled-dataset.mjs"
+    },
+    {
+      "tool": "bash",
+      "command": "node research/annotation/build-controlled-dataset.mjs --force",
+      "status": "node research/annotation/build-controlled-dataset.mjs --force",
+      "exit": 0
+    },
+    {
+      "tool": "edit",
+      "path": "research/annotation/run-evaluation-suite.mjs",
+      "status": "research\\annotation\\run-evaluation-suite.mjs"
+    },
+    {
+      "tool": "edit",
+      "path": "research/annotation/run-evaluation-suite.mjs",
+      "status": "research\\annotation\\run-evaluation-suite.mjs"
+    },
+    {
+      "tool": "bash",
+      "command": "node research/annotation/run-evaluation-suite.mjs --dataset research/datasets/controlled-v1.jsonl --allow-unadjudicated --skip-build --only 01",
+      "status": "node research/annotation/run-evaluation-suite.mjs --dataset research/datasets/controlled-v1.jsonl --allow-unadjudicated --skip-build --only 01",
+      "exit": 0
+    },
+    {
+      "tool": "bash",
+      "command": "node -e \"const fs=require('fs');const base='research/runs/natural-v1-2026-10-28T13-03-35-474Z-67f597e0/01-oracle-heuristic-deterministic-accept-regex';const m=JSON.parse(fs.readFileSync(base+'/metrics.json','utf8'));for(const [k,v] of Object.entries(m))console.log(k,JSON.stringify({gold:v.goldClaims,acc:v.accuracy,missed:v.missedClaims,spurious:v.spuriousClaims,ci:v.confidenceIntervals?.accuracy}));\"",
+      "status": "node -e \"const fs=require('fs');const base='research/runs/natural-v1-2026-10-28T13-03-35-474Z-67f597e0/01-oracle-heuristic-deterministic-accept-regex';const m=JSON.parse(fs.readFileSync(base+'/metrics",
+      "exit": 0
+    },
+    {
+      "tool": "bash",
+      "command": "Get-ChildItem -File research\\runs\\natural-v1-2026-10-28T13-03-35-474Z-67f597e0 -Recurse | Select-Object FullName, Length | Format-Table -AutoSize",
+      "status": "Get-ChildItem -File research\\runs\\natural-v1-2026-10-28T13-03-35-474Z-67f597e0 -Recurse | Select-Object FullName, Length | Format-Table -AutoSize",
+      "exit": 0
+    },
+    {
+      "tool": "bash",
+      "command": "node -e \"const fs=require('fs');const f='research/runs/natural-v1-2026-10-28T13-03-35-474Z-67f597e0/01-oracle-heuristic-deterministic-accept-regex/predictions.jsonl';const ls=fs.readFileSync(f,'utf8').trim().split(/\\r?\\n/).map(JSON.parse);const h=ls.find(x=>x.extractor==='heuristic');console.log(JSON.stringify(h,null,2).slice(0,5000));const o=ls.find(x=>x.extractor==='oracle');console.log('oracle align',JSON.stringify(o.alignment.slice(0,3)));\"",
+      "status": "node -e \"const fs=require('fs');const f='research/runs/natural-v1-2026-10-28T13-03-35-474Z-67f597e0/01-oracle-heuristic-deterministic-accept-regex/predictions.jsonl';const ls=fs.readFileSync(f,'utf8')",
+      "exit": 0
+    },
+    {
+      "tool": "bash",
+      "command": "node -e \"const fs=require('fs');const f='research/runs/natural-v1-2026-10-28T13-03-35-474Z-67f597e0/01-oracle-heuristic-deterministic-accept-regex/extraction.jsonl';const ls=fs.readFileSync(f,'utf8').trim().split(/\\r?\\n/).map(JSON.parse);const h=ls.filter(x=>x.extractor==='heuristic');console.log(h.slice(0,5));console.log('totals',h.reduce((a,x)=>({gold:a.gold+x.gold,pred:a.pred+x.predicted,matched:a.matched+x.matched,failed:a.failed+(x.failed?1:0),empty:a.empty+(x.successfulEmpty?1:0)}),{gold:0,pred:0,matched:0,failed:0,empty:0}));\"",
+      "status": "node -e \"const fs=require('fs');const f='research/runs/natural-v1-2026-10-28T13-03-35-474Z-67f597e0/01-oracle-heuristic-deterministic-accept-regex/extraction.jsonl';const ls=fs.readFileSync(f,'utf8').",
+      "exit": 0
+    },
+    {
+      "tool": "bash",
+      "command": "Select-String -Path research\\benchmark\\run-controlled-benchmark.mjs -Pattern \"match|quote|heuristic|gold\" -Context 1,2 | Select-Object -First 80",
+      "status": "Select-String -Path research\\benchmark\\run-controlled-benchmark.mjs -Pattern \"match|quote|heuristic|gold\" -Context 1,2 | Select-Object -First 80",
+      "exit": 0
+    },
+    {
+      "tool": "edit",
+      "path": "research/annotation/run-evaluation-suite.mjs",
+      "status": "research\\annotation\\run-evaluation-suite.mjs"
+    },
+    {
+      "tool": "grep",
+      "path": "research/annotation/run-evaluation-suite.mjs",
+      "status": "natural-v1|runsRoot|runId|baseDirectory|base ="
+    },
+    {
+      "tool": "read",
+      "path": "research/annotation/run-evaluation-suite.mjs",
+      "status": "research\\annotation\\run-evaluation-suite.mjs"
+    },
+    {
+      "tool": "edit",
+      "path": "research/annotation/run-evaluation-suite.mjs",
+      "status": "research\\annotation\\run-evaluation-suite.mjs"
+    },
+    {
+      "tool": "bash",
+      "command": "Select-String -Path research\\annotation\\build-controlled-dataset.mjs -Pattern \"sourceQuote|claimText|quote|function\" -Context 2,3",
+      "status": "Select-String -Path research\\annotation\\build-controlled-dataset.mjs -Pattern \"sourceQuote|claimText|quote|function\" -Context 2,3",
+      "exit": 0
+    },
+    {
+      "tool": "read",
+      "path": "research/annotation/build-controlled-dataset.mjs",
+      "status": "research\\annotation\\build-controlled-dataset.mjs"
+    },
+    {
+      "tool": "edit",
+      "path": "research/annotation/build-controlled-dataset.mjs",
+      "status": "research\\annotation\\build-controlled-dataset.mjs"
+    },
+    {
+      "tool": "edit",
+      "path": "research/annotation/build-controlled-dataset.mjs",
+      "status": "research\\annotation\\build-controlled-dataset.mjs"
+    },
+    {
+      "tool": "bash",
+      "command": "node research/annotation/build-controlled-dataset.mjs --force",
+      "status": "node research/annotation/build-controlled-dataset.mjs --force",
+      "exit": 0
+    },
+    {
+      "tool": "bash",
+      "command": "rg -n \"benchmarkQuote|goldClaims|claimSchema|sourceQuote\" src | Select-Object -First 60",
+      "status": "rg -n \"benchmarkQuote|goldClaims|claimSchema|sourceQuote\" src | Select-Object -First 60",
+      "exit": 1
+    },
+    {
+      "tool": "grep",
+      "path": "src",
+      "status": "sourceQuote|goldClaims|strict\\(\\)"
+    },
+    {
+      "tool": "bash",
+      "command": "node research/annotation/run-evaluation-suite.mjs --dataset research/datasets/controlled-v1.jsonl --allow-unadjudicated --skip-build --only 01",
+      "status": "node research/annotation/run-evaluation-suite.mjs --dataset research/datasets/controlled-v1.jsonl --allow-unadjudicated --skip-build --only 01",
+      "exit": 0
+    },
+    {
+      "tool": "bash",
+      "command": "node -e \"const fs=require('fs');const base='research/runs/controlled-v1-2026-10-28T13-08-01-638Z-6ca06097/01-oracle-heuristic-deterministic-accept-regex';const m=JSON.parse(fs.readFileSync(base+'/metrics.json','utf8'));for(const [k,v] of Object.entries(m))console.log(k,JSON.stringify({gold:v.goldClaims,acc:v.accuracy,precision:v.precision,recall:v.recall,missed:v.missedClaims,spurious:v.spuriousClaims,fv:v.falseVerified,ci:v.confidenceIntervals?.accuracy}));\"",
+      "status": "node -e \"const fs=require('fs');const base='research/runs/controlled-v1-2026-10-28T13-08-01-638Z-6ca06097/01-oracle-heuristic-deterministic-accept-regex';const m=JSON.parse(fs.readFileSync(base+'/metr",
+      "exit": 0
+    },
+    {
+      "tool": "bash",
+      "command": "Get-ChildItem -File research\\runs\\controlled-v1-2026-10-28T13-08-01-638Z-6ca06097\\01-oracle-heuristic-deterministic-accept-regex | Select-Object Name, Length | Format-Table -AutoSize",
+      "status": "Get-ChildItem -File research\\runs\\controlled-v1-2026-10-28T13-08-01-638Z-6ca06097\\01-oracle-heuristic-deterministic-accept-regex | Select-Object Name, Length | Format-Table -AutoSize",
+      "exit": 0
+    },
+    {
+      "tool": "bash",
+      "command": "$p='research\\runs\\natural-v1-2026-10-28T13-03-35-474Z-67f597e0'; if (Test-Path -LiteralPath $p) { Remove-Item -LiteralPath $p -Recurse -Force; \"removed $p\" } else { \"not found\" }",
+      "status": "$p='research\\runs\\natural-v1-2026-10-28T13-03-35-474Z-67f597e0'; if (Test-Path -LiteralPath $p) { Remove-Item -LiteralPath $p -Recurse -Force; \"removed $p\" } else { \"not found\" }",
+      "exit": 0
+    },
+    {
+      "tool": "bash",
+      "command": "node -e \"const fs=require('fs');const base='research/runs/controlled-v1-2026-10-28T13-08-01-638Z-6ca06097/01-oracle-heuristic-deterministic-accept-regex';const m=JSON.parse(fs.readFileSync(base+'/metrics.json','utf8'));console.log(Object.keys(m));console.log(JSON.stringify(m['oracle/deterministic'],null,2).slice(0,4000));\"",
+      "status": "node -e \"const fs=require('fs');const base='research/runs/controlled-v1-2026-10-28T13-08-01-638Z-6ca06097/01-oracle-heuristic-deterministic-accept-regex';const m=JSON.parse(fs.readFileSync(base+'/metr",
+      "exit": 0
+    },
+    {
+      "tool": "bash",
+      "command": "node -e \"const fs=require('fs');const base='research/runs/controlled-v1-2026-10-28T13-08-01-638Z-6ca06097/01-oracle-heuristic-deterministic-accept-regex';const ls=fs.readFileSync(base+'/predictions.jsonl','utf8').trim().split(/\\r?\\n/).map(JSON.parse);console.log(JSON.stringify(ls[1],null,2).slice(0,4000));\"",
+      "status": "node -e \"const fs=require('fs');const base='research/runs/controlled-v1-2026-10-28T13-08-01-638Z-6ca06097/01-oracle-heuristic-deterministic-accept-regex';const ls=fs.readFileSync(base+'/predictions.js",
+      "exit": 0
+    },
+    {
+      "tool": "bash",
+      "command": "node -e \"const fs=require('fs');const base='research/runs/controlled-v1-2026-10-28T13-08-01-638Z-6ca06097/01-oracle-heuristic-deterministic-accept-regex';const ls=fs.readFileSync(base+'/latencies.jsonl','utf8').trim().split(/\\r?\\n/).map(JSON.parse);console.log(ls.slice(0,3));console.log('n',ls.length);\"",
+      "status": "node -e \"const fs=require('fs');const base='research/runs/controlled-v1-2026-10-28T13-08-01-638Z-6ca06097/01-oracle-heuristic-deterministic-accept-regex';const ls=fs.readFileSync(base+'/latencies.json",
+      "exit": 0
+    },
+    {
+      "tool": "bash",
+      "command": "Select-String -Path src\\research\\llm-judge.ts -Pattern \"fetch|ollama|for |map|judge|claim\" -Context 1,2 | Select-Object -First 80",
+      "status": "Select-String -Path src\\research\\llm-judge.ts -Pattern \"fetch|ollama|for |map|judge|claim\" -Context 1,2 | Select-Object -First 80",
+      "exit": 1
+    },
+    {
+      "tool": "bash",
+      "command": "Get-ChildItem src\\research | Select-Object Name",
+      "status": "Get-ChildItem src\\research | Select-Object Name",
+      "exit": 0
+    },
+    {
+      "tool": "bash",
+      "command": "Select-String -Path research\\annotation\\run-evaluation-suite.mjs -Pattern \"judge|model|baselines\" -Context 1,2",
+      "status": "Select-String -Path research\\annotation\\run-evaluation-suite.mjs -Pattern \"judge|model|baselines\" -Context 1,2",
+      "exit": 0
+    },
+    {
+      "tool": "grep",
+      "path": "src",
+      "status": "judge|Judge|TRACEFORGE_JUDGE_MODEL"
+    },
+    {
+      "tool": "read",
+      "path": "src/research/baselines.ts",
+      "status": "src\\research\\baselines.ts"
+    },
+    {
+      "tool": "read",
+      "path": "research/annotation/run-evaluation-suite.mjs",
+      "status": "research\\annotation\\run-evaluation-suite.mjs"
+    },
+    {
+      "tool": "edit",
+      "path": "research/annotation/run-evaluation-suite.mjs",
+      "status": "research\\annotation\\run-evaluation-suite.mjs"
+    },
+    {
+      "tool": "bash",
+      "command": "$stamp = Get-Date -Format 'yyyyMMdd-HHmmss'; $out = \"research\\runs\\controlled-model-$stamp.out.log\"; $err = \"research\\runs\\controlled-model-$stamp.err.log\"; $node = (Get-Command node).Source; $args = @('research/annotation/run-evaluation-suite.mjs','--dataset','research/datasets/controlled-v1.jsonl','--allow-unadjudicated','--skip-build','--only','02,03,04'); $p = Start-Process -FilePath $node -ArgumentList $args -WorkingDirectory (Get-Location).Path -RedirectStandardOutput $out -RedirectStandardError $err -PassThru -WindowStyle Hidden; \"PID=$($p.Id)`nOUT=$out`nERR=$err\""
+    },
+    {
+      "tool": "bash",
+      "command": "Get-Process -Id 28336 -ErrorAction SilentlyContinue | Select-Object Id, ProcessName, CPU, StartTime | Format-Table -AutoSize; Get-Content -LiteralPath research\\runs\\controlled-model-20261028-140950.out.log -Tail 30 -ErrorAction SilentlyContinue",
+      "status": "Get-Process -Id 28336 -ErrorAction SilentlyContinue | Select-Object Id, ProcessName, CPU, StartTime | Format-Table -AutoSize; Get-Content -LiteralPath research\\runs\\controlled-model-20261028-140950.ou",
+      "exit": 0
+    },
+    {
+      "tool": "read",
+      "path": "src/research/metrics.ts",
+      "status": "src\\research\\metrics.ts"
+    },
+    {
+      "tool": "bash",
+      "command": "node -e \"const fs=require('fs');const d=JSON.parse(fs.readFileSync('research/runs/controlled-v1-2026-10-28T13-08-01-638Z-6ca06097/01-oracle-heuristic-deterministic-accept-regex/metrics.json','utf8'));console.log(JSON.stringify({keys:Object.keys(d), sample:d['oracle/deterministic'], top:[...Object.entries(d)].slice(0,2).map(([k,v])=>[k,Object.keys(v)])},null,2));\"",
+      "status": "node -e \"const fs=require('fs');const d=JSON.parse(fs.readFileSync('research/runs/controlled-v1-2026-10-28T13-08-01-638Z-6ca06097/01-oracle-heuristic-deterministic-accept-regex/metrics.json','utf8'));",
+      "exit": 0
+    },
+    {
+      "tool": "read",
+      "path": "research/annotation/lib.mjs",
+      "status": "research\\annotation\\lib.mjs"
+    },
+    {
+      "tool": "write",
+      "path": "research/annotation/export-evaluation-suite.mjs",
+      "status": "research\\annotation\\export-evaluation-suite.mjs"
+    },
+    {
+      "tool": "edit",
+      "path": "research/annotation/export-evaluation-suite.mjs",
+      "status": "research\\annotation\\export-evaluation-suite.mjs"
+    },
+    {
+      "tool": "edit",
+      "path": "research/annotation/export-evaluation-suite.mjs",
+      "status": "research\\annotation\\export-evaluation-suite.mjs"
+    },
+    {
+      "tool": "bash",
+      "command": "node --check research/annotation/export-evaluation-suite.mjs",
+      "status": "node --check research/annotation/export-evaluation-suite.mjs",
+      "exit": 0
+    },
+    {
+      "tool": "bash",
+      "command": "node research/annotation/export-evaluation-suite.mjs --run-dir research/runs/controlled-v1-2026-10-28T13-08-01-638Z-6ca06097 --out-dir research/exports/evaluation/controlled-v1-fast",
+      "status": "node research/annotation/export-evaluation-suite.mjs --run-dir research/runs/controlled-v1-2026-10-28T13-08-01-638Z-6ca06097 --out-dir research/exports/evaluation/controlled-v1-fast",
+      "exit": 0
+    },
+    {
+      "tool": "bash",
+      "command": "Get-ChildItem research\\exports\\evaluation\\controlled-v1-fast | Select-Object Name, Length | Format-Table -AutoSize; Import-Csv research\\exports\\evaluation\\controlled-v1-fast\\system-metrics.csv | Select-Object eval_name, extractor, baseline, gold_claims, accuracy, ci_lower, ci_upper | Format-Table -AutoSize",
+      "status": "Get-ChildItem research\\exports\\evaluation\\controlled-v1-fast | Select-Object Name, Length | Format-Table -AutoSize; Import-Csv research\\exports\\evaluation\\controlled-v1-fast\\system-metrics.csv | Selec",
+      "exit": 0
+    },
+    {
+      "tool": "bash",
+      "command": "Get-Process -Id 28336 -ErrorAction SilentlyContinue | Select-Object Id, CPU | Format-Table -AutoSize; Get-Content -LiteralPath research\\runs\\controlled-model-20261028-140950.out.log -Tail 20 -ErrorAction SilentlyContinue; if (Test-Path -LiteralPath research\\runs\\controlled-model-20261028-140950.err.log) { Get-Content -LiteralPath research\\runs\\controlled-model-20261028-140950.err.log -Tail 20 -ErrorAction SilentlyContinue }",
+      "status": "Get-Process -Id 28336 -ErrorAction SilentlyContinue | Select-Object Id, CPU | Format-Table -AutoSize; Get-Content -LiteralPath research\\runs\\controlled-model-20261028-140950.out.log -Tail 20 -ErrorAct",
+      "exit": 0
+    },
+    {
+      "tool": "bash",
+      "command": "$start=Get-Date; $limit=New-Timespan -Minutes 5; while($true){ $p=Get-Process -Id 28336 -ErrorAction SilentlyContinue; if(-not $p){ \"MODEL_RUN_FINISHED\"; break }; if ((Get-Date)-$start -gt $limit){ \"MODEL_RUN_STILL_RUNNING_AFTER_5_MIN\"; break }; \"still_running $(Get-Date -Format HH:mm:ss)\"; Start-Sleep -Seconds 20 }",
+      "status": "$start=Get-Date; $limit=New-Timespan -Minutes 5; while($true){ $p=Get-Process -Id 28336 -ErrorAction SilentlyContinue; if(-not $p){ \"MODEL_RUN_FINISHED\"; break }; if ((Get-Date)-$start -gt $limit){ \"M",
+      "exit": 0
+    },
+    {
+      "tool": "bash",
+      "command": "Test-NetConnection -ComputerName 127.0.0.1 -Port 11434; Invoke-WebRequest -Uri http://127.0.0.1:11434/api/tags -Method Get -TimeoutSec 5 -ErrorAction SilentlyContinue | Select-Object StatusCode, Content",
+      "status": "Test-NetConnection -ComputerName 127.0.0.1 -Port 11434; Invoke-WebRequest -Uri http://127.0.0.1:11434/api/tags -Method Get -TimeoutSec 5 -ErrorAction SilentlyContinue | Select-Object StatusCode, Conte",
+      "exit": 1
+    },
+    {
+      "tool": "bash",
+      "command": "Get-Process -Id 28336 -ErrorAction SilentlyContinue | Select-Object Id, CPU, StartTime, TotalProcessorTime | Format-Table -AutoSize",
+      "status": "Get-Process -Id 28336 -ErrorAction SilentlyContinue | Select-Object Id, CPU, StartTime, TotalProcessorTime | Format-Table -AutoSize",
+      "exit": 0
+    },
+    {
+      "tool": "bash",
+      "command": "node -e \"fetch('http://127.0.0.1:11434/api/tags').then(r=>r.text()).then(t=>console.log(t.slice(0,1000))).catch(e=>console.error('ERR',e.message))\"",
+      "status": "node -e \"fetch('http://127.0.0.1:11434/api/tags').then(r=>r.text()).then(t=>console.log(t.slice(0,1000))).catch(e=>console.error('ERR',e.message))\"",
+      "exit": 0
+    },
+    {
+      "tool": "bash",
+      "command": "Get-Process -Name ollama -ErrorAction SilentlyContinue | Select-Object Id, CPU, StartTime, TotalProcessorTime, PM, WS | Format-Table -AutoSize",
+      "status": "Get-Process -Name ollama -ErrorAction SilentlyContinue | Select-Object Id, CPU, StartTime, TotalProcessorTime, PM, WS | Format-Table -AutoSize",
+      "exit": 0
+    },
+    {
+      "tool": "bash",
+      "command": "Select-String -Path src\\modules\\verification\\application\\ollama-claim-extractor.ts -Pattern \"retry|attempt|timeout|fetch|AbortSignal|backoff|delay\" -Context 1,2 | Select-Object -First 100",
+      "status": "Select-String -Path src\\modules\\verification\\application\\ollama-claim-extractor.ts -Pattern \"retry|attempt|timeout|fetch|AbortSignal|backoff|delay\" -Context 1,2 | Select-Object -First 100",
+      "exit": 0
+    },
+    {
+      "tool": "bash",
+      "command": "$start=Get-Date; $limit=New-Timespan -Minutes 10; while($true){ $p=Get-Process -Id 28336 -ErrorAction SilentlyContinue; if(-not $p){ \"MODEL_RUN_FINISHED\"; break }; if ((Get-Date)-$start -gt $limit){ \"MODEL_RUN_STILL_RUNNING_AFTER_10_MIN\"; break }; \"still_running $(Get-Date -Format HH:mm:ss)\"; Start-Sleep -Seconds 30 }",
+      "status": "$start=Get-Date; $limit=New-Timespan -Minutes 10; while($true){ $p=Get-Process -Id 28336 -ErrorAction SilentlyContinue; if(-not $p){ \"MODEL_RUN_FINISHED\"; break }; if ((Get-Date)-$start -gt $limit){ \"",
+      "exit": 0
+    },
+    {
+      "tool": "bash",
+      "command": "Get-ChildItem -File research\\runs\\controlled-v1-2026-10-28T13-09-50-864Z-3a497503 -Recurse | Select-Object FullName, Length | Format-Table -AutoSize -Wrap",
+      "status": "Get-ChildItem -File research\\runs\\controlled-v1-2026-10-28T13-09-50-864Z-3a497503 -Recurse | Select-Object FullName, Length | Format-Table -AutoSize -Wrap",
+      "exit": 0
+    },
+    {
+      "tool": "bash",
+      "command": "Get-Process -Id 28336 -ErrorAction SilentlyContinue | Select-Object Id, CPU | Format-Table -AutoSize",
+      "status": "Get-Process -Id 28336 -ErrorAction SilentlyContinue | Select-Object Id, CPU | Format-Table -AutoSize",
+      "exit": 0
+    },
+    {
+      "tool": "bash",
+      "command": "node -e \"const fs=require('fs');const b='research/runs/controlled-v1-2026-10-28T13-09-50-864Z-3a497503/02-ollama-deterministic';const m=JSON.parse(fs.readFileSync(b+'/metrics.json','utf8'));for(const [k,v] of Object.entries(m))console.log(k,JSON.stringify({gold:v.goldClaims,acc:v.accuracy,missed:v.missedClaims,spurious:v.spuriousClaims,ci:v.confidenceIntervals?.accuracy,failures:v.failureCount||manifestFailures}));\" 2>&1 | head -20\nnode -e \"const fs=require('fs');const b='research/runs/controlled-v1-2026-10-28T13-09-50-864Z-3a497503/02-ollama-deterministic';const ex=fs.readFileSync(b+'/extraction.jsonl','utf8').trim().split(/\\r?\\n/).map(JSON.parse);console.log('extraction rows',ex.length);console.log('totals',ex.reduce((a,x)=>({gold:a.gold+x.gold,pred:a.predicted+x.predicted,matched:a.matched+x.matched,typeCorrect:a.typeCorrect+x.typeCorrect,failed:a.failed+(x.failed?1:0),empty:a.empty+(x.successfulEmpty?1:0)}),{gold:0,pred:0,matched:0,typeCorrect:0,failed:0,empty:0}));const lat=fs.readFileSync(b+'/latencies.jsonl','utf8').trim().split(/\\r?\\n/).map(JSON.parse);console.log('latencies',lat.length,'extraction mean',lat.filter(x=>x.stage==='extraction').map(x=>x.latencyMs).reduce((a,b)=>a+b,0)/lat.filter(x=>x.stage==='extraction').length,'verification mean',lat.filter(x=>x.stage==='verification').map(x=>x.latencyMs).reduce((a,b)=>a+b,0)/lat.filter(x=>x.stage==='verification').length);\"",
+      "status": "node -e \"const fs=require('fs');const b='research/runs/controlled-v1-2026-10-28T13-09-50-864Z-3a497503/02-ollama-deterministic';const m=JSON.parse(fs.readFileSync(b+'/metrics.json','utf8'));for(const ",
+      "exit": 0
+    },
+    {
+      "tool": "bash",
+      "command": "node -e \"const fs=require('fs');const b='research/runs/controlled-v1-2026-10-28T13-09-50-864Z-3a497503/02-ollama-deterministic';const m=JSON.parse(fs.readFileSync(b+'/metrics.json','utf8'));for(const [k,v] of Object.entries(m))console.log(k,JSON.stringify({gold:v.goldClaims,acc:v.accuracy,missed:v.missedClaims,spurious:v.spuriousClaims,ci:v.confidenceIntervals?.accuracy}));const ex=fs.readFileSync(b+'/extraction.jsonl','utf8').trim().split(/\\r?\\n/).map(JSON.parse);console.log('extraction fields',Object.keys(ex[0]));console.log('totals',ex.reduce((a,x)=>({gold:a.gold+x.gold,pred:a.pred+x.predicted,matched:a.matched+x.matched,typeCorrect:a.typeCorrect+x.typeCorrect,failed:a.failed+(x.failed?1:0),empty:a.empty+(x.successfulEmpty?1:0)}),{gold:0,pred:0,matched:0,typeCorrect:0,failed:0,empty:0}));\"",
+      "status": "node -e \"const fs=require('fs');const b='research/runs/controlled-v1-2026-10-28T13-09-50-864Z-3a497503/02-ollama-deterministic';const m=JSON.parse(fs.readFileSync(b+'/metrics.json','utf8'));for(const ",
+      "exit": 0
+    },
+    {
+      "tool": "bash",
+      "command": "$start=Get-Date; $limit=New-Timespan -Minutes 10; while($true){ $p=Get-Process -Id 28336 -ErrorAction SilentlyContinue; if(-not $p){ \"MODEL_RUN_FINISHED\"; break }; if ((Get-Date)-$start -gt $limit){ \"MODEL_RUN_STILL_RUNNING_AFTER_10_MIN\"; break }; \"still_running $(Get-Date -Format HH:mm:ss)\"; Start-Sleep -Seconds 30 }",
+      "status": "$start=Get-Date; $limit=New-Timespan -Minutes 10; while($true){ $p=Get-Process -Id 28336 -ErrorAction SilentlyContinue; if(-not $p){ \"MODEL_RUN_FINISHED\"; break }; if ((Get-Date)-$start -gt $limit){ \""
+    }
+  ],
+  "claimed_done": false
+}

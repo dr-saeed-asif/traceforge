@@ -1,0 +1,2 @@
+"eval_name","dataset","dataset_hash","policy_version","judge_model","matching","bootstrap","allow_unadjudicated","recorded_failures","manifest_source"
+"01-oracle-heuristic-deterministic-accept-regex","E:\PhD Data\latest_plugin\traceforge\research\datasets\controlled-v1.jsonl","8f5af6ce29b048d8bfac904b4816b2c415045db1870137c9aa00a85f9a57ec01","3.1.0","qwen3:4b","exact","1000","true","0","E:\PhD Data\latest_plugin\traceforge\research\runs\controlled-v1-2026-10-28T13-08-01-638Z-6ca06097\01-oracle-heuristic-deterministic-accept-regex\run-manifest.json"

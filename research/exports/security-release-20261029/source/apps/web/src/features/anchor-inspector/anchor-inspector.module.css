@@ -1,0 +1,80 @@
+.stack {
+  display: grid;
+  gap: 1.25rem;
+}
+.card {
+  padding: 1.5rem;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  border-radius: 1rem;
+  min-width: 0;
+}
+.card h2 {
+  margin-top: 0;
+  font-size: 1.1rem;
+}
+.card p {
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+.form {
+  display: grid;
+  gap: 1rem;
+}
+.form label {
+  display: grid;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+.form input,
+.form textarea,
+.form select {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  background: var(--color-surface);
+  color: inherit;
+}
+.form textarea {
+  min-height: 10rem;
+  font-family: monospace;
+  overflow-wrap: anywhere;
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+}
+.scroll {
+  overflow-x: auto;
+}
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+  text-align: left;
+}
+.table th,
+.table td {
+  padding: 0.75rem;
+  border-bottom: 1px solid var(--color-border);
+  vertical-align: top;
+}
+.table code {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+.code {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 0.75rem;
+}
+.notice {
+  padding: 0.75rem;
+  background: var(--color-surface-subtle);
+  border-radius: 0.5rem;
+}

@@ -1,0 +1,131 @@
+$ C:\Program Files\nodejs\node.exe "E:\\PhD Data\\latest_plugin\\traceforge\\dist\\evaluate.js" "--dataset" "E:\\PhD Data\\latest_plugin\\traceforge\\research\\datasets\\controlled-v1.jsonl" "--extractors" "oracle" "--baselines" "llm" "--matching" "exact" "--cluster" "session" "--bootstrap" "1000" "--seed" "42" "--output" "E:\\PhD Data\\latest_plugin\\traceforge\\research\\runs\\controlled-v1-2026-10-28T13-09-50-864Z-3a497503\\03-llm-judge" "--judge-model" "qwen3:4b" "--allow-unadjudicated"
+exitStatus=0
+signal=
+
+STDOUT
+{
+  "output": "E:\\PhD Data\\latest_plugin\\traceforge\\research\\runs\\controlled-v1-2026-10-28T13-09-50-864Z-3a497503\\03-llm-judge",
+  "sessions": 200,
+  "failures": 216,
+  "reports": {
+    "oracle/llm": {
+      "goldClaims": 216,
+      "missedClaims": 216,
+      "spuriousClaims": 0,
+      "accuracy": 0,
+      "perVerdict": {
+        "VERIFIED": {
+          "truePositive": 0,
+          "falsePositive": 0,
+          "falseNegative": 120,
+          "support": 120,
+          "precision": null,
+          "recall": 0,
+          "f1": 0
+        },
+        "CONTRADICTED": {
+          "truePositive": 0,
+          "falsePositive": 0,
+          "falseNegative": 24,
+          "support": 24,
+          "precision": null,
+          "recall": 0,
+          "f1": 0
+        },
+        "UNSUPPORTED": {
+          "truePositive": 0,
+          "falsePositive": 0,
+          "falseNegative": 56,
+          "support": 56,
+          "precision": null,
+          "recall": 0,
+          "f1": 0
+        },
+        "UNVERIFIABLE": {
+          "truePositive": 0,
+          "falsePositive": 0,
+          "falseNegative": 16,
+          "support": 16,
+          "precision": null,
+          "recall": 0,
+          "f1": 0
+        }
+      },
+      "confusion": {
+        "VERIFIED->MISSING": 120,
+        "UNSUPPORTED->MISSING": 56,
+        "CONTRADICTED->MISSING": 24,
+        "UNVERIFIABLE->MISSING": 16
+      },
+      "clusters": 200,
+      "confidenceIntervals": {
+        "available": true,
+        "repetitions": 1000,
+        "seed": 42,
+        "method": "cluster percentile bootstrap, 95%",
+        "accuracy": {
+          "lower": 0,
+          "upper": 0,
+          "validReplicates": 1000
+        },
+        "perVerdict": {
+          "VERIFIED": {
+            "precision": null,
+            "recall": {
+              "lower": 0,
+              "upper": 0,
+              "validReplicates": 1000
+            },
+            "f1": {
+              "lower": 0,
+              "upper": 0,
+              "validReplicates": 1000
+            }
+          },
+          "CONTRADICTED": {
+            "precision": null,
+            "recall": {
+              "lower": 0,
+              "upper": 0,
+              "validReplicates": 1000
+            },
+            "f1": {
+              "lower": 0,
+              "upper": 0,
+              "validReplicates": 1000
+            }
+          },
+          "UNSUPPORTED": {
+            "precision": null,
+            "recall": {
+              "lower": 0,
+              "upper": 0,
+              "validReplicates": 1000
+            },
+            "f1": {
+              "lower": 0,
+              "upper": 0,
+              "validReplicates": 1000
+            }
+          },
+          "UNVERIFIABLE": {
+            "precision": null,
+            "recall": {
+              "lower": 0,
+              "upper": 0,
+              "validReplicates": 1000
+            },
+            "f1": {
+              "lower": 0,
+              "upper": 0,
+              "validReplicates": 1000
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+
+STDERR

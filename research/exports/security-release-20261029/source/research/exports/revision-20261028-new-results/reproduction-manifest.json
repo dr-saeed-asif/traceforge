@@ -1,0 +1,211 @@
+{
+  "model": "qwen3:4b",
+  "requestedContextTokens": 4096,
+  "oldCheckout": "E:\\PhD Data\\latest_plugin\\traceforge-original-reference-20261028",
+  "python": "E:\\PhD Data\\latest_plugin\\traceforge\\.traceforge\\revision-20261028\\venv\\Scripts\\python.exe",
+  "output": "E:\\PhD Data\\latest_plugin\\traceforge\\research\\runs\\revision-20261028-reproduced",
+  "commands": [
+    {
+      "name": "build-core",
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "node_modules/typescript/bin/tsc",
+        "-p",
+        "tsconfig.json"
+      ],
+      "startedAt": "2026-10-28T14:42:28.306Z",
+      "finishedAt": "2026-10-28T14:42:38.949Z",
+      "exitCode": 0,
+      "error": null
+    },
+    {
+      "name": "build-adapter",
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "node_modules/typescript/bin/tsc",
+        "-p",
+        "packages/adapter-opencode/tsconfig.json"
+      ],
+      "startedAt": "2026-10-28T14:42:38.956Z",
+      "finishedAt": "2026-10-28T14:42:43.584Z",
+      "exitCode": 0,
+      "error": null
+    },
+    {
+      "name": "execute-controlled-benchmark",
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "research/benchmark/run-controlled-benchmark.mjs",
+        "--new",
+        "E:\\PhD Data\\latest_plugin\\traceforge",
+        "--old",
+        "E:\\PhD Data\\latest_plugin\\traceforge-original-reference-20261028",
+        "--out",
+        "E:\\PhD Data\\latest_plugin\\traceforge\\research\\runs\\revision-20261028-reproduced\\controlled-benchmark",
+        "--variants",
+        "8",
+        "--seed",
+        "7",
+        "--python",
+        "E:\\PhD Data\\latest_plugin\\traceforge\\.traceforge\\revision-20261028\\venv\\Scripts\\python.exe"
+      ],
+      "startedAt": "2026-10-28T14:42:43.763Z",
+      "finishedAt": "2026-10-28T14:50:22.237Z",
+      "exitCode": 0,
+      "error": null
+    },
+    {
+      "name": "consumer-gate",
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "research/benchmark/run-consumer-gate.mjs",
+        "--root",
+        "E:\\PhD Data\\latest_plugin\\traceforge",
+        "--results",
+        "E:\\PhD Data\\latest_plugin\\traceforge\\research\\runs\\revision-20261028-reproduced\\controlled-benchmark"
+      ],
+      "startedAt": "2026-10-28T14:50:22.241Z",
+      "finishedAt": "2026-10-28T14:50:25.924Z",
+      "exitCode": 0,
+      "error": null
+    },
+    {
+      "name": "convert-controlled-data",
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "research/annotation/build-controlled-dataset.mjs",
+        "--sessions",
+        "E:\\PhD Data\\latest_plugin\\traceforge\\research\\runs\\revision-20261028-reproduced\\controlled-benchmark\\sessions.jsonl",
+        "--summary",
+        "E:\\PhD Data\\latest_plugin\\traceforge\\research\\runs\\revision-20261028-reproduced\\controlled-benchmark\\summary.json",
+        "--rows",
+        "E:\\PhD Data\\latest_plugin\\traceforge\\research\\runs\\revision-20261028-reproduced\\controlled-benchmark\\rows.jsonl",
+        "--output",
+        "E:\\PhD Data\\latest_plugin\\traceforge\\research\\runs\\revision-20261028-reproduced\\controlled-reproduced.jsonl",
+        "--export-dir",
+        "E:\\PhD Data\\latest_plugin\\traceforge\\research\\runs\\revision-20261028-reproduced\\controlled-csv"
+      ],
+      "startedAt": "2026-10-28T14:50:25.934Z",
+      "finishedAt": "2026-10-28T14:50:26.228Z",
+      "exitCode": 0,
+      "error": null
+    },
+    {
+      "name": "01-oracle-heuristic",
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "dist/evaluate.js",
+        "--dataset",
+        "E:\\PhD Data\\latest_plugin\\traceforge\\research\\runs\\revision-20261028-reproduced\\controlled-reproduced.jsonl",
+        "--extractors",
+        "oracle,heuristic",
+        "--baselines",
+        "deterministic,accept,regex",
+        "--judge-model",
+        "qwen3:4b",
+        "--allow-unadjudicated",
+        "--cache-extractions",
+        "--bootstrap",
+        "2000",
+        "--matching",
+        "exact",
+        "--output",
+        "E:\\PhD Data\\latest_plugin\\traceforge\\research\\runs\\revision-20261028-reproduced\\01-oracle-heuristic"
+      ],
+      "startedAt": "2026-10-28T14:50:26.236Z",
+      "finishedAt": "2026-10-28T14:50:33.417Z",
+      "exitCode": 0,
+      "error": null
+    },
+    {
+      "name": "02-ollama",
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "dist/evaluate.js",
+        "--dataset",
+        "E:\\PhD Data\\latest_plugin\\traceforge\\research\\runs\\revision-20261028-reproduced\\controlled-reproduced.jsonl",
+        "--extractors",
+        "ollama",
+        "--baselines",
+        "deterministic,accept,regex",
+        "--judge-model",
+        "qwen3:4b",
+        "--allow-unadjudicated",
+        "--cache-extractions",
+        "--bootstrap",
+        "2000",
+        "--matching",
+        "exact",
+        "--output",
+        "E:\\PhD Data\\latest_plugin\\traceforge\\research\\runs\\revision-20261028-reproduced\\02-ollama"
+      ],
+      "startedAt": "2026-10-28T14:50:33.421Z",
+      "finishedAt": "2026-10-28T14:54:23.971Z",
+      "exitCode": 4294967295,
+      "error": null
+    },
+    {
+      "name": "build-core-context4096",
+      "attemptName": "build-core-context4096",
+      "requestedContextTokens": 4096,
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "node_modules/typescript/bin/tsc",
+        "-p",
+        "tsconfig.json"
+      ],
+      "startedAt": "2026-10-28T14:58:45.061Z",
+      "finishedAt": "2026-10-28T14:58:54.644Z",
+      "exitCode": 0,
+      "error": null
+    },
+    {
+      "name": "02-ollama",
+      "attemptName": "02-ollama-retry-1",
+      "requestedContextTokens": 4096,
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "dist/evaluate.js",
+        "--dataset",
+        "E:\\PhD Data\\latest_plugin\\traceforge\\research\\runs\\revision-20261028-reproduced\\controlled-reproduced.jsonl",
+        "--extractors",
+        "ollama",
+        "--baselines",
+        "deterministic,accept,regex",
+        "--judge-model",
+        "qwen3:4b",
+        "--allow-unadjudicated",
+        "--cache-extractions",
+        "--bootstrap",
+        "2000",
+        "--matching",
+        "exact",
+        "--output",
+        "E:\\PhD Data\\latest_plugin\\traceforge\\research\\runs\\revision-20261028-reproduced\\02-ollama-context4096"
+      ],
+      "startedAt": "2026-10-28T14:58:54.938Z",
+      "finishedAt": "2026-10-28T21:07:29.505Z",
+      "exitCode": 0,
+      "error": null
+    },
+    {
+      "name": "export-evaluation-csv",
+      "attemptName": "export-evaluation-csv",
+      "requestedContextTokens": 4096,
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "research/annotation/export-evaluation-suite.mjs",
+        "--run-dir",
+        "E:\\PhD Data\\latest_plugin\\traceforge\\research\\runs\\revision-20261028-reproduced",
+        "--dataset",
+        "E:\\PhD Data\\latest_plugin\\traceforge\\research\\runs\\revision-20261028-reproduced\\controlled-reproduced.jsonl",
+        "--out-dir",
+        "E:\\PhD Data\\latest_plugin\\traceforge\\research\\runs\\revision-20261028-reproduced\\evaluation-csv"
+      ],
+      "startedAt": "2026-10-28T21:07:29.535Z",
+      "finishedAt": "2026-10-28T21:07:30.007Z",
+      "exitCode": 0,
+      "error": null
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "publicKey": "0x047912c8b640416f3c6378a52c3db2b8fcb2d94664d6c6fe9826bca606ae6ca23c9585983fd3c97c60e71336006c87602406741f035d77b3a1e56f149fbe721910",
+  "privateKeyLocation": "/var/lib/traceforge-keys/rotation-eb38d831131048e28ab92748d7406ca4/signer.hex",
+  "permissions": "root-only 0700 directory / 0600 file",
+  "status": "GENERATED_NOT_ACTIVATED_ON_CHAIN",
+  "revokedSigner": "0xC5D9e40Aa244e30d7C0953D1Ecd76B7c42c31d26"
+}

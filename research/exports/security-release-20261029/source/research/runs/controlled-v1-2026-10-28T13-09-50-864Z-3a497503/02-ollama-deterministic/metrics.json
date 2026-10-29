@@ -1,0 +1,141 @@
+{
+  "ollama/deterministic": {
+    "goldClaims": 216,
+    "missedClaims": 56,
+    "spuriousClaims": 56,
+    "accuracy": 0.24537037037037038,
+    "perVerdict": {
+      "VERIFIED": {
+        "truePositive": 29,
+        "falsePositive": 24,
+        "falseNegative": 91,
+        "support": 120,
+        "precision": 0.5471698113207547,
+        "recall": 0.24166666666666667,
+        "f1": 0.3352601156069364
+      },
+      "CONTRADICTED": {
+        "truePositive": 8,
+        "falsePositive": 0,
+        "falseNegative": 16,
+        "support": 24,
+        "precision": 1,
+        "recall": 0.3333333333333333,
+        "f1": 0.5
+      },
+      "UNSUPPORTED": {
+        "truePositive": 0,
+        "falsePositive": 24,
+        "falseNegative": 56,
+        "support": 56,
+        "precision": 0,
+        "recall": 0,
+        "f1": 0
+      },
+      "UNVERIFIABLE": {
+        "truePositive": 16,
+        "falsePositive": 115,
+        "falseNegative": 0,
+        "support": 16,
+        "precision": 0.12213740458015267,
+        "recall": 1,
+        "f1": 0.21768707482993196
+      }
+    },
+    "confusion": {
+      "VERIFIED->MISSING": 32,
+      "SPURIOUS->VERIFIED": 24,
+      "UNSUPPORTED->MISSING": 24,
+      "SPURIOUS->UNSUPPORTED": 24,
+      "VERIFIED->UNVERIFIABLE": 59,
+      "CONTRADICTED->UNVERIFIABLE": 16,
+      "UNSUPPORTED->UNVERIFIABLE": 32,
+      "VERIFIED->VERIFIED": 29,
+      "CONTRADICTED->CONTRADICTED": 8,
+      "UNVERIFIABLE->UNVERIFIABLE": 16,
+      "SPURIOUS->UNVERIFIABLE": 8
+    },
+    "clusters": 200,
+    "confidenceIntervals": {
+      "available": true,
+      "repetitions": 1000,
+      "seed": 42,
+      "method": "cluster percentile bootstrap, 95%",
+      "accuracy": {
+        "lower": 0.18981481481481483,
+        "upper": 0.3058252427184466,
+        "validReplicates": 1000
+      },
+      "perVerdict": {
+        "VERIFIED": {
+          "precision": {
+            "lower": 0.4074074074074074,
+            "upper": 0.6792452830188679,
+            "validReplicates": 1000
+          },
+          "recall": {
+            "lower": 0.16666666666666666,
+            "upper": 0.328125,
+            "validReplicates": 1000
+          },
+          "f1": {
+            "lower": 0.23668639053254437,
+            "upper": 0.4358974358974359,
+            "validReplicates": 1000
+          }
+        },
+        "CONTRADICTED": {
+          "precision": {
+            "lower": 1,
+            "upper": 1,
+            "validReplicates": 1000
+          },
+          "recall": {
+            "lower": 0.15384615384615385,
+            "upper": 0.5217391304347826,
+            "validReplicates": 1000
+          },
+          "f1": {
+            "lower": 0.26666666666666666,
+            "upper": 0.6857142857142857,
+            "validReplicates": 1000
+          }
+        },
+        "UNSUPPORTED": {
+          "precision": {
+            "lower": 0,
+            "upper": 0,
+            "validReplicates": 1000
+          },
+          "recall": {
+            "lower": 0,
+            "upper": 0,
+            "validReplicates": 1000
+          },
+          "f1": {
+            "lower": 0,
+            "upper": 0,
+            "validReplicates": 1000
+          }
+        },
+        "UNVERIFIABLE": {
+          "precision": {
+            "lower": 0.072,
+            "upper": 0.176,
+            "validReplicates": 1000
+          },
+          "recall": {
+            "lower": 1,
+            "upper": 1,
+            "validReplicates": 1000
+          },
+          "f1": {
+            "lower": 0.13432835820895522,
+            "upper": 0.29931972789115646,
+            "validReplicates": 1000
+          }
+        }
+      }
+    }
+  }
+}

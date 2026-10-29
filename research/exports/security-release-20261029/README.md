@@ -1,0 +1,1 @@
+Unpublished, secret-screened source snapshot and measured security results. No Git history included. Overlay files are identified in the manifest. A release commit/tag, authorized publication and DOI remain pending. Historical Git credential exposure is not repaired by this archive.

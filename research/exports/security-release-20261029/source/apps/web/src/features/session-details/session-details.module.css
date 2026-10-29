@@ -1,0 +1,469 @@
+.detailStack {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.summaryBody {
+  display: grid;
+  gap: 1.15rem;
+}
+
+.statusGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.statusItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: var(--color-surface-subtle);
+  border: 1px solid var(--color-border);
+  border-radius: 0.65rem;
+}
+
+.statusItem > span,
+.summaryMetric span,
+.sessionMetadata dt,
+.evidenceGrid span,
+.hashGrid dt {
+  color: var(--color-text-subtle);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.035em;
+  text-transform: uppercase;
+}
+
+.summaryMetrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: 0.7rem;
+}
+
+.summaryMetric {
+  display: grid;
+  gap: 0.45rem;
+  padding: 0.85rem;
+  border-right: 1px solid var(--color-border);
+}
+
+.summaryMetric:last-child {
+  border-right: 0;
+}
+
+.summaryMetric strong {
+  color: var(--color-text-strong);
+  font-size: 1.3rem;
+  letter-spacing: -0.03em;
+}
+
+.sessionMetadata,
+.hashGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.8rem 1rem;
+  margin: 0;
+}
+
+.sessionMetadata > div,
+.hashGrid > div {
+  min-width: 0;
+}
+
+.sessionMetadata dd,
+.hashGrid dd {
+  margin: 0.3rem 0 0;
+  overflow-wrap: anywhere;
+  color: var(--color-text-strong);
+  font-size: 0.78rem;
+}
+
+.mono,
+.hashGrid code {
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+}
+
+.claimsTable tr:target td {
+  background: var(--color-info-soft);
+}
+
+.claimText,
+.claimType,
+.claimVerdict {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.claimText span {
+  color: var(--color-accent-strong);
+  font-size: 0.67rem;
+  font-weight: 750;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.claimText strong {
+  color: var(--color-text-strong);
+  line-height: 1.45;
+}
+
+.claimText small,
+.noEvidence {
+  color: var(--color-text-subtle);
+  line-height: 1.45;
+}
+
+.claimType {
+  justify-items: start;
+  min-width: 9rem;
+}
+
+.claimType code {
+  max-width: 15rem;
+  overflow: hidden;
+  color: var(--color-text-muted);
+  font-size: 0.71rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.claimVerdict {
+  justify-items: start;
+  min-width: 10rem;
+}
+
+.blockchainAnchorActions {
+  display: grid;
+  justify-items: start;
+  gap: 0.45rem;
+}
+
+.latencySection {
+  display: grid;
+  gap: 0.9rem;
+  padding: 1.25rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.latencySectionHeader {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.latencySectionHeader h3,
+.latencySectionHeader p {
+  margin: 0;
+}
+
+.latencySectionHeader h3 {
+  color: var(--color-text-strong);
+  font-size: 0.9rem;
+}
+
+.latencySectionHeader p {
+  color: var(--color-text-subtle);
+  font-size: 0.76rem;
+  line-height: 1.45;
+}
+
+.latencyGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 23rem), 1fr));
+  gap: 0.75rem;
+}
+
+.evidenceLinks {
+  display: flex;
+  min-width: 7rem;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.evidenceLinks a,
+.relatedClaims a {
+  color: var(--color-accent-strong);
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.evidenceLinks a:hover,
+.relatedClaims a:hover {
+  text-decoration: underline;
+  text-underline-offset: 0.15rem;
+}
+
+.timeline {
+  position: relative;
+  display: grid;
+  gap: 0;
+  padding: 1.25rem;
+  margin: 0;
+  list-style: none;
+}
+
+.timeline::before {
+  position: absolute;
+  top: 1.25rem;
+  bottom: 1.25rem;
+  left: 2.35rem;
+  width: 1px;
+  content: "";
+  background: var(--color-border-strong);
+}
+
+.timeline > li {
+  position: relative;
+  padding: 0 0 1rem 2.7rem;
+}
+
+.timeline > li:last-child {
+  padding-bottom: 0;
+}
+
+.timeline > li::before {
+  position: absolute;
+  top: 1.2rem;
+  left: 0.73rem;
+  z-index: 1;
+  width: 0.7rem;
+  height: 0.7rem;
+  content: "";
+  background: var(--color-surface);
+  border: 2px solid var(--color-border-strong);
+  border-radius: 50%;
+}
+
+.eventCard {
+  padding: 1rem;
+  scroll-margin-top: 5.5rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 0.75rem;
+  transition:
+    border-color 140ms ease,
+    box-shadow 140ms ease;
+}
+
+.linkedEvent {
+  border-left: 0.24rem solid var(--color-accent);
+}
+
+.eventCard:target {
+  border-color: var(--color-focus);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-focus) 18%, transparent);
+}
+
+.eventHeader,
+.eventIdentity,
+.relatedClaims {
+  display: flex;
+  align-items: center;
+}
+
+.eventHeader {
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.eventIdentity {
+  min-width: 0;
+  gap: 0.75rem;
+}
+
+.sequence {
+  display: grid;
+  width: 2.1rem;
+  height: 2.1rem;
+  flex: 0 0 auto;
+  place-items: center;
+  color: var(--color-accent-strong);
+  font-size: 0.72rem;
+  font-weight: 800;
+  background: var(--color-info-soft);
+  border-radius: 0.6rem;
+}
+
+.eventHeader h3 {
+  margin: 0;
+  color: var(--color-text-strong);
+  font-size: 0.88rem;
+}
+
+.eventHeader time {
+  display: block;
+  margin-top: 0.2rem;
+  color: var(--color-text-subtle);
+  font-size: 0.7rem;
+}
+
+.relatedClaims {
+  gap: 0.55rem;
+  flex-wrap: wrap;
+  padding: 0.55rem 0.7rem;
+  margin-top: 0.85rem;
+  background: var(--color-info-soft);
+  border-radius: 0.55rem;
+}
+
+.relatedClaims > span {
+  color: var(--color-info-strong);
+  font-size: 0.69rem;
+  font-weight: 750;
+  text-transform: uppercase;
+}
+
+.evidenceGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  padding-top: 0.9rem;
+  margin-top: 0.9rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.evidenceGrid > div {
+  display: grid;
+  min-width: 0;
+  gap: 0.3rem;
+}
+
+.evidenceGrid strong {
+  overflow-wrap: anywhere;
+  color: var(--color-text-strong);
+  font-size: 0.76rem;
+  font-weight: 600;
+}
+
+.evidenceWide {
+  grid-column: 1 / -1;
+}
+
+.hashDisclosure,
+.metadataDisclosure {
+  margin-top: 0.85rem;
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+}
+
+.hashDisclosure summary,
+.metadataDisclosure summary {
+  width: fit-content;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.hashDisclosure summary code {
+  margin-left: 0.35rem;
+  color: var(--color-text-subtle);
+  font-size: 0.69rem;
+}
+
+.hashGrid {
+  grid-template-columns: 1fr;
+  padding: 0.8rem;
+  margin-top: 0.65rem;
+  background: var(--color-surface-subtle);
+  border-radius: 0.55rem;
+}
+
+.hashGrid code {
+  display: block;
+  overflow-x: auto;
+  font-size: 0.69rem;
+  white-space: nowrap;
+}
+
+.metadataDisclosure pre {
+  max-height: 18rem;
+  padding: 0.8rem;
+  overflow: auto;
+  color: var(--color-text);
+  font-size: 0.7rem;
+  line-height: 1.55;
+  background: var(--color-surface-subtle);
+  border: 1px solid var(--color-border);
+  border-radius: 0.55rem;
+}
+
+.timelineEmpty {
+  padding: 2rem;
+  margin: 0;
+  color: var(--color-text-subtle);
+  text-align: center;
+}
+
+@media (max-width: 52rem) {
+  .statusGrid,
+  .sessionMetadata {
+    grid-template-columns: 1fr;
+  }
+
+  .summaryMetrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .summaryMetric:nth-child(2) {
+    border-right: 0;
+  }
+
+  .summaryMetric:nth-child(-n + 2) {
+    border-bottom: 1px solid var(--color-border);
+  }
+}
+
+@media (max-width: 38rem) {
+  .summaryMetrics,
+  .evidenceGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .summaryMetric,
+  .summaryMetric:nth-child(2) {
+    border-right: 0;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .summaryMetric:last-child {
+    border-bottom: 0;
+  }
+
+  .timeline {
+    padding: 0.85rem;
+  }
+
+  .timeline::before {
+    left: 1.47rem;
+  }
+
+  .timeline > li {
+    padding-left: 2rem;
+  }
+
+  .timeline > li::before {
+    left: 0.29rem;
+  }
+
+  .eventHeader {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .eventCard {
+    transition: none;
+  }
+}

@@ -1,0 +1,11 @@
+style,extractor,gold_claims,detected,missed,type_correct,verdict_correct_detected,false_verified_detected,spurious_predicted,spurious_verified,sessions,gate_agreement,unsafe_accepts,should_not_accept,false_rejects,should_accept
+P0,oracle,216,216,0,216,200,0,0,0,200,184,0,112,16,88
+P0,heuristic,216,216,0,216,200,0,0,0,200,184,0,112,16,88
+P0F,oracle,216,216,0,216,200,0,0,0,200,184,0,112,16,88
+P0F,heuristic,216,216,0,216,200,0,0,0,200,184,0,112,16,88
+N,oracle,216,216,0,216,200,0,0,0,200,184,0,112,16,88
+N,heuristic,216,216,0,216,200,0,0,0,200,184,0,112,16,88
+L,oracle,216,216,0,216,200,0,0,0,200,184,0,112,16,88
+L,heuristic,216,216,0,216,200,0,0,0,200,184,0,112,16,88
+S,oracle,216,216,0,216,192,8,0,0,200,176,8,112,16,88
+S,heuristic,216,176,40,176,144,0,0,0,200,136,8,112,24,88

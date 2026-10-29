@@ -1,0 +1,6 @@
+"workspace","files","median_no_cache_ms","median_warm_cache_ms","speedup","runs","digest_identical","node","cpu","cores","memory_gib","kernel"
+".","239","55.2","14.9","3.704697986577181","7","true","v22.23.4","Intel(R) Xeon(R) Processor","2","7.8","6.18.44-fc-v180"
+"../repos/express","216","43.8","12","3.65","7","true","v22.23.4","Intel(R) Xeon(R) Processor","2","7.8","6.18.44-fc-v180"
+"../repos/vite","2874","566.8","156.5","3.6217252396166133","7","true","v22.23.4","Intel(R) Xeon(R) Processor","2","7.8","6.18.44-fc-v180"
+"../repos/django","7087","1397.2","423.8","3.2968381311939594","7","true","v22.23.4","Intel(R) Xeon(R) Processor","2","7.8","6.18.44-fc-v180"
+"synthetic-10000","10000","1743.7","392.2","4.4459459459459465","7","true","v22.23.4","Intel(R) Xeon(R) Processor","2","7.8","6.18.44-fc-v180"

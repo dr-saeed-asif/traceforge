@@ -1,0 +1,10 @@
+{
+  "outDir": "E:\\PhD Data\\latest_plugin\\traceforge\\research\\runs\\revision-20261028-reproduced\\evaluation-csv",
+  "evaluationDirs": 2,
+  "systemRows": 9,
+  "verdictRows": 36,
+  "claimRows": 1944,
+  "extractionRows": 3,
+  "latencyRows": 13,
+  "failureRows": 0
+}

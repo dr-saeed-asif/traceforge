@@ -1,0 +1,59 @@
+{
+  "name": "traceforge-prompt-capture",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "npm@11.16.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json && tsc -p packages/adapter-opencode/tsconfig.json",
+    "build:all": "npm run build && npm run web:build",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p packages/adapter-opencode/tsconfig.json --noEmit",
+    "typecheck:all": "npm run typecheck && npm run contracts:typecheck && npm run claim-anchoring:typecheck && npm run sui-claim-anchoring:typecheck && npm run web:typecheck",
+    "test": "vitest run",
+    "test:all": "npm test -- --run && npm run web:test",
+    "quality:all": "npm run typecheck:all && npm test -- --run && npm run web:quality",
+    "contracts:typecheck": "npm run typecheck --workspace @traceforge/verification-contracts",
+    "claim-anchoring:typecheck": "npm run typecheck --workspace @traceforge/claim-anchoring",
+    "sui-claim-anchoring:typecheck": "npm run typecheck --workspace @traceforge/sui-claim-anchoring",
+    "contracts:test": "npm run test --workspace @traceforge/verification-contracts",
+    "web:dev": "npm run dev --workspace @traceforge/web",
+    "web:build": "npm run build --workspace @traceforge/web",
+    "web:start": "npm run start --workspace @traceforge/web",
+    "web:lint": "npm run lint --workspace @traceforge/web",
+    "web:format": "npm run format --workspace @traceforge/web",
+    "web:format:check": "npm run format:check --workspace @traceforge/web",
+    "web:typecheck": "npm run typecheck --workspace @traceforge/web",
+    "web:test": "npm run test --workspace @traceforge/web",
+    "web:test:e2e": "npm run test:e2e --workspace @traceforge/web",
+    "web:quality": "npm run web:format:check && npm run web:typecheck && npm run web:lint && npm run web:test",
+    "web:verify:production": "npm run verify:production --workspace @traceforge/web",
+    "db:migrate": "npm run build && node --env-file-if-exists=.env dist/migrate.js",
+    "db:import:mysql": "npm run build && node --env-file-if-exists=.env dist/import-mysql-to-sqlite.js",
+    "api:start": "npm run build && node --env-file-if-exists=.env dist/server.js",
+    "api:up": "npm run db:migrate && npm run api:start",
+    "key:generate": "npm run build && node dist/generate-encryption-key.js",
+    "code:decrypt": "node --env-file-if-exists=.env dist/decrypt-generated-code.js",
+    "research:export": "npm run build && node --env-file-if-exists=.env dist/export-research-dataset.js",
+    "research:evaluate": "npm run build && node --env-file-if-exists=.env dist/evaluate.js",
+    "mcp:gate": "npm run build && node --env-file-if-exists=.env dist/mcp-claim-gate.js",
+    "research:benchmark": "npm run build && node research/benchmark/run-benchmark.mjs"
+  },
+  "engines": {
+    "node": ">=22.5"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.2",
+    "mysql2": "^3.14.4",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@opencode-ai/plugin": "1.18.21",
+    "@types/node": "^24.0.0",
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
+  }
+}

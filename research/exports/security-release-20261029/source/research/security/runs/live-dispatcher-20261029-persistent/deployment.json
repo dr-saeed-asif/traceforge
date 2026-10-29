@@ -1,0 +1,19 @@
+{
+  "profile": "protected Linux tools only; legacy Windows capture is not upgraded",
+  "releaseDirectory": "/var/lib/traceforge-secure/capture-f942a6650378424c8d893a8161d31367",
+  "collectorPid": 13,
+  "collectorUid": 61000,
+  "hostUid": 61001,
+  "agentUid": 61002,
+  "socket": "/var/lib/traceforge-secure/capture-f942a6650378424c8d893a8161d31367/run/collector.sock",
+  "networkNamespace": true,
+  "chroot": true,
+  "noNewPrivileges": true,
+  "data": "Frozen controlled traces replayed through authenticated Linux collector; not live OpenCode tasks",
+  "sessionsPerAttack": 200,
+  "deployed": true,
+  "dispatcherPid": 14,
+  "dispatcherSocket": "/var/lib/traceforge-secure/capture-f942a6650378424c8d893a8161d31367/run/dispatcher.sock",
+  "controlSessions": 2,
+  "dispatcherSourceSha256": "37bd1c357d394e2a6f1d6b2e6d667c6896d41d874819a39d68b1695c0ebff54d"
+}

@@ -1,0 +1,4 @@
+"check","status","passed","failed","detail"
+"unit_and_integration_tests","PASS","142","0","Final complete Vitest run"
+"core_and_adapter_builds","PASS","2","0","Direct Node TypeScript commands; see reproduction manifest"
+"old_result_cleanup","BLOCKED","","","Backup verified; recursive deletion rejected by automatic approval policy"

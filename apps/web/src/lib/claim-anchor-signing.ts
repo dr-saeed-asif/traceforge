@@ -23,6 +23,8 @@ export async function signClaimAnchorAuthorization(payload: BlockchainClaimAncho
   if (!contractAddress || !/^0x[0-9a-f]{40}$/i.test(contractAddress))
     throw new Error("The Sepolia claim registry address is not configured on the server.");
   const account = privateKeyToAccount(privateKey as `0x${string}`);
+  if (account.address.toLowerCase() === "0xc5d9e40aa244e30d7c0953d1ecd76b7c42c31d26")
+    throw new Error("The historical signer is compromised and permanently disabled. Activate a reviewed V2 deployment before public use.");
   const bytes = crypto.getRandomValues(new Uint8Array(32));
   const nonce =
     `0x${Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("")}` as `0x${string}`;

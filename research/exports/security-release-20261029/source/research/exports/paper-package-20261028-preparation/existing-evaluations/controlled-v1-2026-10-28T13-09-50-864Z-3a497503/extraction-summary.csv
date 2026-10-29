@@ -1,0 +1,2 @@
+"eval_name","extractor","sessions","gold_claims","predicted_claims","matched_claims","type_correct","failed","successful_empty"
+"02-ollama-deterministic","ollama","200","216","216","160","152","0","0"

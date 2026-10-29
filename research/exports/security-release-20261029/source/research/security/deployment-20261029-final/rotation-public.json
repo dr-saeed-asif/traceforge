@@ -1,0 +1,15 @@
+{
+  "publicKey": "0x047912c8b640416f3c6378a52c3db2b8fcb2d94664d6c6fe9826bca606ae6ca23c9585983fd3c97c60e71336006c87602406741f035d77b3a1e56f149fbe721910",
+  "privateKeyLocation": "/var/lib/traceforge-keys/rotation-eb38d831131048e28ab92748d7406ca4/signer.hex",
+  "permissions": "root-only 0700 directory / 0600 file",
+  "status": "WALLET_SIGNATURE_REQUIRED; NOT_DEPLOYED",
+  "revokedSigner": "0xC5D9e40Aa244e30d7C0953D1Ecd76B7c42c31d26",
+  "signer": "0x8A48491C722ACC46066504bB0613A00B6d071847",
+  "owner": "0x80949bf40bB69ba00Ac21562e7bE2e82450d1919",
+  "chainId": 11155111,
+  "rpcStatus": {
+    "status": "READY_FOR_WALLET_SIGNATURE",
+    "balanceWei": "981211038007389204",
+    "estimatedGas": "4646695"
+  }
+}

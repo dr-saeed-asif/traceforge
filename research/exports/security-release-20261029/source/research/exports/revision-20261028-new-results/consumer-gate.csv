@@ -1,0 +1,4 @@
+"system","sessions","agreement","unsafe_accept_rate","false_reject_rate"
+"Trust the report (no gate)","200","0.44","1","0"
+"TF 2.0.0 original (heuristic extraction)","200","0.4","0.5714285714285714","0.5454545454545454"
+"TF 3.1.0 fixed (heuristic extraction)","200","0.92","0","0.18181818181818182"

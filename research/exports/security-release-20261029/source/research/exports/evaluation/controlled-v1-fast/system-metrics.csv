@@ -1,0 +1,7 @@
+"eval_name","extractor","baseline","sessions","gold_claims","missed_claims","spurious_claims","accuracy","clusters","ci_lower","ci_upper","ci_valid_replicates"
+"01-oracle-heuristic-deterministic-accept-regex","oracle","deterministic","200","216","0","0","0.925926","200","0.889908","0.959091","1000"
+"01-oracle-heuristic-deterministic-accept-regex","oracle","accept","200","216","0","0","0.555556","200","0.486111","0.623853","1000"
+"01-oracle-heuristic-deterministic-accept-regex","oracle","regex","200","216","0","0","0.481481","200","0.420561","0.546296","1000"
+"01-oracle-heuristic-deterministic-accept-regex","heuristic","deterministic","200","216","0","0","0.925926","200","0.889908","0.959091","1000"
+"01-oracle-heuristic-deterministic-accept-regex","heuristic","accept","200","216","0","0","0.555556","200","0.486111","0.623853","1000"
+"01-oracle-heuristic-deterministic-accept-regex","heuristic","regex","200","216","0","0","0.481481","200","0.420561","0.546296","1000"

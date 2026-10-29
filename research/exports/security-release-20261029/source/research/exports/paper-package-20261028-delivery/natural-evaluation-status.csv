@@ -1,0 +1,6 @@
+"extractors","baselines","model","status","reason"
+"oracle,heuristic","deterministic,accept,regex","qwen3:4b","NOT_RUN","No genuine completed adjudications available"
+"ollama","deterministic","qwen3:4b","NOT_RUN","No genuine completed adjudications available"
+"oracle","llm","qwen3:4b","NOT_RUN","No genuine completed adjudications available"
+"oracle","agent","qwen3:4b","NOT_RUN","No genuine completed adjudications available"
+"ollama","deterministic,accept,regex","qwen3:4b","NOT_RUN","No genuine completed adjudications available"
