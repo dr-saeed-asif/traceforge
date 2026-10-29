@@ -1,0 +1,162 @@
+[
+  {
+    "id": "honest-0",
+    "condition": "honest",
+    "expected": "ACCEPT",
+    "actual": "ACCEPT",
+    "agreement": true,
+    "latencyMs": 12.585799999214942
+  },
+  {
+    "id": "honest-1",
+    "condition": "honest",
+    "expected": "ACCEPT",
+    "actual": "ACCEPT",
+    "agreement": true,
+    "latencyMs": 37.08080000069458
+  },
+  {
+    "id": "honest-2",
+    "condition": "honest",
+    "expected": "ACCEPT",
+    "actual": "ACCEPT",
+    "agreement": true,
+    "latencyMs": 10.698699999920791
+  },
+  {
+    "id": "honest-3",
+    "condition": "honest",
+    "expected": "ACCEPT",
+    "actual": "ACCEPT",
+    "agreement": true,
+    "latencyMs": 8.572700000513578
+  },
+  {
+    "id": "contradicted-0",
+    "condition": "contradicted",
+    "expected": "REJECT",
+    "actual": "REJECT",
+    "agreement": true,
+    "latencyMs": 10.12799999807612
+  },
+  {
+    "id": "contradicted-1",
+    "condition": "contradicted",
+    "expected": "REJECT",
+    "actual": "REJECT",
+    "agreement": true,
+    "latencyMs": 8.11740000062855
+  },
+  {
+    "id": "contradicted-2",
+    "condition": "contradicted",
+    "expected": "REJECT",
+    "actual": "REJECT",
+    "agreement": true,
+    "latencyMs": 8.527400001185015
+  },
+  {
+    "id": "contradicted-3",
+    "condition": "contradicted",
+    "expected": "REJECT",
+    "actual": "REJECT",
+    "agreement": true,
+    "latencyMs": 8.077100002992665
+  },
+  {
+    "id": "edited-payload-0",
+    "condition": "edited-payload",
+    "expected": "REJECT",
+    "actual": "REJECT",
+    "agreement": true,
+    "latencyMs": 9.645699999964563
+  },
+  {
+    "id": "edited-payload-1",
+    "condition": "edited-payload",
+    "expected": "REJECT",
+    "actual": "REJECT",
+    "agreement": true,
+    "latencyMs": 7.695500000409083
+  },
+  {
+    "id": "edited-payload-2",
+    "condition": "edited-payload",
+    "expected": "REJECT",
+    "actual": "REJECT",
+    "agreement": true,
+    "latencyMs": 8.693700001458637
+  },
+  {
+    "id": "edited-payload-3",
+    "condition": "edited-payload",
+    "expected": "REJECT",
+    "actual": "REJECT",
+    "agreement": true,
+    "latencyMs": 7.935400000860682
+  },
+  {
+    "id": "foreign-key-0",
+    "condition": "foreign-key",
+    "expected": "REJECT",
+    "actual": "REJECT",
+    "agreement": true,
+    "latencyMs": 6.244299998797942
+  },
+  {
+    "id": "foreign-key-1",
+    "condition": "foreign-key",
+    "expected": "REJECT",
+    "actual": "REJECT",
+    "agreement": true,
+    "latencyMs": 7.6150000022607855
+  },
+  {
+    "id": "foreign-key-2",
+    "condition": "foreign-key",
+    "expected": "REJECT",
+    "actual": "REJECT",
+    "agreement": true,
+    "latencyMs": 7.015200000751065
+  },
+  {
+    "id": "foreign-key-3",
+    "condition": "foreign-key",
+    "expected": "REJECT",
+    "actual": "REJECT",
+    "agreement": true,
+    "latencyMs": 7.146600000851322
+  },
+  {
+    "id": "swapped-artifact-0",
+    "condition": "swapped-artifact",
+    "expected": "REJECT",
+    "actual": "REJECT",
+    "agreement": true,
+    "latencyMs": 7.819799997378141
+  },
+  {
+    "id": "swapped-artifact-1",
+    "condition": "swapped-artifact",
+    "expected": "REJECT",
+    "actual": "REJECT",
+    "agreement": true,
+    "latencyMs": 7.917999999335734
+  },
+  {
+    "id": "swapped-artifact-2",
+    "condition": "swapped-artifact",
+    "expected": "REJECT",
+    "actual": "REJECT",
+    "agreement": true,
+    "latencyMs": 8.007799999177223
+  },
+  {
+    "id": "swapped-artifact-3",
+    "condition": "swapped-artifact",
+    "expected": "REJECT",
+    "actual": "REJECT",
+    "agreement": true,
+    "latencyMs": 8.670100000017555
+  }
+]

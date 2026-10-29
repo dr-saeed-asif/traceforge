@@ -1,0 +1,2 @@
+"commit","dirty","os","node","python","model_id","model_version","seed","prompt_sha256","command","exit_code","start","end"
+"065689b564bb55bd6ceaac28420d4aac831071f3","true","win32 10.0.26300 x64","v22.14.0","","","","","","[""C:\\Program Files\\nodejs\\node.exe"",""E:\\PhD Data\\latest_plugin\\traceforge\\research\\revision-r1\\evaluate-policy.mjs"",""--out-dir"",""research/exports/remarks-policy320-extraction330-release-20261029""]","0","2026-10-29T13:15:30.420Z","2026-10-29T13:15:49.728Z"

@@ -1,0 +1,29 @@
+
+> w@1.0.0 test
+> node --test
+
+TAP version 13
+# Subtest: t0
+ok 1 - t0
+  ---
+  duration_ms: 2.2418
+  ...
+# Subtest: t1
+ok 2 - t1
+  ---
+  duration_ms: 0.3834
+  ...
+# Subtest: t2
+ok 3 - t2
+  ---
+  duration_ms: 0.3677
+  ...
+1..3
+# tests 3
+# suites 0
+# pass 3
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 340.8473

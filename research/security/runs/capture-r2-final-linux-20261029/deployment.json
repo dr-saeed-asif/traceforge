@@ -1,0 +1,15 @@
+{
+  "profile": "3.2.0-capture.1",
+  "releaseDirectory": "/var/lib/traceforge-secure/capture-2ac5a4e2f9de46318eec0f5fb1384709",
+  "collectorPid": 29216,
+  "collectorUid": 61000,
+  "hostUid": 61001,
+  "agentUid": 61002,
+  "socket": "/var/lib/traceforge-secure/capture-2ac5a4e2f9de46318eec0f5fb1384709/run/collector.sock",
+  "networkNamespace": true,
+  "chroot": true,
+  "noNewPrivileges": true,
+  "data": "Frozen controlled traces replayed through authenticated Linux collector; not live OpenCode tasks",
+  "sessionsPerAttack": 200,
+  "deployed": false
+}

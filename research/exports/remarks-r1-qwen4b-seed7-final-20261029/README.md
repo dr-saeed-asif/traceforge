@@ -1,0 +1,3 @@
+# R1 judge analysis
+
+Table 6 additional row. Complete 216-claim measured run; gold labels only used here for scoring. Prompt/model metadata and raw outputs remain in E:\PhD Data\latest_plugin\traceforge\research\exports\remarks-r1-qwen4b-seed7-20261029. All invalid attempts retained. Gold gate incorporates the annotation's test-tampering advisory, while judge gates use their returned verdicts. Remaining failures are incorrect outcomes, never dropped. Bootstrap 2000 seed 7 by session/family; exact FVR bounds supplementary. Local monetary cost unavailable, not zero. Shared workstation latency is descriptive, not a clean cold/warm hardware study.

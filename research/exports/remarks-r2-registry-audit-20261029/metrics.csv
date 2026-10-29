@@ -1,0 +1,2 @@
+"registry","source_path","status","owner","onchain_revocation_confirmed","finding"
+"0xbeADd119bef9F7F8A0844A505627eA91cF06F8b6",".env.example","DEPLOYED","0xC5D9e40Aa244e30d7C0953D1Ecd76B7c42c31d26","false","Historical compromised signer is immutable V1 owner; cannot claim on-chain revocation. Retire this deployment."

@@ -1,0 +1,122 @@
+[
+  {
+    "id": "honest-0",
+    "condition": "honest",
+    "workspace": "E:\\PhD Data\\latest_plugin\\traceforge\\research\\exports\\remarks-r6-network-mcp-final-20261029\\artifacts\\honest-0",
+    "expected": "ACCEPT"
+  },
+  {
+    "id": "honest-1",
+    "condition": "honest",
+    "workspace": "E:\\PhD Data\\latest_plugin\\traceforge\\research\\exports\\remarks-r6-network-mcp-final-20261029\\artifacts\\honest-1",
+    "expected": "ACCEPT"
+  },
+  {
+    "id": "honest-2",
+    "condition": "honest",
+    "workspace": "E:\\PhD Data\\latest_plugin\\traceforge\\research\\exports\\remarks-r6-network-mcp-final-20261029\\artifacts\\honest-2",
+    "expected": "ACCEPT"
+  },
+  {
+    "id": "honest-3",
+    "condition": "honest",
+    "workspace": "E:\\PhD Data\\latest_plugin\\traceforge\\research\\exports\\remarks-r6-network-mcp-final-20261029\\artifacts\\honest-3",
+    "expected": "ACCEPT"
+  },
+  {
+    "id": "contradicted-0",
+    "condition": "contradicted",
+    "workspace": "E:\\PhD Data\\latest_plugin\\traceforge\\research\\exports\\remarks-r6-network-mcp-final-20261029\\artifacts\\contradicted-0",
+    "expected": "REJECT"
+  },
+  {
+    "id": "contradicted-1",
+    "condition": "contradicted",
+    "workspace": "E:\\PhD Data\\latest_plugin\\traceforge\\research\\exports\\remarks-r6-network-mcp-final-20261029\\artifacts\\contradicted-1",
+    "expected": "REJECT"
+  },
+  {
+    "id": "contradicted-2",
+    "condition": "contradicted",
+    "workspace": "E:\\PhD Data\\latest_plugin\\traceforge\\research\\exports\\remarks-r6-network-mcp-final-20261029\\artifacts\\contradicted-2",
+    "expected": "REJECT"
+  },
+  {
+    "id": "contradicted-3",
+    "condition": "contradicted",
+    "workspace": "E:\\PhD Data\\latest_plugin\\traceforge\\research\\exports\\remarks-r6-network-mcp-final-20261029\\artifacts\\contradicted-3",
+    "expected": "REJECT"
+  },
+  {
+    "id": "edited-payload-0",
+    "condition": "edited-payload",
+    "workspace": "E:\\PhD Data\\latest_plugin\\traceforge\\research\\exports\\remarks-r6-network-mcp-final-20261029\\artifacts\\edited-payload-0",
+    "expected": "REJECT"
+  },
+  {
+    "id": "edited-payload-1",
+    "condition": "edited-payload",
+    "workspace": "E:\\PhD Data\\latest_plugin\\traceforge\\research\\exports\\remarks-r6-network-mcp-final-20261029\\artifacts\\edited-payload-1",
+    "expected": "REJECT"
+  },
+  {
+    "id": "edited-payload-2",
+    "condition": "edited-payload",
+    "workspace": "E:\\PhD Data\\latest_plugin\\traceforge\\research\\exports\\remarks-r6-network-mcp-final-20261029\\artifacts\\edited-payload-2",
+    "expected": "REJECT"
+  },
+  {
+    "id": "edited-payload-3",
+    "condition": "edited-payload",
+    "workspace": "E:\\PhD Data\\latest_plugin\\traceforge\\research\\exports\\remarks-r6-network-mcp-final-20261029\\artifacts\\edited-payload-3",
+    "expected": "REJECT"
+  },
+  {
+    "id": "foreign-key-0",
+    "condition": "foreign-key",
+    "workspace": "E:\\PhD Data\\latest_plugin\\traceforge\\research\\exports\\remarks-r6-network-mcp-final-20261029\\artifacts\\foreign-key-0",
+    "expected": "REJECT"
+  },
+  {
+    "id": "foreign-key-1",
+    "condition": "foreign-key",
+    "workspace": "E:\\PhD Data\\latest_plugin\\traceforge\\research\\exports\\remarks-r6-network-mcp-final-20261029\\artifacts\\foreign-key-1",
+    "expected": "REJECT"
+  },
+  {
+    "id": "foreign-key-2",
+    "condition": "foreign-key",
+    "workspace": "E:\\PhD Data\\latest_plugin\\traceforge\\research\\exports\\remarks-r6-network-mcp-final-20261029\\artifacts\\foreign-key-2",
+    "expected": "REJECT"
+  },
+  {
+    "id": "foreign-key-3",
+    "condition": "foreign-key",
+    "workspace": "E:\\PhD Data\\latest_plugin\\traceforge\\research\\exports\\remarks-r6-network-mcp-final-20261029\\artifacts\\foreign-key-3",
+    "expected": "REJECT"
+  },
+  {
+    "id": "swapped-artifact-0",
+    "condition": "swapped-artifact",
+    "workspace": "E:\\PhD Data\\latest_plugin\\traceforge\\research\\exports\\remarks-r6-network-mcp-final-20261029\\artifacts\\swapped-artifact-0",
+    "expected": "REJECT"
+  },
+  {
+    "id": "swapped-artifact-1",
+    "condition": "swapped-artifact",
+    "workspace": "E:\\PhD Data\\latest_plugin\\traceforge\\research\\exports\\remarks-r6-network-mcp-final-20261029\\artifacts\\swapped-artifact-1",
+    "expected": "REJECT"
+  },
+  {
+    "id": "swapped-artifact-2",
+    "condition": "swapped-artifact",
+    "workspace": "E:\\PhD Data\\latest_plugin\\traceforge\\research\\exports\\remarks-r6-network-mcp-final-20261029\\artifacts\\swapped-artifact-2",
+    "expected": "REJECT"
+  },
+  {
+    "id": "swapped-artifact-3",
+    "condition": "swapped-artifact",
+    "workspace": "E:\\PhD Data\\latest_plugin\\traceforge\\research\\exports\\remarks-r6-network-mcp-final-20261029\\artifacts\\swapped-artifact-3",
+    "expected": "REJECT"
+  }
+]

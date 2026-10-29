@@ -1,0 +1,38 @@
+{
+  "system": "Judge whether a coding agent claim is supported by its supplied prompt-scoped trace. Return JSON only.\nVERIFIED: matching sufficient evidence confirms the literal operation. CONTRADICTED: matching direct evidence conflicts with the claim.\nUNSUPPORTED: objective claim lacks sufficient valid, fresh matching evidence. UNVERIFIABLE: semantics cannot be established from these artifacts.\nKeep command flags, operands, working directory, and post-test edits significant. Passing tests does not prove arbitrary task correctness.\nReturn {\"verdict\":\"VERIFIED|CONTRADICTED|UNSUPPORTED|UNVERIFIABLE\",\"reason\":\"brief rationale\",\"requestEventIds\":[]}.\nKeep the rationale to at most 25 words.\nFor retrieval mode you may instead return {\"verdict\":\"INSPECT\",\"reason\":\"need evidence\",\"requestEventIds\":[\"id\",...]} to inspect supplied events. No external tools or execution are available.",
+  "schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "verdict": {
+        "type": "string",
+        "enum": [
+          "VERIFIED",
+          "CONTRADICTED",
+          "UNSUPPORTED",
+          "UNVERIFIABLE"
+        ]
+      },
+      "reason": {
+        "type": "string",
+        "maxLength": 400
+      },
+      "requestEventIds": {
+        "type": "array",
+        "maxItems": 50,
+        "items": {
+          "type": "string"
+        }
+      }
+    },
+    "required": [
+      "verdict",
+      "reason",
+      "requestEventIds"
+    ]
+  },
+  "temperature": 0,
+  "contextTokens": 8192,
+  "repairBudget": 1,
+  "maxRounds": 1
+}

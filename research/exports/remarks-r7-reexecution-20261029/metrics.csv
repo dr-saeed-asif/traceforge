@@ -1,0 +1,2 @@
+"condition","total_claims","eligible_command_claims","excluded","executed","failures","agreement_with_gold","agreement_with_traceforge","gold_agreement_session_low","gold_agreement_session_high","gold_agreement_family_low","gold_agreement_family_high","runtime_p50_ms","runtime_p95_ms"
+"isolated-reexecution","216","120","96","120","0","0.6666666666666666","0.6","0.5833333333333334","0.75","0.4","0.8666666666666667","534.0436549995502","1536.2887600022077"
